@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Color de fondo del icono adaptativo (del app.json: backgroundColor: "#ffffff") -->
+    <color name="iconBackground">#FFFFFF</color>
+    
+    <!-- Color de fondo del splash screen (del app.json: backgroundColor: "#ffffff") -->
+    <color name="splashscreen_background">#FFFFFF</color>
+    
+    <!-- Colores corporativos de Servitel (opcional) -->
+    <color name="primary">#3e78b2</color>
+    <color name="secondary">#ffd166</color>
+</resources>
