@@ -7,7 +7,7 @@ import {
   assignMaterialToCrew,
   returnMaterialFromCrew,
 } from "@/lib/inventoryService";
-import { getUserFromRequest } from "@/lib/api_reference/lib/authHelpers";
+import { getUserFromRequest } from "@/lib/authHelpers";
 
 export async function POST(request: NextRequest) {
   try {

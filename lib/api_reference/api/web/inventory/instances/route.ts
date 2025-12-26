@@ -8,7 +8,7 @@ import {
   updateEquipmentInstance,
   deleteEquipmentInstance,
 } from "@/lib/inventoryService";
-import { getUserFromRequest } from "@/lib/api_reference/lib/authHelpers";
+import { getUserFromRequest } from "@/lib/authHelpers";
 
 // GET: Listar instancias de un equipo con filtros
 export async function GET(request: NextRequest) {

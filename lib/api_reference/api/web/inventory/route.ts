@@ -5,8 +5,8 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   getInventoryItems,
 } from "@/lib/inventoryService";
-import InventoryModel from "@/lib/api_reference/models/Inventory";
-import { connectDB } from "@/lib/api_reference/lib/db";
+import InventoryModel from "@/models/Inventory";
+import { connectDB } from "@/lib/db";
 
 // GET: Listar ítems de inventario con filtros opcionales
 export async function GET(request: NextRequest) {

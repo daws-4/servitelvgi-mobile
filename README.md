@@ -93,100 +93,100 @@ React Native (Expo) para técnicos de campo.
 
 ##### 🔧 **1. Configuración y Preparación del Proyecto**
 
-- [ ] **Limpiar código de demostración**
-  - [ ] Eliminar archivos en `/app/screens` (onboarding, weather, parallax, etc.) - son demos
-  - [ ] Limpiar componentes demo en `/components` (VideoCard, JournalCard, CounterCard, etc.)
-  - [ ] Conservar solo: Header, ThemeToggle, BottomBar (adaptables)
+- [x] **Limpiar código de demostración**
+  - [x] Eliminar archivos en `/app/screens` (onboarding, weather, parallax, etc.) - son demos
+  - [x] Limpiar componentes demo en `/components` (VideoCard, JournalCard, CounterCard, etc.)
+  - [x] Conservar solo: Header, ThemeToggle, BottomBar (adaptables)
   
-- [ ] **Configurar variables de entorno**
-  - [ ] Crear archivo `.env` en raíz
-  - [ ] Agregar `API_BASE_URL` - URL del backend de Servitel
-  - [ ] Agregar `GOOGLE_MAPS_API_KEY` - API Key de Google Maps
-  - [ ] Agregar `SPEEDTEST_API_URL` - URL de API de test de velocidad (opcional)
-  - [ ] Instalar `expo-constants` para acceder a variables (ya está instalado ✅)
+- [x] **Configurar variables de entorno**
+  - [x] Crear archivo `.env` en raíz
+  - [x] Agregar `API_BASE_URL` - URL del backend de Servitel
+  - [x] Agregar `GOOGLE_MAPS_API_KEY` - API Key de Google Maps
+  - [x] Agregar `SPEEDTEST_API_URL` - URL de API de test de velocidad (opcional)
+  - [x] Instalar `expo-constants` para acceder a variables (ya está instalado ✅)
   
-- [ ] **Instalar dependencias adicionales necesarias**
-  - [ ] `expo-secure-store` - Almacenamiento seguro de JWT
-  - [ ] `axios` o `@tanstack/react-query` - Cliente HTTP y caché
-  - [ ] `react-native-maps` - Google Maps
-  - [ ] `expo-location` - Geolocalización
-  - [ ] `expo-image-picker` - Captura de fotos
-  - [ ] `expo-camera` - Acceso a cámara
-  - [ ] `react-native-signature-canvas` - Firma digital
-  - [ ] `expo-notifications` - Push notifications
-  - [ ] `expo-device` - Info del dispositivo
-  - [ ] `@react-native-async-storage/async-storage` - Almacenamiento local
+- [x] **Instalar dependencias adicionales necesarias**
+  - [x] `expo-secure-store` - Almacenamiento seguro de JWT
+  - [x] `axios` o `@tanstack/react-query` - Cliente HTTP y caché
+  - [x] `react-native-maps` - Google Maps
+  - [x] `expo-location` - Geolocalización
+  - [x] `expo-image-picker` - Captura de fotos
+  - [x] `expo-camera` - Acceso a cámara
+  - [x] `react-native-signature-canvas` - Firma digital
+  - [x] `expo-notifications` - Push notifications
+  - [x] `expo-device` - Info del dispositivo
+  - [x] `@react-native-async-storage/async-storage` - Almacenamiento local
   
-- [ ] **Actualizar configuración**
-  - [ ] Actualizar `app.json` con:
+- [x] **Actualizar configuración**
+  - [x] Actualizar `app.json` con:
     - Nombre: "Servitel Instaladores"
     - Bundle ID: `com.servitel.instaladores`
     - Permisos necesarios (ubicación, cámara, notificaciones)
     - Configurar Google Maps API Key
-  - [ ] Actualizar `package.json` con nombre correcto del proyecto
+  - [x] Actualizar `package.json` con nombre correcto del proyecto
 
 ---
 
 ##### 📁 **2. Estructura de Carpetas y Tipos**
 
-- [ ] **Crear carpeta `/services` en raíz**
-  - [ ] `/services/api/auth.ts` - Servicios de autenticación
-  - [ ] `/services/api/orders.ts` - Servicios de órdenes
-  - [ ] `/services/api/crews.ts` - Servicios de cuadrillas
-  - [ ] `/services/api/inventory.ts` - Servicios de inventario
-  - [ ] `/services/api/installers.ts` - Servicios de instaladores
-  - [ ] `/services/api/client.ts` - Cliente HTTP base (axios/fetch)
+- [x] **Crear carpeta `/services` en raíz**
+  - [x] `/services/api/auth.ts` - Servicios de autenticación
+  - [x] `/services/api/orders.ts` - Servicios de órdenes
+  - [x] `/services/api/crews.ts` - Servicios de cuadrillas
+  - [x] `/services/api/inventory.ts` - Servicios de inventario
+  - [x] `/services/api/installers.ts` - Servicios de instaladores
+  - [x] `/services/api/client.ts` - Cliente HTTP base (axios/fetch)
   
-- [ ] **Crear carpeta `/types` en raíz**
-  - [ ] Copiar y adaptar modelos de `/lib/api_reference/models`:
-    - [ ] `/types/User.ts`
-    - [ ] `/types/Installer.ts`
-    - [ ] `/types/Order.ts`
-    - [ ] `/types/Crew.ts`
-    - [ ] `/types/Inventory.ts`
-    - [ ] `/types/InventoryHistory.ts`
-    - [ ] `/types/OrderHistory.ts`
-  - [ ] `/types/navigation.ts` - Tipos de navegación
-  - [ ] `/types/api.ts` - Tipos de respuestas API
+- [x] **Crear carpeta `/types` en raíz**
+  - [x] Copiar y adaptar modelos de `/lib/api_reference/models`:
+    - [x] `/types/User.ts`
+    - [x] `/types/Installer.ts`
+    - [x] `/types/Order.ts`
+    - [x] `/types/Crew.ts`
+    - [x] `/types/Inventory.ts`
+    - [x] `/types/InventoryHistory.ts`
+    - [x] `/types/OrderHistory.ts`
+  - [x] `/types/navigation.ts` - Tipos de navegación
+  - [x] `/types/api.ts` - Tipos de respuestas API
   
-- [ ] **Crear carpeta `/constants`**
-  - [ ] `/constants/colors.ts` - Paleta de colores Servitel
-  - [ ] `/constants/config.ts` - Configuraciones globales
-  - [ ] `/constants/orderStates.ts` - Estados de órdenes
+- [x] **Crear carpeta `/constants`**
+  - [x] `/constants/colors.ts` - Paleta de colores Servitel
+  - [x] `/constants/config.ts` - Configuraciones globales
+  - [x] `/constants/orderStates.ts` - Estados de órdenes
   
-- [ ] **Reorganizar `/app/contexts`**
+- [x] **Reorganizar `/app/contexts`**
   - [x] `ThemeContext.tsx` - Ya existe ✅
-  - [ ] `AuthContext.tsx` - Gestión de autenticación
-  - [ ] `OrderContext.tsx` - Estado global de órdenes (opcional)
+  - [x] `AuthContext.tsx` - Gestión de autenticación
+  - [x] `OrderContext.tsx` - Estado global de órdenes (opcional)
 
 ---
 
 ##### 🔐 **3. Autenticación y Sesión**
 
-- [ ] **AuthContext y AuthProvider**
-  - [ ] Crear `AuthContext.tsx` con:
+- [x] **AuthContext y AuthProvider**
+  - [x] Crear `AuthContext.tsx` con:
     - Estado: `user`, `token`, `isLoading`, `isAuthenticated`
     - Funciones: `login()`, `logout()`, `checkAuth()`
-  - [ ] Almacenar JWT en SecureStore
-  - [ ] Cargar token al iniciar app y validar
+  - [x] Almacenar JWT en SecureStore
+  - [x] Cargar token al iniciar app y validar
   
-- [ ] **Servicio de autenticación (`/services/api/auth.ts`)**
-  - [ ] Función `login(email, password)` → POST `/api/web/auth/login`
-  - [ ] Función `validateToken(token)` → Verificar validez del token
-  - [ ] Función `logout()` → Limpiar sesión
+- [x] **Servicio de autenticación (`/services/api/auth.ts`)**
+  - [x] Función `login(email, password)` → POST `/api/web/auth/login`
+  - [x] Función `validateToken(token)` → Verificar validez del token
+  - [x] Función `logout()` → Limpiar sesión
   
-- [ ] **Pantalla de Login (`/app/login.tsx`)**
-  - [ ] Layout con logo de Servitel
-  - [ ] Formulario con email y contraseña
-  - [ ] Validación de campos (email válido, contraseña mínimo 6 caracteres)
-  - [ ] Botón de login con indicador de carga
-  - [ ] Manejo de errores (credenciales incorrectas, sin conexión)
-  - [ ] Redirección automática si ya está autenticado
+- [x] **Pantalla de Login (`/app/login.tsx`)**
+  - [x] Layout con logo de Servitel
+  - [x] Formulario con email y contraseña
+  - [x] Validación de campos (email válido, contraseña mínimo 6 caracteres)
+  - [x] Botón de login con indicador de carga
+  - [x] Manejo de errores (credenciales incorrectas, sin conexión)
+  - [x] Redirección automática si ya está autenticado
   
-- [ ] **Protección de rutas**
-  - [ ] Modificar `_layout.tsx` para verificar autenticación
-  - [ ] Redireccionar a `/login` si no hay token válido
-  - [ ] Redireccionar a app principal si está autenticado
+- [x] **Protección de rutas**
+  - [x] Modificar `_layout.tsx` para verificar autenticación
+  - [x] Redireccionar a `/login` si no hay token válido
+  - [x] Redireccionar a app principal si está autenticado
 
 ---
 

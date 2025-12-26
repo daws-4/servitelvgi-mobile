@@ -7,7 +7,7 @@ import {
   deleteOrder,
 } from "@/lib/orderService";
 import { processOrderUsage } from "@/lib/inventoryService";
-import { getUserFromRequest } from "@/lib/api_reference/lib/authHelpers";
+import { getUserFromRequest } from "@/lib/authHelpers";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",

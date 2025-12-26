@@ -780,7 +780,7 @@ export async function deleteInventory(id: string) {
 // EQUIPMENT INSTANCE MANAGEMENT FUNCTIONS
 // ============================================================================
 
-import type { CreateInstanceInput, AssignInstanceInput, InstallInstanceInput } from "@/types/inventory";
+import type { CreateInstanceInput, AssignInstanceInput, InstallInstanceInput } from "@/types/Inventory";
 
 /**
  * Añade instancias a un ítem de equipo

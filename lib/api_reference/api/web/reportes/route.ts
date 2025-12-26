@@ -2,7 +2,7 @@
 // API Endpoint principal para generación de reportes
 
 import { NextRequest, NextResponse } from "next/server";
-import { getUserFromRequest } from "@/lib/api_reference/lib/authHelpers";
+import { getUserFromRequest } from "@/lib/authHelpers";
 import {
   getDailyReport,
   getMonthlyReport,

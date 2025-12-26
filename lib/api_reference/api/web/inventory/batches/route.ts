@@ -8,7 +8,7 @@ import {
   assignMetersToBatch,
   deleteBatch,
 } from "@/lib/inventoryService";
-import { getUserFromRequest } from "@/lib/api_reference/lib/authHelpers";
+import { getUserFromRequest } from "@/lib/authHelpers";
 
 /**
  * GET /api/web/inventory/batches

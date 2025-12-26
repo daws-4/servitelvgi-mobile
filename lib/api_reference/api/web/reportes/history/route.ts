@@ -2,9 +2,9 @@
 // Endpoint para listar reportes generados previamente con paginación
 
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/lib/api_reference/lib/db";
-import GeneratedReportModel from "@/lib/api_reference/models/GeneratedReport";
-import { getUserFromRequest } from "@/lib/api_reference/lib/authHelpers";
+import { connectDB } from "@/lib/db";
+import GeneratedReportModel from "@/models/GeneratedReport";
+import { getUserFromRequest } from "@/lib/authHelpers";
 
 /**
  * GET /api/web/reportes/history

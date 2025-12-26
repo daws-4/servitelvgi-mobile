@@ -1,0 +1,163 @@
+import Constants from 'expo-constants';
+
+/**
+ * Configuración global de la aplicación
+ * Valores cargados desde .env y constantes de la app
+ */
+
+// Obtener variables de entorno desde process.env
+const getEnvVar = (key: string, defaultValue: string = ''): string => {
+  return process.env[key] || defaultValue;
+};
+
+export const Config = {
+  // ============================================================================
+  // API CONFIGURATION
+  // ============================================================================
+  
+  /**
+   * Base URL del backend de Servitel
+   * Debe configurarse en .env como API_BASE_URL
+   */
+  API_BASE_URL: getEnvVar('API_BASE_URL', 'http://localhost:3000'),
+  
+  /**
+   * Timeout para peticiones HTTP en milisegundos
+   */
+  API_TIMEOUT: 30000, // 30 segundos
+  
+  // ============================================================================
+  // GOOGLE MAPS
+  // ============================================================================
+  
+  /**
+   * API Key de Google Maps
+   * Debe configurarse en .env como GOOGLE_MAPS_API_KEY
+   */
+  GOOGLE_MAPS_API_KEY: getEnvVar('GOOGLE_MAPS_API_KEY', ''),
+  
+  /**
+   * Configuración de mapa por defecto
+   */
+  MAP_DEFAULT_LOCATION: {
+    latitude: 10.4806, // Caracas, Venezuela
+    longitude: -66.9036,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0421,
+  },
+  
+  // ============================================================================
+  // SPEED TEST
+  // ============================================================================
+  
+  /**
+   * URL del servicio de speed test (opcional)
+   */
+  SPEEDTEST_API_URL: getEnvVar('SPEEDTEST_API_URL'),
+  
+  // ============================================================================
+  // APP INFO
+  // ============================================================================
+  
+  /**
+   * Versión de la aplicación
+   */
+  APP_VERSION: Constants.expoConfig?.version || '1.0.0',
+  
+  /**
+   * Nombre de la aplicación
+   */
+  APP_NAME: Constants.expoConfig?.name || 'Servitel Mobile',
+  
+  /**
+   * Bundle ID
+   */
+  BUNDLE_ID: Constants.expoConfig?.ios?.bundleIdentifier || 
+             Constants.expoConfig?.android?.package || 
+             'com.servitelv.mobile',
+  
+  // ============================================================================
+  // AUTHENTICATION
+  // ============================================================================
+  
+  /**
+   * Duración del token JWT en días
+   */
+  JWT_EXPIRY_DAYS: 30,
+  
+  // ============================================================================
+  // CACHE & STORAGE
+  // ============================================================================
+  
+  /**
+   * Tiempo de expiración de caché en minutos
+   */
+  CACHE_EXPIRY_MINUTES: 15,
+  
+  // ============================================================================
+  // MEDIA & FILES
+  // ============================================================================
+  
+  /**
+   * Tamaño máximo de foto en MB
+   */
+  MAX_PHOTO_SIZE_MB: 5,
+  
+  /**
+   * Cantidad máxima de fotos por orden
+   */
+  MAX_PHOTOS_PER_ORDER: 10,
+  
+  /**
+   * Calidad de compresión de imágenes (0-1)
+   */
+  IMAGE_COMPRESSION_QUALITY: 0.8,
+  
+  // ============================================================================
+  // NOTIFICATIONS
+  // ============================================================================
+  
+  /**
+   * Configuración de notificaciones
+   */
+  NOTIFICATIONS: {
+    CHANNEL_ID: 'servitel-orders',
+    CHANNEL_NAME: 'Órdenes de Servicio',
+    ICON_COLOR: '#3e78b2',
+  },
+  
+  // ============================================================================
+  // DEVELOPMENT
+  // ============================================================================
+  
+  /**
+   * Modo de desarrollo
+   */
+  IS_DEV: __DEV__,
+  
+  /**
+   * Habilitar logs de debug
+   */
+  ENABLE_DEBUG_LOGS: __DEV__,
+} as const;
+
+// Tipo para autocompletado
+export type AppConfig = typeof Config;
+
+// Validar configuración requerida
+export const validateConfig = (): { valid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+  
+  if (!Config.API_BASE_URL || Config.API_BASE_URL === 'http://localhost:3000') {
+    errors.push('API_BASE_URL no está configurado en .env');
+  }
+  
+  if (!Config.GOOGLE_MAPS_API_KEY) {
+    errors.push('GOOGLE_MAPS_API_KEY no está configurado en .env');
+  }
+  
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+};

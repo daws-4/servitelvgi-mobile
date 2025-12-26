@@ -3,8 +3,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createDailySnapshot } from "@/lib/inventoryService";
-import InventorySnapshotModel from "@/lib/api_reference/models/InventorySnapshot";
-import { connectDB } from "@/lib/api_reference/lib/db";
+import InventorySnapshotModel from "@/models/InventorySnapshot";
+import { connectDB } from "@/lib/db";
 
 // GET: Obtener snapshots con filtros de fecha
 export async function GET(request: NextRequest) {
