@@ -12,7 +12,7 @@ interface LoginInputProps extends TextInputProps {
 
 /**
  * Input reutilizable para el formulario de login
- * con icono, label y opción de mostrar/ocultar contraseña
+ * VERSIÓN SIMPLIFICADA - Sin Views que interfieran con touch events
  */
 export function LoginInput({
     label,
@@ -29,27 +29,20 @@ export function LoginInput({
             {/* Label */}
             <Text style={styles.label}>{label.toUpperCase()}</Text>
 
-            {/* Input con icono */}
-            <View style={[
-                styles.inputWrapper,
-                isFocused && styles.inputWrapperFocused,
-                error && styles.inputWrapperError
-            ]}>
-                {/* Icono izquierdo */}
-                <View style={styles.iconContainer}>
-                    <Ionicons
-                        name={icon}
-                        size={20}
-                        color={isFocused ? BrandColors.primary : '#cbd5e1'} // slate-300
-                    />
-                </View>
-
-                {/* Input de texto */}
+            {/* Container absoluto para el icono y botón - NO interfiere con input */}
+            <View style={styles.inputContainer}>
+                {/* Input de texto - ELEMENTO PRINCIPAL */}
                 <TextInput
-                    style={styles.input}
-                    placeholderTextColor="#94a3b8" // slate-400
+                    style={[
+                        styles.input,
+                        isFocused && styles.inputFocused,
+                        error && styles.inputError
+                    ]}
+                    placeholderTextColor="#94a3b8"
+                    autoFocus={false}
                     {...textInputProps}
                     secureTextEntry={isPassword && !showPassword}
+                    blurOnSubmit={false}
                     onFocus={(e) => {
                         setIsFocused(true);
                         textInputProps.onFocus?.(e);
@@ -60,13 +53,21 @@ export function LoginInput({
                     }}
                 />
 
-                {/* Botón toggle password (solo si isPassword) */}
+                {/* Icono - posicionado absolutamente sobre el input */}
+                <View style={styles.iconOverlay} pointerEvents="none">
+                    <Ionicons
+                        name={icon}
+                        size={20}
+                        color={isFocused ? BrandColors.primary : '#cbd5e1'}
+                    />
+                </View>
+
+                {/* Botón eye - posicionado absolutamente */}
                 {isPassword && (
                     <TouchableOpacity
-                        style={styles.eyeButton}
+                        style={styles.eyeOverlay}
                         onPress={() => setShowPassword(!showPassword)}
                         activeOpacity={0.6}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
                         <Ionicons
                             name={showPassword ? 'eye-off' : 'eye'}
@@ -87,22 +88,27 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 11,
         fontWeight: '700',
-        color: '#94a3b8', // slate-400
+        color: '#94a3b8',
         letterSpacing: 1.2,
         marginBottom: 8,
         marginLeft: 4,
     },
-    inputWrapper: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#f8fafc', // slate-50
-        borderWidth: 1,
-        borderColor: '#e2e8f0', // slate-200
-        borderRadius: 12,
-        paddingHorizontal: 16,
-        height: 56,
+    inputContainer: {
+        position: 'relative',
     },
-    inputWrapperFocused: {
+    input: {
+        backgroundColor: '#f8fafc',
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        borderRadius: 12,
+        paddingLeft: 48, // Espacio para el icono
+        paddingRight: 48, // Espacio para el botón eye (si existe)
+        paddingVertical: 16,
+        height: 56,
+        fontSize: 16,
+        color: BrandColors.dark,
+    },
+    inputFocused: {
         borderColor: BrandColors.primary,
         backgroundColor: '#ffffff',
         shadowColor: BrandColors.primary,
@@ -111,20 +117,22 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 2,
     },
-    inputWrapperError: {
-        borderColor: '#f44336', // Red error color
+    inputError: {
+        borderColor: '#f44336',
     },
-    iconContainer: {
-        marginRight: 12,
+    iconOverlay: {
+        position: 'absolute',
+        left: 16,
+        top: 0,
+        bottom: 0,
+        justifyContent: 'center',
     },
-    input: {
-        flex: 1,
-        fontSize: 16,
-        color: BrandColors.dark,
-        paddingVertical: 0, // Necesario para centrar verticalmente en Android
-    },
-    eyeButton: {
+    eyeOverlay: {
+        position: 'absolute',
+        right: 16,
+        top: 0,
+        bottom: 0,
+        justifyContent: 'center',
         padding: 8,
-        marginLeft: 8,
     },
 });

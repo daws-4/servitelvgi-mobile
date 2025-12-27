@@ -4,6 +4,8 @@ import {
     Text,
     StyleSheet,
     ScrollView,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -109,63 +111,74 @@ export default function LoginScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView
-                contentContainerStyle={styles.scrollContent}
-                keyboardShouldPersistTaps="handled"
-                keyboardDismissMode="on-drag"
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.flex}
             >
-                {/* Logo y encabezado */}
-                <LoginLogo />
+                <ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
+                >
+                    {/* Logo y encabezado */}
+                    <LoginLogo />
 
-                {/* Tarjeta del formulario */}
-                <LoginCard title="Acceso al Sistema">
-                    {/* Campo de usuario */}
-                    <LoginInput
-                        label="Usuario"
-                        icon="person"
-                        placeholder="Ingresa tu usuario"
-                        value={username}
-                        onChangeText={handleUsernameChange}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        editable={!isLoading}
-                        testID="username-input"
-                        returnKeyType="next"
-                    />
+                    {/* Tarjeta del formulario */}
+                    <LoginCard title="Acceso al Sistema">
+                        {/* Campo de usuario */}
+                        <LoginInput
+                            key="username-input"
+                            label="Usuario"
+                            icon="person"
+                            placeholder="Ingresa tu usuario"
+                            value={username}
+                            onChangeText={handleUsernameChange}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                            autoFocus={false}
+                            editable={!isLoading}
+                            testID="username-input"
+                            keyboardType="default"
+                            returnKeyType="next"
+                        />
 
-                    {/* Campo de contraseña */}
-                    <LoginInput
-                        label="Contraseña"
-                        icon="lock-closed"
-                        placeholder="••••••••"
-                        value={password}
-                        onChangeText={handlePasswordChange}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        editable={!isLoading}
-                        testID="password-input"
-                        returnKeyType="done"
-                        onSubmitEditing={handleLogin}
-                        isPassword
-                    />
+                        {/* Campo de contraseña */}
+                        <LoginInput
+                            key="password-input"
+                            label="Contraseña"
+                            icon="lock-closed"
+                            placeholder="••••••••"
+                            value={password}
+                            onChangeText={handlePasswordChange}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                            autoFocus={false}
+                            editable={!isLoading}
+                            testID="password-input"
+                            keyboardType="default"
+                            returnKeyType="done"
+                            onSubmitEditing={handleLogin}
+                            isPassword
+                        />
 
-                    {/* Mensaje de error */}
-                    <ErrorAlert message={errorMessage} />
+                        {/* Mensaje de error */}
+                        <ErrorAlert message={errorMessage} />
 
-                    {/* Botón de login */}
-                    <LoginButton
-                        onPress={handleLogin}
-                        loading={isLoading}
-                        text="Iniciar Sesión"
-                    />
-                </LoginCard>
+                        {/* Botón de login */}
+                        <LoginButton
+                            onPress={handleLogin}
+                            loading={isLoading}
+                            text="Iniciar Sesión"
+                        />
+                    </LoginCard>
 
-                {/* Footer */}
-                <View style={styles.footer}>
-                    <Text style={styles.footerText}>¿Problemas con tu acceso?</Text>
-                    <Text style={styles.footerLink}>Contactar a Soporte Técnico</Text>
-                </View>
-            </ScrollView>
+                    {/* Footer */}
+                    <View style={styles.footer}>
+                        <Text style={styles.footerText}>¿Problemas con tu acceso?</Text>
+                        <Text style={styles.footerLink}>Contactar a Soporte Técnico</Text>
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }
@@ -175,6 +188,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f8fafc', // slate-50 background like HTML
+    },
+    flex: {
+        flex: 1,
     },
     scrollContent: {
         flexGrow: 1,

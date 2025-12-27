@@ -32,7 +32,7 @@
       "package": "com.servitelv.mobile",
       "config": {
         "googleMaps": {
-          "apiKey": "TU_GOOGLE_MAPS_API_KEY"
+          "apiKey": "AIzaSyDTyGS8C9ytWCV79-eh3mwE6LHmO2h-vLY"
         }
       },
       "permissions": [
@@ -41,7 +41,8 @@
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE"
-      ]
+      ],
+      "softInputMode": "adjustResize"
     },
     "web": {
       "bundler": "metro",
