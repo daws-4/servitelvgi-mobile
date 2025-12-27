@@ -1,5 +1,5 @@
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { View, Text, Pressable, Image } from 'react-native';
+import { View, Text, Pressable, Image, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
 import ThemeToggle from './ThemeToggle';
@@ -7,6 +7,8 @@ import useThemeColors from '@/app/contexts/ThemeColors';
 import SlideUp from './SlideUp';
 import { useState } from 'react';
 import React from 'react';
+import { useOffline } from '@/app/contexts/OfflineContext';
+import { BrandColors, StatusColors } from '@/constants/colors';
 
 interface HeaderProps {
     showBackButton?: boolean;
@@ -42,9 +44,55 @@ export default function Header({ showBackButton = false, title = '', hasAvatar =
                         <Text className="text-text text-2xl font-bold">{title}</Text>
                     )}
                 </View>
-                <ThemeToggle />
+
+                {/* Sync indicator and theme toggle */}
+                <View className="flex-row items-center gap-3">
+                    <SyncIndicator />
+                    <ThemeToggle />
+                </View>
             </View>
             <SlideUp visible={showSlideUp} onClose={() => setShowSlideUp(false)} />
         </>
+    );
+}
+
+/**
+ * Indicador de sincronización offline
+ */
+function SyncIndicator() {
+    const { isSyncing, pendingCount } = useOffline();
+    const colors = useThemeColors();
+
+    if (!isSyncing && pendingCount === 0) {
+        return null;
+    }
+
+    return (
+        <View className="flex-row items-center gap-2">
+            {isSyncing ? (
+                <>
+                    <ActivityIndicator size="small" color={BrandColors.primary} />
+                    <Text style={{ color: colors.text, fontSize: 12 }}>
+                        Sincronizando...
+                    </Text>
+                </>
+            ) : (
+                <View className="flex-row items-center gap-1">
+                    <Feather name="cloud-off" color={StatusColors.warning} size={16} />
+                    <View
+                        style={{
+                            backgroundColor: StatusColors.warning,
+                            borderRadius: 10,
+                            paddingHorizontal: 6,
+                            paddingVertical: 2,
+                        }}
+                    >
+                        <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: 'bold' }}>
+                            {pendingCount}
+                        </Text>
+                    </View>
+                </View>
+            )}
+        </View>
     );
 }

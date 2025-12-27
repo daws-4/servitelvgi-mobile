@@ -435,25 +435,25 @@ React Native (Expo) para técnicos de campo.
 
 ##### 🎨 **11. UI/UX y Diseño Corporativo**
 
-- [ ] **Definir paleta de colores Servitel**
-  - [ ] Actualizar `tailwind.config.js` con colores corporativos
-  - [ ] Crear `/constants/colors.ts` con paleta completa
+- [x] **Definir paleta de colores Servitel**
+  - [x] Actualizar `tailwind.config.js` con colores corporativos
+  - [x] Crear `/constants/colors.ts` con paleta completa
   
-- [ ] **Crear componentes reutilizables**
-  - [ ] `/components/ui/Button.tsx` - Botón primario, secundario, danger
-  - [ ] `/components/ui/Card.tsx` - Tarjeta base
-  - [ ] `/components/ui/Badge.tsx` - Badges de estado
-  - [ ] `/components/ui/LoadingSpinner.tsx` - Indicador de carga
-  - [ ] `/components/ui/EmptyState.tsx` - Estado vacío
-  - [ ] `/components/ui/ErrorState.tsx` - Estado de error
-  - [ ] `/components/ui/Toast.tsx` - Notificaciones toast
+- [x] **Crear componentes reutilizables**
+  - [x] `/components/ui/Button.tsx` - Botón primario, secundario, danger
+  - [x] `/components/ui/Card.tsx` - Tarjeta base
+  - [x] `/components/ui/Badge.tsx` - Badges de estado
+  - [x] `/components/ui/LoadingSpinner.tsx` - Indicador de carga
+  - [x] `/components/ui/EmptyState.tsx` - Estado vacío
+  - [x] `/components/ui/ErrorState.tsx` - Estado de error
+  - [x] `/components/ui/Toast.tsx` - Notificaciones toast
   
-- [ ] **Modo Offline**
-  - [ ] Detectar estado de conexión (`NetInfo`)
-  - [ ] Mostrar banner "Sin conexión"
-  - [ ] Almacenar acciones pendientes en AsyncStorage
-  - [ ] Sincronizar al recuperar conexión
-  - [ ] Indicador visual de sincronización en Header
+- [x] **Modo Offline**
+  - [x] Detectar estado de conexión (`NetInfo`)
+  - [x] Mostrar banner "Sin conexión"
+  - [x] Almacenar acciones pendientes en AsyncStorage
+  - [x] Sincronizar al recuperar conexión
+  - [x] Indicador visual de sincronización en Header
 
 ---
 

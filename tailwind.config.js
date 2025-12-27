@@ -17,6 +17,7 @@ module.exports = {
         global: '24px'
       },
       colors: {
+        // Dynamic colors (mantener compatibilidad con CSS variables)
         primary: "var(--color-primary)",
         invert: "var(--color-invert)",
         secondary: "var(--color-secondary)",
@@ -24,8 +25,25 @@ module.exports = {
         text: "var(--color-text)",
         highlight: "var(--color-highlight)",
         border: "var(--color-border)",
-        invert: "var(--color-invert)",
         darker: "var(--color-darker)",
+        
+        // Colores corporativos de Servitel
+        servitel: {
+          primary: '#3e78b2',    // Rich Cerulean - Azul corporativo principal
+          secondary: '#004ba8',  // Cobalt Blue - Azul secundario
+          accent: '#deefb7',     // Tea Green - Color de acento
+          neutral: '#bcabae',    // Lilac Ash - Color neutral
+          dark: '#0f0f0f',       // Onyx - Color oscuro
+        },
+        
+        // Colores de estado
+        success: '#17c964',      // Verde - éxito
+        warning: '#f5a524',      // Naranja - advertencia
+        error: '#f44336',        // Rojo - error
+        info: '#2196f3',         // Azul - información
+        pending: '#f5a524',      // Naranja - pendiente
+        active: '#17c964',       // Verde - activo
+        inactive: '#9e9e9e',     // Gris - inactivo
       },
     },
   },

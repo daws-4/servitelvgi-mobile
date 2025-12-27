@@ -1,9 +1,12 @@
 import '../global.css';
 import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
+import Toast from 'react-native-toast-message';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { OfflineProvider } from './contexts/OfflineContext';
 import { LoadingScreen } from '@/components/LoadingScreen';
+import { OfflineBanner } from '@/components/OfflineBanner';
 import useThemedNavigation from './hooks/useThemedNavigation';
 
 /**
@@ -47,23 +50,27 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <ProtectedLayout>
-          <Stack screenOptions={screenOptions}>
-            <Stack.Screen
-              name="login"
-              options={{
-                headerShown: false,
-                animation: 'fade'
-              }}
-            />
-            <Stack.Screen
-              name="index"
-              options={{
-                headerShown: false
-              }}
-            />
-          </Stack>
-        </ProtectedLayout>
+        <OfflineProvider>
+          <ProtectedLayout>
+            <OfflineBanner />
+            <Stack screenOptions={screenOptions}>
+              <Stack.Screen
+                name="login"
+                options={{
+                  headerShown: false,
+                  animation: 'fade'
+                }}
+              />
+              <Stack.Screen
+                name="index"
+                options={{
+                  headerShown: false
+                }}
+              />
+            </Stack>
+            <Toast />
+          </ProtectedLayout>
+        </OfflineProvider>
       </ThemeProvider>
     </AuthProvider>
   );
