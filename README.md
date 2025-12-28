@@ -192,21 +192,21 @@ React Native (Expo) para técnicos de campo.
 
 ##### 📱 **4. Navegación Principal**
 
-- [ ] **Diseñar estructura de navegación**
-  - [ ] Stack Navigator raíz (auth vs app)
-  - [ ] Tab Navigator para pantallas principales:
+- [x] **Diseñar estructura de navegación**
+  - [x] Stack Navigator raíz (auth vs app)
+  - [x] Tab Navigator para pantallas principales:
     - Tab 1: Órdenes (`/app/(tabs)/orders/index.tsx`)
     - Tab 2: Inventario (`/app/(tabs)/inventory/index.tsx`)
     - Tab 3: Perfil (`/app/(tabs)/profile/index.tsx`)
     - Tab 4 (opcional): Mapa (`/app/(tabs)/map/index.tsx`)
   
-- [ ] **Crear componente BottomTabNavigator**
-  - [ ] Adaptar `BottomBar.tsx` existente o crear nuevo
-  - [ ] Iconos: lista (órdenes), paquete (inventario), usuario (perfil), mapa
-  - [ ] Indicadores de badge (órdenes pendientes)
+- [x] **Crear componente BottomTabNavigator**
+  - [x] Adaptar `BottomBar.tsx` existente o crear nuevo
+  - [x] Iconos: lista (órdenes), paquete (inventario), usuario (perfil), mapa
+  - [x] Indicadores de badge (órdenes pendientes)
   
-- [ ] **Actualizar Header**
-  - [ ] Adaptar `Header.tsx` para mostrar:
+- [x] **Actualizar Header**
+  - [x] Adaptar `Header.tsx` para mostrar:
     - Logo Servitel
     - Nombre del instalador
     - Foto de perfil
@@ -459,17 +459,17 @@ React Native (Expo) para técnicos de campo.
 
 ##### 🔒 **12. Seguridad y Permisos**
 
-- [ ] **Gestión de permisos**
-  - [ ] Solicitar ubicación al primer uso de mapa
-  - [ ] Solicitar cámara al capturar foto
-  - [ ] Solicitar notificaciones al login
-  - [ ] Manejo de permisos denegados con diálogos explicativos
+- [x] **Gestión de permisos**
+  - [x] Solicitar ubicación al primer uso de mapa
+  - [x] Solicitar cámara al capturar foto
+  - [x] Solicitar notificaciones al login
+  - [x] Manejo de permisos denegados con diálogos explicativos
   
-- [ ] **Seguridad**
-  - [ ] Interceptor HTTP para agregar JWT a headers
-  - [ ] Refresh token automático (si backend lo soporta)
-  - [ ] Auto-logout después de 8 horas de inactividad
-  - [ ] Validar certificados SSL en producción
+- [x] **Seguridad**
+  - [x] Interceptor HTTP para agregar JWT a headers
+  - [x] Refresh token automático (si backend lo soporta)
+  - [x] Auto-logout después de 8 horas de inactividad
+  - [x] Validar certificados SSL en producción
 
 ---
 

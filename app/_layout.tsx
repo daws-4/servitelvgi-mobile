@@ -1,12 +1,15 @@
 import '../global.css';
 import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Toast from 'react-native-toast-message';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { SecurityProvider } from './contexts/SecurityContext';
 import { OfflineProvider } from './contexts/OfflineContext';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { OfflineBanner } from '@/components/OfflineBanner';
+import { InactivityMonitor } from '@/components/InactivityMonitor';
 import useThemedNavigation from './hooks/useThemedNavigation';
 
 /**
@@ -48,30 +51,42 @@ export default function RootLayout() {
   const { screenOptions } = useThemedNavigation();
 
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <OfflineProvider>
-          <ProtectedLayout>
-            <OfflineBanner />
-            <Stack screenOptions={screenOptions}>
-              <Stack.Screen
-                name="login"
-                options={{
-                  headerShown: false,
-                  animation: 'fade'
-                }}
-              />
-              <Stack.Screen
-                name="index"
-                options={{
-                  headerShown: false
-                }}
-              />
-            </Stack>
-            <Toast />
-          </ProtectedLayout>
-        </OfflineProvider>
-      </ThemeProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <SecurityProvider>
+          <ThemeProvider>
+            <OfflineProvider>
+              <ProtectedLayout>
+                <InactivityMonitor>
+                  <OfflineBanner />
+                  <Stack screenOptions={screenOptions}>
+                    <Stack.Screen
+                      name="login"
+                      options={{
+                        headerShown: false,
+                        animation: 'fade'
+                      }}
+                    />
+                    <Stack.Screen
+                      name="(tabs)"
+                      options={{
+                        headerShown: false
+                      }}
+                    />
+                    <Stack.Screen
+                      name="index"
+                      options={{
+                        headerShown: false
+                      }}
+                    />
+                  </Stack>
+                  <Toast />
+                </InactivityMonitor>
+              </ProtectedLayout>
+            </OfflineProvider>
+          </ThemeProvider>
+        </SecurityProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }

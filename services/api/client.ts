@@ -15,6 +15,7 @@ const TOKEN_KEY = 'servitel_auth_token';
 class ApiClient {
   private client: AxiosInstance;
   private token: string | null = null;
+  private onUnauthorized?: () => void;
 
   constructor() {
     this.client = axios.create({
@@ -61,9 +62,12 @@ class ApiClient {
           // Limpiar token
           await this.clearToken();
           
-          // Aquí podrías disparar un evento o callback para logout
-          // Por ahora solo logueamos
-          console.warn('Token inválido o expirado. Usuario debe re-autenticarse.');
+          // Notificar al AuthContext para logout
+          if (this.onUnauthorized) {
+            this.onUnauthorized();
+          } else {
+            console.warn('Token inválido o expirado. Usuario debe re-autenticarse.');
+          }
         }
 
         // Re-lanzar el error para que lo maneje el caller
@@ -140,6 +144,14 @@ class ApiClient {
    */
   public getClient(): AxiosInstance {
     return this.client;
+  }
+
+  /**
+   * Establecer callback para errores 401
+   * Permite coordinar logout con AuthContext
+   */
+  public setUnauthorizedCallback(callback: () => void): void {
+    this.onUnauthorized = callback;
   }
 
   /**

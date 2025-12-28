@@ -16,7 +16,7 @@ class AuthService {
    * POST /api/mobile/auth/login
    * Autenticar instalador con username y password
    */
-  async login(username: string, password: string): Promise<LoginResponse> {
+  login = async (username: string, password: string): Promise<LoginResponse> => {
     try {
       const payload: LoginRequest = { username, password };
       
@@ -34,13 +34,13 @@ class AuthService {
     } catch (error) {
       throw this.handleAuthError(error as ApiError);
     }
-  }
+  };
 
   /**
    * POST /api/mobile/auth/logout
    * Cerrar sesión del instalador
    */
-  async logout(): Promise<void> {
+  logout = async (): Promise<void> => {
     try {
       await httpClient.post('/api/mobile/auth/logout');
     } catch (error) {
@@ -50,13 +50,13 @@ class AuthService {
       // Siempre limpiar token local
       await apiClient.clearToken();
     }
-  }
+  };
 
   /**
    * GET /api/mobile/auth/me
    * Obtener perfil del instalador autenticado
    */
-  async getMe(): Promise<InstallerProfile> {
+  getMe = async (): Promise<InstallerProfile> => {
     try {
       const response = await httpClient.get<{ installer: InstallerProfile }>(
         '/api/mobile/auth/me'
@@ -66,33 +66,43 @@ class AuthService {
     } catch (error) {
       throw this.handleAuthError(error as ApiError);
     }
-  }
+  };
 
   /**
    * Verificar si el usuario está autenticado
    * (Tiene token guardado)
    */
-  async isAuthenticated(): Promise<boolean> {
+  isAuthenticated = async (): Promise<boolean> => {
     return await apiClient.hasToken();
-  }
+  };
 
   /**
    * Obtener token guardado
    */
-  async getToken(): Promise<string | null> {
+  getToken = async (): Promise<string | null> => {
     const hasToken = await apiClient.hasToken();
     if (!hasToken) return null;
     
     // El token está en memoria después de hasToken()
     return apiClient.getClient().defaults.headers.common['Authorization'] as string | null;
-  }
+  };
 
   /**
    * Manejar errores de autenticación y convertirlos a formato consistente
    */
-  private handleAuthError(error: ApiError): AuthError {
-    let code: AuthErrorCode;
-    let message: string = error.message;
+  private handleAuthError = (error: ApiError | any): AuthError => {
+    let code: AuthErrorCode = 'SERVER_ERROR';
+    let message: string = 'Error al iniciar sesión';
+
+    // Validación básica de objeto
+    if (!error || typeof error !== 'object') {
+      return { code, message };
+    }
+
+    // Intentar extraer mensaje si existe
+    if (error.message) {
+      message = error.message;
+    }
 
     // Mapear códigos de error del backend
     if (error.code === 'INSTALLER_INACTIVE') {
@@ -104,15 +114,16 @@ class AuthService {
     } else if (error.status === 0) {
       code = 'NETWORK_ERROR';
       message = 'No se pudo conectar con el servidor. Verifique su conexión.';
-    } else if (error.status >= 500) {
+    } else if (error.status && error.status >= 500) {
       code = 'SERVER_ERROR';
       message = 'Error del servidor. Intente nuevamente más tarde.';
     } else {
+      // Error genérico
       code = 'SERVER_ERROR';
     }
 
     return { code, message };
-  }
+  };
 }
 
 // Crear instancia singleton

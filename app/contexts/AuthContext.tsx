@@ -1,10 +1,6 @@
-/**
- * AuthContext - Contexto de Autenticación
- * Maneja el estado global de autenticación del instalador
- */
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import authService from '@/services/api/auth';
+import apiClient from '@/services/api/client';
 import type { InstallerProfile, AuthError } from '@/types/auth';
 
 // ============================================================================
@@ -44,6 +40,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [installer, setInstaller] = useState<InstallerProfile | null>(null);
     const [error, setError] = useState<AuthError | null>(null);
+
+    /**
+     * Configurar callback para errores 401 del HTTP client
+     */
+    useEffect(() => {
+        apiClient.setUnauthorizedCallback(() => {
+            console.log('Token expirado detectado por HTTP client, cerrando sesión...');
+            logout();
+        });
+    }, []);
 
     /**
      * Verificar si hay sesión guardada al iniciar la app

@@ -14,18 +14,21 @@ interface HeaderProps {
     showBackButton?: boolean;
     title?: string;
     hasAvatar?: boolean;
+    showInstallerInfo?: boolean; // Show installer name and crew
+    showLogo?: boolean; // Show Servitel logo
 }
 
-export default function Header({ showBackButton = false, title = '', hasAvatar = false }: HeaderProps) {
+export default function Header({ showBackButton = false, title = '', hasAvatar = false, showInstallerInfo = false, showLogo = false }: HeaderProps) {
     const colors = useThemeColors();
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const [showSlideUp, setShowSlideUp] = useState(false);
+    const { installer } = require('@/app/contexts/AuthContext').useAuth();
 
     return (
         <>
             <View className=' px-5 py-6 flex-row bg-background items-center justify-between absolute top-0 left-0 right-0 z-50' style={{ paddingTop: insets.top + 10 }}>
-                <View className="flex-row items-center">
+                <View className="flex-row items-center flex-1">
                     {showBackButton && (
                         <Pressable
                             onPress={() => router.back()}
@@ -35,12 +38,37 @@ export default function Header({ showBackButton = false, title = '', hasAvatar =
                             <Feather name="arrow-left" color={colors.icon} size={24} />
                         </Pressable>
                     )}
+
+                    {/* Servitel Logo */}
+                    {showLogo && (
+                        <View className="mr-3">
+                            <Text style={{ color: BrandColors.primary }} className="text-2xl font-bold">
+                                Servitel
+                            </Text>
+                        </View>
+                    )}
+
                     {hasAvatar && (
                         <Pressable onPress={() => setShowSlideUp(true)}>
-                            <Image source={require('@/assets/img/thomino.jpg')} className='w-8 h-8 rounded-full' />
+                            <Image source={require('@/assets/img/thomino.jpg')} className='w-8 h-8 rounded-full mr-3' />
                         </Pressable>
                     )}
-                    {title && (
+
+                    {/* Installer Info */}
+                    {showInstallerInfo && installer && (
+                        <View className="flex-1">
+                            <Text className="text-text font-bold text-base">
+                                {installer.name} {installer.surname}
+                            </Text>
+                            {installer.crew && (
+                                <Text className="text-text opacity-50 text-xs">
+                                    {installer.crew.name}
+                                </Text>
+                            )}
+                        </View>
+                    )}
+
+                    {title && !showInstallerInfo && (
                         <Text className="text-text text-2xl font-bold">{title}</Text>
                     )}
                 </View>
