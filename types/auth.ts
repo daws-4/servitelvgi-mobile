@@ -36,6 +36,7 @@ export interface InstallerProfile {
   phone?: string;
   status: InstallerStatus;
   onDuty: boolean;
+  showInventory: boolean;
   crew: CrewInfo | null;
 }
 

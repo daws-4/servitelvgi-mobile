@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Header from '@/components/Header';
 import Feather from '@expo/vector-icons/Feather';
@@ -13,11 +14,16 @@ export default function InventoryScreen() {
     const colors = useThemeColors();
 
     return (
-        <>
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
             <Header title="Inventario" showInstallerInfo />
             <ScrollView
-                style={{ paddingTop: insets.top + 70 }}
-                className="px-6 pt-6 bg-background"
+                style={{ flex: 1 }}
+                contentContainerStyle={{
+                    flexGrow: 1,
+                    paddingTop: insets.top + 70 + 24, // Header height + padding
+                    paddingHorizontal: 24,
+                    paddingBottom: 24
+                }}
             >
                 <View className="mb-6">
                     <Text className="text-2xl font-bold text-text mb-2">
@@ -46,6 +52,6 @@ export default function InventoryScreen() {
 
                 <View className="h-32" />
             </ScrollView>
-        </>
+        </View>
     );
 }

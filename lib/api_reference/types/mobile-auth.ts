@@ -17,6 +17,7 @@ export interface InstallerAuthData {
   phone: string;
   status: string;
   onDuty: boolean;
+  showInventory: boolean;
   crew: {
     _id: string;
     name: string;
@@ -48,6 +49,7 @@ export interface InstallerTokenPayload {
   role: 'installer';
   crewId: string | null;
   crewName: string | null;
+  showInventory: boolean;
   iat?: number;
   exp?: number;
 }

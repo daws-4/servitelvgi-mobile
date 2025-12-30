@@ -1,13 +1,13 @@
-import InstallerModel from "@/lib/api_reference/models/Installer";
-import CrewModel from "@/lib/api_reference/models/Crew"; // Import to register the schema
-import { connectDB } from "@/lib/api_reference/lib/db";
+import InstallerModel from "@/models/Installer";
+import CrewModel from "@/models/Crew"; // Import to register the schema
+import { connectDB } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
 // Función reutilizable para CREAR instalador
 export async function createInstaller(data: any) {
   await connectDB();
   
-  const { username, password, email, surname, name, phone, status, currentCrew } = data;
+  const { username, password, email, surname, name, phone, status, currentCrew, showInventory } = data;
   
   try {
     // 1. Hash password
@@ -22,6 +22,7 @@ export async function createInstaller(data: any) {
       name,
       phone,
       status,
+      showInventory,
       currentCrew: currentCrew
     });
     

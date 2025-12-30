@@ -1,13 +1,13 @@
 // lib/reportService.ts
 // Servicio central para generación de reportes con agregaciones MongoDB
 
-import { connectDB } from "@/lib/api_reference/lib/db";
-import OrderModel from "@/lib/api_reference/models/Order";
-import CrewModel from "@/lib/api_reference/models/Crew";
-import InventoryModel from "@/lib/api_reference/models/Inventory";
-import InventoryHistoryModel from "@/lib/api_reference/models/InventoryHistory";
-import GeneratedReportModel from "@/lib/api_reference/models/GeneratedReport";
-import { SessionUser } from "@/lib/api_reference/lib/authHelpers";
+import { connectDB } from "@/lib/db";
+import OrderModel from "@/models/Order";
+import CrewModel from "@/models/Crew";
+import InventoryModel from "@/models/Inventory";
+import InventoryHistoryModel from "@/models/InventoryHistory";
+import GeneratedReportModel from "@/models/GeneratedReport";
+import { SessionUser } from "@/lib/authHelpers";
 import { startOfMonth, endOfMonth, format, parseISO } from "date-fns";
 import type { Types } from "mongoose";
 import type {

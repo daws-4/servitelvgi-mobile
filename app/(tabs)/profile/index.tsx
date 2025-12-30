@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, Image } from 'react-native';
+import { View, Text, Pressable, Image } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Header from '@/components/Header';
@@ -23,11 +24,17 @@ export default function ProfileScreen() {
     };
 
     return (
-        <>
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
             <Header showInstallerInfo />
             <ScrollView
-                style={{ paddingTop: insets.top + 70 }}
-                className="px-6 pt-6 bg-background"
+                style={{ flex: 1 }}
+                contentContainerStyle={{
+                    flexGrow: 1,
+                    paddingTop: insets.top + 70 + 24,
+                    paddingHorizontal: 24,
+                    paddingBottom: 24
+                }}
+                showsVerticalScrollIndicator={true}
             >
                 {/* Profile Header */}
                 <View className="items-center mb-8">
@@ -115,7 +122,7 @@ export default function ProfileScreen() {
 
                 <View className="h-32" />
             </ScrollView>
-        </>
+        </View>
     );
 }
 

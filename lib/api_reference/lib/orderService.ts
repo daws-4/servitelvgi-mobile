@@ -1,9 +1,9 @@
-import OrderModel from "@/lib/api_reference/models/Order";
-import InstallerModel from "@/lib/api_reference/models/Installer"; // Registers Installer schema
-import CrewModel from "@/lib/api_reference/models/Crew"; // Registers Crew schema
-import { connectDB } from "@/lib/api_reference/lib/db";
-import { createOrderHistory } from "@/lib/api_reference/lib/orderHistoryService";
-import { SessionUser } from "@/lib/api_reference/lib/authHelpers";
+import OrderModel from "@/models/Order";
+import InstallerModel from "@/models/Installer"; // Registers Installer schema
+import CrewModel from "@/models/Crew"; // Registers Crew schema
+import { connectDB } from "@/lib/db";
+import { createOrderHistory } from "@/lib/orderHistoryService";
+import { SessionUser } from "@/lib/authHelpers";
 
 // Ensure Installer and Crew models are registered for populate
 void InstallerModel;

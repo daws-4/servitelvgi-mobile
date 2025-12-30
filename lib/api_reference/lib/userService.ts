@@ -1,5 +1,5 @@
-import UserModel from "@/lib/api_reference/models/User";
-import { connectDB } from "@/lib/api_reference/lib/db";
+import UserModel from "@/models/User";
+import { connectDB } from "@/lib/db";
 
 export async function createUser(data: any) {
   await connectDB();

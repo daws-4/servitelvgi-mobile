@@ -1,6 +1,6 @@
 // models/Crew.ts
 import mongoose from "mongoose";
-import IndividualInventorySchema from "@/lib/api_reference/models/IndividualInventorySchema";
+import IndividualInventorySchema from "@/models/IndividualInventorySchema";
 
 const CrewSchema = new mongoose.Schema(
   {

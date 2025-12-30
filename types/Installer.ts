@@ -28,6 +28,7 @@ export interface Installer {
   phone?: string;                  // Teléfono
   status: InstallerStatus;         // Estado
   onDuty: boolean;                 // En servicio actualmente
+  showInventory: boolean;          // Mostrar tab de inventario
   currentCrew?: string;            // ID de cuadrilla actual
   crewDetails?: {                  // Detalles de cuadrilla (populado)
     _id: string;

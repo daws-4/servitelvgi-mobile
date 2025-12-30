@@ -1,5 +1,5 @@
-import OrderHistoryModel from "@/lib/api_reference/models/OrderHistory";
-import { connectDB } from "@/lib/api_reference/lib/db";
+import OrderHistoryModel from "@/models/OrderHistory";
+import { connectDB } from "@/lib/db";
 
 export async function createOrderHistory(data: any) {
   await connectDB();

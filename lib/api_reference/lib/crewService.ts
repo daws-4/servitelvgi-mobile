@@ -1,8 +1,8 @@
-import CrewModel from "@/lib/api_reference/models/Crew";
-import InstallerModel from "@/lib/api_reference/models/Installer";
-import OrderModel from "@/lib/api_reference/models/Order";
-import InventoryModel from "@/lib/api_reference/models/Inventory";
-import { connectDB } from "@/lib/api_reference/lib/db";
+import CrewModel from "@/models/Crew";
+import InstallerModel from "@/models/Installer";
+import OrderModel from "@/models/Order";
+import InventoryModel from "@/models/Inventory";
+import { connectDB } from "@/lib/db";
 
 // Type for lean() Crew documents
 interface CrewLeanDocument {
@@ -62,7 +62,7 @@ export async function getCrewById(id: string) {
   const crew = (await CrewModel.findById(id)
     .populate('leader', 'name surname role')
     .populate('members', 'name surname role')
-    .populate('assignedInventory.item', 'code description unit')
+    .populate('assignedInventory.item', 'code description unit type')
     .lean()) as CrewLeanDocument | null;
   
   // Filter out null inventory items (when referenced document doesn't exist)

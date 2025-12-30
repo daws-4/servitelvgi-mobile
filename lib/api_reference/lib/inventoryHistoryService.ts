@@ -1,7 +1,7 @@
-import InventoryHistoryModel from "@/lib/api_reference/models/InventoryHistory";
-import UserModel from "@/lib/api_reference/models/User";
-import InstallerModel from "@/lib/api_reference/models/Installer";
-import { connectDB } from "@/lib/api_reference/lib/db";
+import InventoryHistoryModel from "@/models/InventoryHistory";
+import UserModel from "@/models/User";
+import InstallerModel from "@/models/Installer";
+import { connectDB } from "@/lib/db";
 
 export async function createInventoryHistory(data: any) {
   await connectDB();
