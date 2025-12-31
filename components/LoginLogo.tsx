@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 16,
-        transform: [{ rotate: '3deg' }],
+        // transform: [{ rotate: '3deg' }],
         shadowColor: BrandColors.primary,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.2,
@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
         elevation: 8,
     },
     icon: {
-        transform: [{ rotate: '-3deg' }],
+        // transform: [{ rotate: '-3deg' }],
     },
     logoText: {
         fontSize: 32,

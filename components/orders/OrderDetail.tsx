@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, StyleSheet, Image, Platform } from 'react-native';
-import { FontAwesome, Ionicons } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FontAwesome } from '@expo/vector-icons';
 import { BrandColors } from '@/constants/colors';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Order } from './OrderCard';
 
 interface OrderDetailProps {
@@ -19,348 +20,149 @@ export default function OrderDetail({ order, onBack, onMap }: OrderDetailProps) 
     const [observations, setObservations] = useState('');
 
     return (
-        <View style={styles.container}>
-            {/* Top Bar */}
-            <View style={[styles.topBar, { paddingTop: insets.top + 10 }]}>
-                <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-                    <FontAwesome name="arrow-left" size={16} color="#0f0f0f" />
-                </TouchableOpacity>
-                <View>
-                    <Text style={styles.topBarTitle}>Detalle de Orden</Text>
-                    <Text style={styles.topBarSubtitle}>Abonado: {order.id}</Text>
-                </View>
-                <TouchableOpacity onPress={onMap} style={styles.mapBtn}>
-                    <FontAwesome name="map" size={16} color={BrandColors.primary} />
-                </TouchableOpacity>
-            </View>
-
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                {/* Client Info Card */}
-                <LinearGradient
-                    colors={[BrandColors.secondary, BrandColors.primary]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.clientCard}
+        <SafeAreaView className="flex-1 mt-2" style={{ backgroundColor: '#f8fafc' }}>
+            <View style={{ flex: 1, backgroundColor: '#f8fafc'   }} >
+                <View
+                    className="flex-row items-center px-6 pb-5 border-b border-slate-100"
+                    style={{ backgroundColor: 'rgba(248, 250, 252, 0.9)' }}
                 >
-                    <View style={styles.clientHeader}>
-                        <View style={styles.clientAvatar}>
-                            <Text style={styles.avatarText}>DC</Text>
+                    <TouchableOpacity
+                        onPress={onBack}
+                        className="w-10 h-10 rounded-full bg-slate-100 justify-center items-center mr-4"
+                    >
+                        <FontAwesome name="arrow-left" size={16} color="#0f0f0f" />
+                    </TouchableOpacity>
+                    <View>
+                        <Text className="text-lg font-bold text-gray-900">Detalle de Orden</Text>
+                        <Text className="text-xs font-bold text-slate-400">Abonado: {order.id}</Text>
+                    </View>
+                    <TouchableOpacity
+                        onPress={onMap}
+                        className="w-10 h-10 rounded-full bg-blue-50 justify-center items-center ml-auto"
+                    >
+                        <FontAwesome name="map" size={16} color={BrandColors.primary} />
+                    </TouchableOpacity>
+                </View>
+                <ScrollView
+                    showsVerticalScrollIndicator={true}
+                    contentContainerStyle={{
+                        flexGrow: 1,
+                        paddingTop: insets.top,
+                        paddingBottom: 24
+                    }}
+                    style={{ flex: 1 }}
+                >
+                    {/* Top Bar */}
+                    
+
+                    {/* Client Info Card */}
+                    <LinearGradient
+                        colors={[BrandColors.secondary, BrandColors.primary]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        className="m-4 p-6 shadow-lg"
+                        style={{ elevation: 10, borderRadius: 32 }}
+                    >
+                        <View className="flex-row items-center mb-4">
+                            <View className="w-14 h-14 bg-white rounded-2xl justify-center items-center mr-4">
+                                <Text className="text-2xl font-black" style={{ color: BrandColors.primary }}>DC</Text>
+                            </View>
+                            <View>
+                                <Text className="text-white text-xl font-bold">{order.clientName}</Text>
+                                <Text className="text-blue-100 text-sm opacity-80">Plan FibraNet 500Mb</Text>
+                            </View>
                         </View>
-                        <View>
-                            <Text style={styles.clientName}>{order.clientName}</Text>
-                            <Text style={styles.clientPlan}>Plan FibraNet 500Mb</Text>
+
+                        <View className="flex-row border-t border-white/20 pt-4 gap-6">
+                            <View>
+                                <Text className="text-blue-100 text-xs font-bold uppercase opacity-60 mb-0.5">NODO</Text>
+                                <Text className="text-white text-sm font-bold">SCRVEG20112A</Text>
+                            </View>
+                            <View>
+                                <Text className="text-blue-100 text-xs font-bold uppercase opacity-60 mb-0.5">TELÉFONO</Text>
+                                <Text className="text-white text-sm font-bold">424-7617337</Text>
+                            </View>
                         </View>
-                    </View>
+                    </LinearGradient>
 
-                    <View style={styles.clientDetails}>
-                        <View>
-                            <Text style={styles.detailLabel}>NODO</Text>
-                            <Text style={styles.detailValue}>SCRVEG20112A</Text>
+                    {/* Form */}
+                    <View className="px-6 pt-0 gap-6">
+                        <View className="flex-row items-center">
+                            <FontAwesome name="list-alt" size={16} color={BrandColors.primary} style={{ marginRight: 8 }} />
+                            <Text className="text-base font-black text-gray-900 uppercase tracking-wider">Reporte de Instalación</Text>
                         </View>
-                        <View>
-                            <Text style={styles.detailLabel}>TELÉFONO</Text>
-                            <Text style={styles.detailValue}>424-7617337</Text>
+
+                        {/* Status Select (Simulated) */}
+                        <View className="gap-2">
+                            <Text className="text-sm font-bold text-slate-400 ml-1">Estado de Ejecución</Text>
+                            <View className="flex-row justify-between items-center bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                                <Text className="text-base font-medium text-gray-900">{status}</Text>
+                                <FontAwesome name="chevron-down" size={12} color="#cbd5e1" />
+                            </View>
                         </View>
-                    </View>
-                </LinearGradient>
 
-                {/* Form */}
-                <View style={styles.formContainer}>
-                    <View style={styles.sectionHeader}>
-                        <FontAwesome name="list-alt" size={16} color={BrandColors.primary} style={{ marginRight: 8 }} />
-                        <Text style={styles.sectionTitle}>Reporte de Instalación</Text>
-                    </View>
-
-                    {/* Status Select (Simulated) */}
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Estado de Ejecución</Text>
-                        <View style={styles.pickerContainer}>
-                            <Text style={styles.pickerText}>{status}</Text>
-                            <FontAwesome name="chevron-down" size={12} color="#cbd5e1" />
+                        {/* Material Input */}
+                        <View className="gap-2">
+                            <Text className="text-sm font-bold text-slate-400 ml-1">Cable UTP Utilizado (mts)</Text>
+                            <TextInput
+                                className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-base"
+                                placeholder="Ej: 45"
+                                keyboardType="numeric"
+                                value={cableUsed}
+                                onChangeText={setCableUsed}
+                            />
                         </View>
-                    </View>
 
-                    {/* Material Input */}
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Cable UTP Utilizado (mts)</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Ej: 45"
-                            keyboardType="numeric"
-                            value={cableUsed}
-                            onChangeText={setCableUsed}
-                        />
-                    </View>
+                        {/* Observations */}
+                        <View className="gap-2">
+                            <Text className="text-sm font-bold text-slate-400 ml-1">Observaciones Técnicas</Text>
+                            <TextInput
+                                className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-base h-[100px]"
+                                placeholder="Detalles de la falla o instalación..."
+                                multiline
+                                numberOfLines={3}
+                                textAlignVertical="top"
+                                value={observations}
+                                onChangeText={setObservations}
+                            />
+                        </View>
 
-                    {/* Observations */}
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Observaciones Técnicas</Text>
-                        <TextInput
-                            style={[styles.input, styles.textArea]}
-                            placeholder="Detalles de la falla o instalación..."
-                            multiline
-                            numberOfLines={3}
-                            textAlignVertical="top"
-                            value={observations}
-                            onChangeText={setObservations}
-                        />
-                    </View>
-
-                    {/* Photos */}
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Evidencias Fotográficas</Text>
-                        <View style={styles.photoGrid}>
-                            <TouchableOpacity style={styles.addPhotoBtn}>
-                                <FontAwesome name="camera" size={20} color="#94a3b8" />
-                                <Text style={styles.addPhotoText}>AGREGAR</Text>
-                            </TouchableOpacity>
-                            {/* Placeholder for photos */}
-                            <View style={styles.photoPlaceholder}>
-                                <View style={styles.photoOverlay}>
-                                    <FontAwesome name="times" size={10} color="white" />
+                        {/* Photos */}
+                        <View className="gap-2">
+                            <Text className="text-sm font-bold text-slate-400 ml-1">Evidencias Fotográficas</Text>
+                            <View className="flex-row gap-2">
+                                <TouchableOpacity className="w-[100px] h-[100px] bg-slate-100 border-2 border-dashed border-slate-200 rounded-2xl justify-center items-center">
+                                    <FontAwesome name="camera" size={20} color="#94a3b8" />
+                                    <Text className="text-[10px] font-bold text-slate-400 mt-1">AGREGAR</Text>
+                                </TouchableOpacity>
+                                {/* Placeholder for photos */}
+                                <View className="w-[100px] h-[100px] bg-slate-200 rounded-2xl relative">
+                                    <View className="absolute top-1 right-1 bg-red-500 w-5 h-5 rounded-full justify-center items-center shadow-md" style={{ elevation: 5 }}>
+                                        <FontAwesome name="times" size={10} color="white" />
+                                    </View>
                                 </View>
                             </View>
                         </View>
-                    </View>
-                </View>
-            </ScrollView>
 
-            {/* Footer Action */}
-            <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 24) }]}>
-                <TouchableOpacity style={styles.submitBtn}>
-                    <FontAwesome name="paper-plane" size={16} color="white" />
-                    <Text style={styles.submitBtnText}>Finalizar Orden</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
+                        {/* Footer Action */}
+                        <View
+                            className="px-6 pt-4"
+                            style={{ paddingBottom: Math.max(insets.bottom, 24), backgroundColor: '#f8fafc' }}
+                        >
+                            <TouchableOpacity
+                                className="flex-row justify-center items-center p-4 rounded-2xl gap-3 shadow-lg"
+                                style={{
+                                    backgroundColor: BrandColors.primary,
+                                    elevation: 8
+                                }}
+                            >
+                                <FontAwesome name="paper-plane" size={16} color="white" />
+                                <Text className="text-white font-bold text-lg">Finalizar Orden</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </ScrollView>
+            </View >
+        </SafeAreaView >
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: 'white',
-    },
-    topBar: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 24,
-        paddingBottom: 20,
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        borderBottomWidth: 1,
-        borderBottomColor: '#f1f5f9',
-    },
-    backBtn: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#f1f5f9',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 16,
-    },
-    mapBtn: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#e6f0fa',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginLeft: 'auto'
-    },
-    topBarTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#0f0f0f',
-    },
-    topBarSubtitle: {
-        fontSize: 10,
-        fontWeight: 'bold',
-        color: '#94a3b8',
-    },
-    scrollContent: {
-        paddingBottom: 100,
-    },
-    clientCard: {
-        margin: 16,
-        borderRadius: 32,
-        padding: 24,
-        shadowColor: BrandColors.primary,
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.2,
-        shadowRadius: 20,
-        elevation: 10,
-    },
-    clientHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 16,
-    },
-    clientAvatar: {
-        width: 56,
-        height: 56,
-        backgroundColor: 'white',
-        borderRadius: 16,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 16,
-    },
-    avatarText: {
-        color: BrandColors.primary,
-        fontSize: 20,
-        fontWeight: '900',
-    },
-    clientName: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    clientPlan: {
-        color: '#dbeafe',
-        fontSize: 12,
-        opacity: 0.8,
-    },
-    clientDetails: {
-        flexDirection: 'row',
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(255,255,255,0.2)',
-        paddingTop: 16,
-        gap: 24,
-    },
-    detailLabel: {
-        color: '#dbeafe',
-        fontSize: 10,
-        fontWeight: 'bold',
-        textTransform: 'uppercase',
-        opacity: 0.6,
-        marginBottom: 2,
-    },
-    detailValue: {
-        color: 'white',
-        fontSize: 12,
-        fontWeight: 'bold',
-    },
-    formContainer: {
-        padding: 24,
-        paddingTop: 0,
-        gap: 24,
-    },
-    sectionHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    sectionTitle: {
-        fontSize: 14,
-        fontWeight: '900',
-        color: '#0f0f0f',
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-    },
-    inputGroup: {
-        gap: 8,
-    },
-    label: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: '#94a3b8',
-        marginLeft: 4,
-    },
-    pickerContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: '#f8fafc', // slate-50
-        borderWidth: 1,
-        borderColor: '#e2e8f0', // slate-200
-        borderRadius: 16,
-        padding: 16,
-    },
-    pickerText: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: '#0f0f0f',
-    },
-    input: {
-        backgroundColor: '#f8fafc',
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
-        borderRadius: 16,
-        padding: 16,
-        fontSize: 14,
-    },
-    textArea: {
-        height: 100,
-    },
-    photoGrid: {
-        flexDirection: 'row',
-        gap: 8,
-    },
-    addPhotoBtn: {
-        width: 100,
-        height: 100,
-        backgroundColor: '#f1f5f9',
-        borderWidth: 2,
-        borderColor: '#e2e8f0',
-        borderStyle: 'dashed',
-        borderRadius: 16,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    addPhotoText: {
-        fontSize: 8,
-        fontWeight: 'bold',
-        color: '#94a3b8',
-        marginTop: 4,
-    },
-    photoPlaceholder: {
-        width: 100,
-        height: 100,
-        backgroundColor: '#e2e8f0',
-        borderRadius: 16,
-        position: 'relative'
-    },
-    photoOverlay: {
-        position: 'absolute',
-        top: 4,
-        right: 4,
-        backgroundColor: '#ef4444',
-        width: 20,
-        height: 20,
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-    },
-    footer: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        paddingHorizontal: 24,
-        paddingTop: 16,
-        backgroundColor: 'rgba(255,255,255,0.9)',
-    },
-    submitBtn: {
-        backgroundColor: BrandColors.primary,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 16,
-        borderRadius: 16,
-        gap: 12,
-        shadowColor: BrandColors.primary,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 16,
-        elevation: 8,
-    },
-    submitBtnText: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-});

@@ -75,7 +75,7 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
     console.log('📊 Total filtered routes:', filteredRoutes.length);
 
     return (
-        <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+        <View pointerEvents="box-none" style={[styles.container, { height: 64, paddingBottom: Math.max(insets.bottom, 16) }]}>
             {filteredRoutes
                 .map((route) => {
                     const { options } = descriptors[route.key];
@@ -123,6 +123,7 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
                         <TouchableOpacity
                             key={route.key}
                             accessibilityRole="button"
+
                             accessibilityState={isFocused ? { selected: true } : {}}
                             accessibilityLabel={options.tabBarAccessibilityLabel}
                             testID={optionsWithTestID.tabBarTestID}
@@ -151,6 +152,7 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
 
 const styles = StyleSheet.create({
     container: {
+        height: 64,
         flexDirection: 'row',
         backgroundColor: 'white',
         borderTopWidth: 1,

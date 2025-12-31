@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, BackHandler } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, BackHandler } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useRouter } from 'expo-router';
@@ -28,6 +29,46 @@ const MOCK_ORDERS: Order[] = [
     },
     {
         id: '369120',
+        type: 'Avería Crítica',
+        clientName: 'MARÍA RODRÍGUEZ',
+        address: 'CALLE 5, SECTOR LAS LOMAS, EDIF...',
+        timeAgo: 'Urgente',
+        statusColor: '#f87171',
+        statusBg: '#fee2e2', // red-100
+        statusText: '#dc2626', // red-600
+    },
+    {
+        id: '36863',
+        type: 'Instalación',
+        clientName: 'DANIEL CHACÓN',
+        address: 'MUNICIPIO CÁRDENAS, URB. LA FLORIDA...',
+        timeAgo: 'Hace 2 horas',
+        statusColor: '#4ade80',
+        statusBg: '#dcfce7', // green-100
+        statusText: '#16a34a', // green-600
+    },
+    {
+        id: '3690',
+        type: 'Avería Crítica',
+        clientName: 'MARÍA RODRÍGUEZ',
+        address: 'CALLE 5, SECTOR LAS LOMAS, EDIF...',
+        timeAgo: 'Urgente',
+        statusColor: '#f87171',
+        statusBg: '#fee2e2', // red-100
+        statusText: '#dc2626', // red-600
+    },
+    {
+        id: '38063',
+        type: 'Instalación',
+        clientName: 'DANIEL CHACÓN',
+        address: 'MUNICIPIO CÁRDENAS, URB. LA FLORIDA...',
+        timeAgo: 'Hace 2 horas',
+        statusColor: '#4ade80',
+        statusBg: '#dcfce7', // green-100
+        statusText: '#16a34a', // green-600
+    },
+    {
+        id: '36910',
         type: 'Avería Crítica',
         clientName: 'MARÍA RODRÍGUEZ',
         address: 'CALLE 5, SECTOR LAS LOMAS, EDIF...',
@@ -147,7 +188,6 @@ export default function OrdersScreen() {
     return (
         <View style={styles.container}>
             <InstallerHeader />
-
             <OrderFilters
                 activeFilter={activeFilter}
                 onSelectFilter={setActiveFilter}
@@ -155,7 +195,7 @@ export default function OrdersScreen() {
 
             <ScrollView
                 contentContainerStyle={[styles.listContent, { paddingBottom: tabBarHeight + 100 }]}
-                showsVerticalScrollIndicator={false}
+                showsVerticalScrollIndicator={true}
             >
                 {MOCK_ORDERS.map((order) => (
                     <OrderCard

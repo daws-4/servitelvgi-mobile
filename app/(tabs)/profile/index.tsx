@@ -1,20 +1,23 @@
 import React from 'react';
-import { View, Text, Pressable, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useRouter } from 'expo-router';
-import Header from '@/components/Header';
-import Feather from '@expo/vector-icons/Feather';
-import useThemeColors from '@/app/contexts/ThemeColors';
+import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { BrandColors } from '@/constants/colors';
+import ProfileHeader from '@/components/profile/ProfileHeader';
+import StatsCard from '@/components/profile/StatsCard';
+import SettingsSection from '@/components/profile/SettingsSection';
+import SettingsMenuItem from '@/components/profile/SettingsMenuItem';
 
 /**
- * Profile screen - Display installer profile and settings
+ * Profile screen - Display installer profile, statistics, and settings
  */
 export default function ProfileScreen() {
     const insets = useSafeAreaInsets();
-    const colors = useThemeColors();
+    const tabBarHeight = useBottomTabBarHeight();
     const { installer, logout } = useAuth();
     const router = useRouter();
 
@@ -23,124 +26,146 @@ export default function ProfileScreen() {
         router.replace('/login');
     };
 
+    // Get installer's full name
+    const fullName = installer ? `${installer.name} ${installer.surname}` : 'Usuario';
+
+    // Get role/crew info
+    const roleText = installer?.crew
+        ? `Técnico • ${installer.crew.name}`
+        : 'Técnico Instalador • Servitel';
+
+    // Get status
+    const status = installer?.onDuty ? 'onduty' : installer?.status === 'active' ? 'active' : 'inactive';
+
     return (
-        <View style={{ flex: 1, backgroundColor: colors.bg }}>
-            <Header showInstallerInfo />
+        <View style={styles.container}>
+            {/* Profile Header */}
+            <View style={{  }}>
+                <ProfileHeader
+                    installerName={fullName}
+                    role={roleText}
+                    status={status}
+                />
+            </View>
+
+            {/* Statistics Cards */}
+            <View style={styles.statsContainer}>
+                <StatsCard label="Órdenes Hoy" value="08" />
+                <StatsCard label="Efectividad" value="98%" highlighted />
+                <StatsCard label="Puntos" value="1.2k" />
+            </View>
+
             <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={{
-                    flexGrow: 1,
-                    paddingTop: insets.top + 70 + 24,
-                    paddingHorizontal: 24,
-                    paddingBottom: 24
-                }}
-                showsVerticalScrollIndicator={true}
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                bounces={true}
+                alwaysBounceVertical={true}
             >
-                {/* Profile Header */}
-                <View className="items-center mb-8">
-                    <Image
-                        source={require('@/assets/img/thomino.jpg')}
-                        className="w-24 h-24 rounded-full mb-4"
-                    />
-                    <Text className="text-2xl font-bold text-text">
-                        {installer?.name} {installer?.surname}
-                    </Text>
-                    <Text className="text-text opacity-50 mb-2">
-                        @{installer?.username}
-                    </Text>
-                    {installer?.crew && (
-                        <View className="flex-row items-center bg-secondary rounded-full px-4 py-2 mt-2">
-                            <Feather name="users" size={16} color={colors.text} />
-                            <Text className="text-text ml-2 font-semibold">
-                                {installer.crew.name}
-                            </Text>
-                        </View>
-                    )}
-                </View>
-
-                {/* Profile Information */}
-                <View className="mb-6">
-                    <Text className="text-lg font-bold text-text mb-4">
-                        Información Personal
-                    </Text>
-
-                    {installer?.email && (
-                        <ProfileItem
-                            icon="mail"
-                            label="Email"
-                            value={installer.email}
+             
+                {/* Settings Content */}
+                <View style={styles.settingsContent}>
+                    {/* Personal Configuration Section */}
+                    <SettingsSection title="Configuración Personal">
+                        <SettingsMenuItem
+                            icon="user"
+                            title="Datos Personales"
+                            subtitle="Nombre, teléfono y correo"
+                            onPress={() => console.log('Navigate to personal data')}
                         />
-                    )}
-
-                    {installer?.phone && (
-                        <ProfileItem
-                            icon="phone"
-                            label="Teléfono"
-                            value={installer.phone}
+                        <SettingsMenuItem
+                            icon="shield"
+                            title="Seguridad"
+                            subtitle="Cambiar contraseña y PIN"
+                            onPress={() => console.log('Navigate to security')}
                         />
-                    )}
+                    </SettingsSection>
 
-                    <ProfileItem
-                        icon="activity"
-                        label="Estado"
-                        value={installer?.status === 'active' ? 'Activo' : 'Inactivo'}
-                    />
+                    {/* Application Section */}
+                    <SettingsSection title="Aplicación">
+                        <SettingsMenuItem
+                            icon="bell"
+                            title="Notificaciones"
+                            subtitle="Alertas de nuevas órdenes"
+                            showToggle
+                            toggleValue={true}
+                            onToggleChange={(val) => console.log('Toggle notifications:', val)}
+                        />
+                        <SettingsMenuItem
+                            icon="headphones"
+                            title="Soporte Técnico"
+                            subtitle="Ayuda con la aplicación"
+                            onPress={() => console.log('Navigate to support')}
+                        />
+                    </SettingsSection>
 
-                    <ProfileItem
-                        icon="briefcase"
-                        label="En Servicio"
-                        value={installer?.onDuty ? 'Sí' : 'No'}
-                    />
-                </View>
-
-                {/* Actions */}
-                <View className="mb-6">
-                    <Text className="text-lg font-bold text-text mb-4">
-                        Configuración
-                    </Text>
-
-                    <Pressable
+                    {/* Logout Button */}
+                    <TouchableOpacity
+                        style={styles.logoutButton}
                         onPress={handleLogout}
-                        style={{
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.1,
-                            shadowRadius: 3.84,
-                            elevation: 5,
-                        }}
-                        className="flex-row items-center bg-secondary rounded-2xl px-4 py-4 mb-3"
+                        activeOpacity={0.8}
                     >
-                        <View className="w-12 h-12 bg-background flex items-center justify-center rounded-full">
-                            <Feather name="log-out" size={20} color={BrandColors.primary} />
-                        </View>
-                        <Text className="text-text font-semibold ml-4 flex-1">
-                            Cerrar Sesión
-                        </Text>
-                        <Feather name="chevron-right" size={20} color={colors.icon} />
-                    </Pressable>
-                </View>
+                        <FontAwesome name="power-off" size={14} color="#ef4444" />
+                        <Text style={styles.logoutText}>Cerrar Sesión</Text>
+                    </TouchableOpacity>
 
-                <View className="h-32" />
+                    {/* Version Info */}
+                    <Text style={styles.version}>SGO VERSION 1.0.4-ST</Text>
+                </View>
             </ScrollView>
         </View>
     );
 }
 
-/**
- * Profile information item component
- */
-function ProfileItem({ icon, label, value }: { icon: string, label: string, value: string }) {
-    const colors = useThemeColors();
-
-    return (
-        <View className="flex-row items-center bg-secondary rounded-2xl px-4 py-4 mb-3">
-            <View className="w-10 h-10 bg-background flex items-center justify-center rounded-full">
-                <Feather name={icon as any} size={18} color={colors.icon} />
-            </View>
-            <View className="ml-4 flex-1">
-                <Text className="text-text opacity-50 text-xs">{label}</Text>
-                <Text className="text-text font-semibold">{value}</Text>
-            </View>
-        </View>
-    );
-}
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#f8fafc', // slate-50
+    },
+    scrollView: {
+        flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
+    },
+    statsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 12,
+        paddingHorizontal: 24,
+        marginTop: -32,
+        marginBottom: 32,
+    },
+    settingsContent: {
+        paddingHorizontal: 24,
+        paddingBottom: 120, // Fixed padding for tab bar clearance
+    },
+    logoutButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 12,
+        paddingVertical: 16,
+        backgroundColor: '#fef2f2', // red-50
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: '#fee2e2', // red-100
+        marginTop: 24,
+    },
+    logoutText: {
+        color: '#ef4444', // red-500
+        fontSize: 12,
+        fontWeight: '900',
+        textTransform: 'uppercase',
+        letterSpacing: 1.5,
+    },
+    version: {
+        textAlign: 'center',
+        fontSize: 9,
+        fontWeight: 'bold',
+        color: '#bcabae', // neutral
+        opacity: 0.5,
+        paddingTop: 16,
+        paddingBottom: 24,
+    },
+});
