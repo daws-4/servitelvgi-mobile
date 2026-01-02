@@ -3,11 +3,11 @@ import {
     View,
     Text,
     StyleSheet,
-    ScrollView,
     KeyboardAvoidingView,
     Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView } from 'react-native-gesture-handler';
 import { useRouter } from 'expo-router';
 import { useAuth } from './contexts/AuthContext';
 import { BrandColors } from '@/constants/colors';

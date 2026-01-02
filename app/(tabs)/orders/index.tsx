@@ -4,7 +4,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useRouter } from 'expo-router';
-import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { FontAwesome } from '@expo/vector-icons';
 
@@ -172,14 +172,16 @@ export default function OrdersScreen() {
                     <Text style={styles.headerTitle}>Mapa de Órdenes</Text>
                 </View>
 
-                <MapView
-                    provider={PROVIDER_GOOGLE}
-                    style={[StyleSheet.absoluteFillObject, { marginTop: insets.top + 60, marginBottom: tabBarHeight }]}
-                    initialRegion={initialRegion}
-                    showsUserLocation
-                    showsMyLocationButton
-                    showsCompass
-                />
+                <View style={{ flex: 1, paddingTop: insets.top + 60, paddingBottom: tabBarHeight }}>
+                    <MapView
+                        provider={PROVIDER_DEFAULT}
+                        style={{ width: '100%', height: '100%' }}
+                        initialRegion={initialRegion}
+                        showsUserLocation
+                        showsMyLocationButton
+                        showsCompass
+                    />
+                </View>
             </View>
         );
     }

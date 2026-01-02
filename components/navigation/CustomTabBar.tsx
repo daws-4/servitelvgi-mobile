@@ -33,8 +33,6 @@ const LABELS: Record<string, string> = {
 };
 
 export default function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
-    console.log('🎯 CustomTabBar RENDERED - This component is being used!');
-    console.log('📋 Total routes received:', state.routes.length);
     const insets = useSafeAreaInsets();
 
     // Filter routes (in case we need to hide tabs in the future)
@@ -46,11 +44,8 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
         const href = anyOptions?.href;
         const tabBarButton = anyOptions?.tabBarButton;
 
-        console.log(`🔍 Filtering "${route.name}":`, { href, hasTabBarButton: !!tabBarButton });
-
         // Hide if href is explicitly null
         if (href === null) {
-            console.log(`❌ HIDING "${route.name}" - href is null`);
             return false;
         }
 
@@ -59,7 +54,6 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
             try {
                 const result = tabBarButton({});
                 if (result === null) {
-                    console.log(`❌ HIDING "${route.name}" - tabBarButton returns null`);
                     return false;
                 }
             } catch (e) {
@@ -67,12 +61,8 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
             }
         }
 
-        console.log(`✅ SHOWING "${route.name}"`);
         return true;
     });
-
-    console.log('✅ CustomTabBar - Filtered tabs:', filteredRoutes.map(r => r.name).join(', '));
-    console.log('📊 Total filtered routes:', filteredRoutes.length);
 
     return (
         <View pointerEvents="box-none" style={[styles.container, { height: 64, paddingBottom: Math.max(insets.bottom, 16) }]}>
@@ -106,14 +96,6 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
 
                     // Fallback to LABELS mapping if options are not set
                     const label = tabBarLabel || title || LABELS[route.name] || route.name;
-
-                    console.log(`🏷️ Route "${route.name}":`, {
-                        tabBarLabel,
-                        title,
-                        finalLabel: label,
-                        hasOptions: !!options,
-                        allOptions: Object.keys(anyOptions || {})
-                    });
 
                     // Casting options to any because tabBarTestID is not in the default types but is used
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any

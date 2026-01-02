@@ -11,9 +11,6 @@ import { useAuth } from '@/app/contexts/AuthContext';
 export default function TabsLayout() {
     const { installer } = useAuth();
 
-    // Log the showInventory value for debugging
-    console.log('🔍 TabsLayout - installer.showInventory:', installer?.showInventory);
-
     return (
         <Tabs
             tabBar={(props) => <CustomTabBar {...props} />}
@@ -32,16 +29,16 @@ export default function TabsLayout() {
             />
 
             {/* Conditionally render inventory tab based on installer.showInventory */}
-       
-                <Tabs.Screen
-                    name="inventory/index"
-                    options={{
-                        title: 'Inventario',
-                        tabBarLabel: 'Inventario',
-                        href: installer?.showInventory ? '/inventory' : null,
-                    }}
-                />
-    
+
+            <Tabs.Screen
+                name="inventory/index"
+                options={{
+                    title: 'Inventario',
+                    tabBarLabel: 'Inventario',
+                    href: installer?.showInventory ? '/inventory' : null,
+                }}
+            />
+
 
             <Tabs.Screen
                 name="profile/index"

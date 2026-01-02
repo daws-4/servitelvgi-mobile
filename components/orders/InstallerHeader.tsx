@@ -1,101 +1,100 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome } from '@expo/vector-icons';
 import { BrandColors } from '@/constants/colors';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '@/app/contexts/AuthContext';
 
-export default function InstallerHeader() {
-    const insets = useSafeAreaInsets();
+interface InstallerHeaderProps {
+    onSearch?: (text: string) => void;
+}
+
+export default function InstallerHeader({ onSearch }: InstallerHeaderProps) {
+    const { installer } = useAuth();
+
+    // Get installer's full name
+    const fullName = installer ? `${installer.name} ${installer.surname}` : 'Técnico Instalador';
+
+    // Get role/crew info
+    const roleText = installer?.crew
+        ? `Técnico • ${installer.crew.name}`
+        : 'Técnico Instalador • Servitel';
 
     return (
-        <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
-            {/* User Info */}
-            <View style={styles.headerTop}>
-                <View>
-                    <Text style={styles.roleText}>Técnico Instalador</Text>
-                    <Text style={styles.nameText}>Daniel Hernández</Text>
-                </View>
-                <View style={styles.avatarContainer}>
-                    <FontAwesome name="user-md" size={20} color="white" />
-                </View>
+        <LinearGradient
+            colors={[BrandColors.secondary, BrandColors.primary]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            className="pt-10 pb-8 px-8 rounded-b-[56px] relative overflow-hidden"
+            style={{
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.3,
+                shadowRadius: 16,
+                elevation: 12,
+            }}
+        >
+            {/* Background Decoration */}
+            <View
+                className="absolute -top-10 -right-10 w-40 h-40 rounded-full"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+            />
+
+            {/* Avatar Button - Positioned absolutely */}
+            <TouchableOpacity
+                className="absolute top-10 right-8 w-12 h-12 rounded-full justify-center items-center z-20"
+                style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    borderWidth: 1,
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                }}
+            >
+                <FontAwesome name="user-md" size={20} color="white" />
+            </TouchableOpacity>
+
+            {/* Header Content - Centered */}
+            <View className="items-center relative z-10 mb-5 px-4">
+                <Text
+                    className="text-white text-2xl font-black mb-1 text-center"
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    style={{ letterSpacing: -0.5 }}
+                >
+                    {fullName}
+                </Text>
+                <Text
+                    className="text-[10px] font-bold uppercase"
+                    style={{
+                        color: 'rgba(219, 234, 254, 0.7)',
+                        letterSpacing: 2,
+                    }}
+                >
+                    {roleText}
+                </Text>
             </View>
 
             {/* Search Bar */}
-            <View style={styles.searchContainer}>
-                <FontAwesome name="search" size={14} color="rgba(255,255,255,0.5)" style={styles.searchIcon} />
+            <View className="relative justify-center">
+                <FontAwesome
+                    name="search"
+                    size={14}
+                    color="rgba(255,255,255,0.5)"
+                    className="absolute left-4 z-10"
+                    style={{ position: 'absolute', left: 16, zIndex: 1 }}
+                />
                 <TextInput
-                    style={styles.searchInput}
+                    className="rounded-2xl py-2.5 pr-4 text-sm text-white"
+                    style={{
+                        backgroundColor: 'rgba(255,255,255,0.1)',
+                        borderColor: 'rgba(255,255,255,0.2)',
+                        borderWidth: 1,
+                        paddingLeft: 44,
+                    }}
                     placeholder="Buscar abonado o dirección..."
                     placeholderTextColor="rgba(255,255,255,0.5)"
+                    onChangeText={onSearch}
                 />
             </View>
-        </View>
+        </LinearGradient>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        backgroundColor: BrandColors.primary,
-        borderBottomLeftRadius: 40,
-        borderBottomRightRadius: 40,
-        paddingHorizontal: 24,
-        paddingBottom: 32,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 10,
-    },
-    headerTop: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    roleText: {
-        color: '#dbeafe', // blue-100
-        fontSize: 10,
-        fontWeight: 'bold',
-        textTransform: 'uppercase',
-        letterSpacing: 2,
-        marginBottom: 2,
-    },
-    nameText: {
-        color: 'white',
-        fontSize: 20,
-        fontWeight: 'bold',
-    },
-    avatarContainer: {
-        width: 48,
-        height: 48,
-        backgroundColor: 'rgba(255,255,255,0.2)',
-        borderRadius: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.3)',
-    },
-    searchContainer: {
-        position: 'relative',
-        justifyContent: 'center',
-    },
-    searchIcon: {
-        position: 'absolute',
-        left: 16,
-        zIndex: 1,
-    },
-    searchInput: {
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        borderColor: 'rgba(255,255,255,0.2)',
-        borderWidth: 1,
-        borderRadius: 16,
-        paddingVertical: 10,
-        paddingLeft: 44,
-        paddingRight: 16,
-        fontSize: 14,
-        color: 'white',
-    },
-});
