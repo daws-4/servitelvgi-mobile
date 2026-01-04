@@ -17,6 +17,13 @@ allprojects {
     google()
     mavenCentral()
     maven { url 'https://www.jitpack.io' }
+    maven {
+      url 'https://maven.speedcheckerapi.com/artifactory/libs-release'
+      credentials {
+        username = "demo"
+        password = "AP85qiz6wYEsCttWU2ZckEWSwJKuA6mSYcizEY"
+      }
+    }
   }
 }
 

@@ -9,6 +9,7 @@ import InventorySummary from '@/components/inventory/InventorySummary';
 import InventorySearchBar from '@/components/inventory/InventorySearchBar';
 import InventoryFilters from '@/components/inventory/InventoryFilters';
 import InventoryItem, { InventoryItemData } from '@/components/inventory/InventoryItem';
+import { InternetSpeedTest } from '@/components/InternetSpeedTest';
 import { BrandColors } from '@/constants/colors';
 
 // Mock inventory data
@@ -128,6 +129,10 @@ export default function InventoryScreen() {
                 contentContainerStyle={{ paddingHorizontal: 24, gap: 12, paddingBottom: tabBarHeight + 100 }}
                 showsVerticalScrollIndicator={true}
             >
+                {/* Internet Speed Test */}
+                <InternetSpeedTest />
+
+                {/* Inventory Items */}
                 {filteredInventory.map((item) => (
                     <InventoryItem
                         key={item.id}

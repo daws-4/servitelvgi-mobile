@@ -1,0 +1,359 @@
+import SpeedCheckerPlugin from '@speedchecker/react-native-plugin';
+import { useState, useEffect, useRef } from 'react';
+import * as Location from 'expo-location';
+import NetInfo from '@react-native-community/netinfo';
+
+interface Coordinates {
+  latitude: number;
+  longitude: number;
+}
+
+interface SpeedTestEvent {
+  downloadSpeed?: string;
+  uploadSpeed?: string;
+  ping?: number;
+  status?: string;
+}
+
+export const useSpeedTest = () => {
+  const [results, setResults] = useState({
+    download: '0',
+    upload: '0',
+    ping: '0',
+    isp: 'Cargando...',
+    status: 'Inactivo',
+    coordinates: null as Coordinates | null,
+    networkName: 'Desconocido',
+    networkBand: 'Desconocido',
+    error: null as string | null
+  });
+
+  // Store final values for animation
+  const finalValues = useRef({
+    download: 0,
+    upload: 0,
+    ping: 0
+  });
+
+  // Helper function to parse speed values (removes "Mbps" and formats)
+  const parseSpeed = (speedStr: string | undefined | null): number => {
+    if (!speedStr) return 0;
+    const match = String(speedStr).match(/[\d.]+/);
+    if (match) {
+      return parseFloat(match[0]);
+    }
+    return 0;
+  };
+
+  // Helper function to parse ping values (removes "ms")
+  const parsePing = (pingStr: string | number | undefined | null): number => {
+    if (!pingStr) return 0;
+    const match = String(pingStr).match(/[\d.]+/);
+    if (match) {
+      return parseFloat(match[0]);
+    }
+    return 0;
+  };
+
+  useEffect(() => {
+    // Set up event listeners when component mounts
+    const setupListeners = () => {
+      try {
+        // Add listener for test started - THIS IS WHERE ALL DATA COMES!
+        const testStartedListener = SpeedCheckerPlugin.addTestStartedListener?.((event: any) => {
+          // console.log('🚀 Test started - Full event:', JSON.stringify(event, null, 2));
+          
+          // Extract values from the event
+          const downloadSpeed = parseSpeed(event.downloadSpeed);
+          const uploadSpeed = parseSpeed(event.uploadSpeed);
+          const currentSpeed = parseSpeed(event.currentSpeed); // Progressive speed during test
+          const ping = parsePing(event.ping);
+          
+          // console.log('📊 Parsed values:', { downloadSpeed, uploadSpeed, currentSpeed, ping, status: event.status });
+          // console.log('✅ UPDATING COMPONENT STATE NOW!');
+          
+          // Update state preserving previous values
+          setResults(prev => {
+            const newState = {
+              ...prev,
+              // Only update download if we have a value > 0, otherwise keep previous
+              download: downloadSpeed > 0 ? downloadSpeed.toFixed(2) : prev.download,
+              // Only update upload if we have a value > 0, otherwise keep previous
+              upload: uploadSpeed > 0 ? uploadSpeed.toFixed(2) : prev.upload,
+              // Only update ping if we have a value > 0, otherwise keep previous
+              ping: ping > 0 ? ping.toFixed(0) : prev.ping,
+              // Update status based on event
+              status: event.status === 'Speed test finished' 
+                ? 'Finalizado' 
+                : event.status === 'Upload Test'
+                  ? 'Probando Subida'
+                  : event.status === 'Download Test'
+                    ? 'Probando Descarga'
+                    : 'En Proceso'
+            };
+            
+            // If we have currentSpeed during a test, use it for the appropriate field
+            if (currentSpeed > 0) {
+              if (event.status === 'Upload Test') {
+                newState.upload = currentSpeed.toFixed(2);
+              } else if (event.status === 'Download Test') {
+                newState.download = currentSpeed.toFixed(2);
+              }
+            }
+            
+            // console.log('🎯 New state being set:', newState);
+            return newState;
+          });
+        });
+
+        // Keep these listeners for progressive updates if they fire
+        const downloadListener = SpeedCheckerPlugin.addDownloadProgressListener?.((event: any) => {
+          // console.log('📥 Download progress event:', event);
+          
+          const speed = event?.downloadSpeed || event?.speed || event?.data?.downloadSpeed || event?.data?.speed;
+          
+          if (speed !== undefined && speed !== null) {
+            const speedNum = parseSpeed(speed);
+            // console.log('✅ UPDATING DOWNLOAD:', speedNum);
+            
+            setResults(prev => ({
+              ...prev,
+              download: speedNum.toFixed(2),
+              status: 'Probando Descarga'
+            }));
+          }
+        });
+
+        const uploadListener = SpeedCheckerPlugin.addUploadProgressListener?.((event: any) => {
+          // console.log('📤 Upload progress event:', event);
+          
+          const speed = event?.uploadSpeed || event?.speed || event?.data?.uploadSpeed || event?.data?.speed;
+          
+          if (speed !== undefined && speed !== null) {
+            const speedNum = parseSpeed(speed);
+            // console.log('✅ UPDATING UPLOAD:', speedNum);
+            
+            setResults(prev => ({
+              ...prev,
+              upload: speedNum.toFixed(2),
+              status: 'Probando Subida'
+            }));
+          }
+        });
+
+        const pingListener = SpeedCheckerPlugin.addPingListener?.((event: any) => {
+          // console.log('🏓 Ping event:', event);
+          
+          const ping = event?.ping || event?.latency || event?.data?.ping || event?.data?.latency;
+          
+          if (ping !== undefined && ping !== null) {
+            const pingNum = parsePing(ping);
+            // console.log('✅ UPDATING PING:', pingNum);
+            
+            setResults(prev => ({ 
+              ...prev, 
+              ping: pingNum.toFixed(0)
+            }));
+          }
+        });
+
+        const finishListener = SpeedCheckerPlugin.addTestFinishedListener?.((event: any) => {
+          // console.log('🏁 Test finished event:', event);
+          
+          const downloadSpeed = parseSpeed(event?.downloadSpeed || event?.data?.downloadSpeed);
+          const uploadSpeed = parseSpeed(event?.uploadSpeed || event?.data?.uploadSpeed);
+          const ping = parsePing(event?.ping || event?.data?.ping);
+          
+          // console.log('✅ UPDATING FINAL VALUES');
+          
+          setResults(prev => ({
+            ...prev,
+            download: downloadSpeed > 0 ? downloadSpeed.toFixed(2) : prev.download,
+            upload: uploadSpeed > 0 ? uploadSpeed.toFixed(2) : prev.upload,
+            ping: ping > 0 ? ping.toFixed(0) : prev.ping,
+            status: 'Finalizado'
+          }));
+        });
+
+        // console.log('🎧 SpeedChecker listeners registered:', {
+        //   testStarted: !!testStartedListener,
+        //   download: !!downloadListener,
+        //   upload: !!uploadListener,
+        //   ping: !!pingListener,
+        //   finish: !!finishListener
+        // });
+
+        // Return cleanup function
+        return () => {
+          // console.log('🧹 Cleaning up SpeedChecker listeners...');
+          testStartedListener?.remove?.();
+          downloadListener?.remove?.();
+          uploadListener?.remove?.();
+          pingListener?.remove?.();
+          finishListener?.remove?.();
+        };
+      } catch (error) {
+        // console.error('❌ Error setting up SpeedChecker listeners:', error);
+      }
+    };
+
+    const cleanup = setupListeners();
+    return cleanup;
+  }, []);
+
+  const startTest = async () => {
+    // Reset state before starting new test
+    setResults({
+      download: '0',
+      upload: '0',
+      ping: '0',
+      isp: 'Cargando...',
+      status: 'Preparando...',
+      coordinates: null,
+      networkName: 'Detectando...',
+      networkBand: 'Detectando...',
+      error: null
+    });
+
+    finalValues.current = {
+      download: 0,
+      upload: 0,
+      ping: 0
+    };
+
+    // Check network connectivity first
+    try {
+      const netInfoState = await NetInfo.fetch();
+      
+      // Check if we have internet connection
+      if (!netInfoState.isConnected || !netInfoState.isInternetReachable) {
+        setResults(prev => ({
+          ...prev,
+          status: 'Sin Conexión',
+          error: 'No hay conexión a internet. Por favor verifica tu conexión y vuelve a intentar.',
+          networkName: 'Sin conexión',
+          networkBand: 'N/A',
+          isp: 'Sin conexión'
+        }));
+        return; // Exit early - no point continuing without internet
+      }
+
+      // Get WiFi info
+      if (netInfoState.type === 'wifi' && netInfoState.details) {
+        const wifiDetails = netInfoState.details as any;
+        const ssid = wifiDetails.ssid || 'Red WiFi';
+        
+        let band = 'Desconocido';
+        if (wifiDetails.frequency) {
+          const frequency = parseInt(wifiDetails.frequency);
+          if (frequency >= 2400 && frequency <= 2500) {
+            band = '2.4 GHz';
+          } else if (frequency >= 5000 && frequency <= 5900) {
+            band = '5 GHz';
+          }
+        }
+        
+        setResults(prev => ({
+          ...prev,
+          networkName: ssid,
+          networkBand: band,
+          error: null
+        }));
+      } else if (netInfoState.type === 'cellular') {
+        setResults(prev => ({
+          ...prev,
+          networkName: 'Datos Móviles',
+          networkBand: netInfoState.details?.cellularGeneration || 'Desconocido',
+          error: null
+        }));
+      } else {
+        setResults(prev => ({
+          ...prev,
+          networkName: 'Desconocido',
+          networkBand: 'Desconocido',
+          error: null
+        }));
+      }
+    } catch (e) {
+      setResults(prev => ({
+        ...prev,
+        networkName: 'Error de red',
+        networkBand: 'Error',
+        error: 'Error al detectar la red. Por favor verifica tu conexión.'
+      }));
+      // Continue anyway - might still work
+    }
+
+    // 1. Obtener coordenadas (non-critical - continue even if fails)
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+          timeInterval: 5000
+        });
+        setResults(prev => ({
+          ...prev,
+          coordinates: {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude
+          }
+        }));
+      }
+    } catch (e) {
+      // Location is optional - don't fail the test
+    }
+
+    // 2. Obtener el ISP using free API (non-critical)
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      const response = await fetch('http://ip-api.com/json/', {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setResults(prev => ({ ...prev, isp: data.isp || 'Desconocido' }));
+      } else {
+        setResults(prev => ({ ...prev, isp: 'Desconocido' }));
+      }
+    } catch (e) {
+      setResults(prev => ({ ...prev, isp: 'Desconocido' }));
+    }
+
+    // 3. Iniciar la prueba de velocidad (critical)
+    try {
+      // Final connectivity check before starting
+      const finalCheck = await NetInfo.fetch();
+      if (!finalCheck.isConnected) {
+        setResults(prev => ({
+          ...prev,
+          status: 'Sin Conexión',
+          error: 'La conexión se perdió antes de iniciar la prueba.'
+        }));
+        return;
+      }
+
+      SpeedCheckerPlugin.startTest();
+      setResults(prev => ({ ...prev, status: 'Iniciando...', error: null }));
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Error desconocido al iniciar la prueba.';
+      setResults(prev => ({ 
+        ...prev, 
+        status: 'Error',
+        error: `No se pudo iniciar la prueba: ${errorMessage}`,
+        isp: prev.isp === 'Cargando...' ? 'Error' : prev.isp
+      }));
+    }
+  };
+
+  // Function to clear error
+  const clearError = () => {
+    setResults(prev => ({ ...prev, error: null }));
+  };
+
+  return { results, startTest, clearError };
+};

@@ -214,7 +214,7 @@ React Native (Expo) para técnicos de campo.
     - Indicador de sincronización
 
 ---
-
+haz un plan de implementación para proceder con los siguientes pasos del proyecto en curso
 ##### 📦 **5. Módulo de Órdenes de Servicio**
 
 - [ ] **Servicio API de órdenes (`/services/api/orders.ts`)**
@@ -285,7 +285,7 @@ React Native (Expo) para técnicos de campo.
     - [ ] Enviar datos completos a backend
     - [ ] Actualizar estado de orden a `completada`
     - [ ] Navegar de vuelta a lista con mensaje de éxito
-
+toma en consideración que las rutas existentes del backend piden token de autenticación, así que maneja las peticiones enviando el token creado con el login
 ---
 
 ##### 🗺️ **6. Google Maps y Navegación GPS**
