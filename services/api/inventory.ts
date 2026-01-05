@@ -18,7 +18,7 @@ class InventoryService {
    */
   async getCrewInventory(crewId: string): Promise<AssignedInventoryItem[]> {
     const response = await httpClient.get<{ assignedInventory: AssignedInventoryItem[] }>(
-      `/api/web/crews/${crewId}`
+      `/api/web/crews?id=${crewId}`
     );
     
     return response.data.assignedInventory || [];
@@ -66,7 +66,7 @@ class InventoryService {
    */
   async getInventoryItemById(itemId: string): Promise<InventoryItem> {
     const response = await httpClient.get<InventoryItem>(
-      `/api/web/inventory/${itemId}`
+      `/api/web/inventory?id=${itemId}`
     );
     
     return response.data;
@@ -78,7 +78,7 @@ class InventoryService {
    */
   async getBatchByCode(batchCode: string): Promise<InventoryBatch> {
     const response = await httpClient.get<InventoryBatch>(
-      `/api/web/inventory/batches/${batchCode}`
+      `/api/web/inventory/batches?code=${batchCode}`
     );
     
     return response.data;

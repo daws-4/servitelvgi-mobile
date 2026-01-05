@@ -290,16 +290,16 @@ toma en consideración que las rutas existentes del backend piden token de auten
 
 ##### 🗺️ **6. Google Maps y Navegación GPS**
 
-- [ ] **Configurar Google Maps**
-  - [ ] Obtener API Key de Google Cloud Console
-  - [ ] Habilitar APIs: Maps SDK, Geocoding, Distance Matrix
-  - [ ] Agregar API Key en `app.json` (android.config.googleMaps.apiKey, ios.config.googleMapsApiKey)
+- [x] **Configurar Google Maps**
+  - [x] Obtener API Key de Google Cloud Console
+  - [x] Habilitar APIs: Maps SDK, Geocoding, Distance Matrix
+  - [x] Agregar API Key en `app.json` (android.config.googleMaps.apiKey, ios.config.googleMapsApiKey)
   
-- [ ] **Servicio de ubicación (`/services/location.ts`)**
-  - [ ] Solicitar permisos de ubicación
-  - [ ] `getCurrentLocation()` - Obtener ubicación actual
-  - [ ] `geocodeAddress(address)` - Convertir dirección a coordenadas
-  - [ ] `openNativeNavigation(lat, lng)` - Abrir Google/Apple Maps
+- [x] **Servicio de ubicación (`/services/location.ts`)**
+  - [x] Solicitar permisos de ubicación
+  - [x] `getCurrentLocation()` - Obtener ubicación actual
+  - [x] `geocodeAddress(address)` - Convertir dirección a coordenadas
+  - [x] `openNativeNavigation(lat, lng)` - Abrir Google/Apple Maps
   
 - [ ] **Pantalla: Mapa de Orden (`/app/(tabs)/orders/map/[id].tsx`)**
   - [ ] Mapa centrado en ubicación del cliente
@@ -360,21 +360,21 @@ toma en consideración que las rutas existentes del backend piden token de auten
 
 ##### ⚡ **8. Speed Test de Internet**
 
-- [ ] **Investigar y seleccionar API**
-  - [ ] Opción 1: Fast.com API (Netflix)
-  - [ ] Opción 2: LibreSpeed (self-hosted)
-  - [ ] Opción 3: Ookla Speedtest SDK (licencia comercial)
+- [x] **Investigar y seleccionar API**
+  - [x] Opción 1: Fast.com API (Netflix)
+  - [x] Opción 2: LibreSpeed (self-hosted)
+  - [x] Opción 3: Ookla Speedtest SDK (licencia comercial)
   
-- [ ] **Servicio de Speed Test (`/services/speedTest.ts`)**
-  - [ ] `runSpeedTest()` - Ejecutar test completo
-  - [ ] Retornar: download (Mbps), upload (Mbps), ping (ms), jitter (ms)
+- [x] **Servicio de Speed Test (`/services/speedTest.ts`)**
+  - [x] `runSpeedTest()` - Ejecutar test completo
+  - [x] Retornar: download (Mbps), upload (Mbps), ping (ms), jitter (ms)
   
-- [ ] **Componente: SpeedTestWidget (`/components/speedtest/SpeedTestWidget.tsx`)**
-  - [ ] Integrable en formulario de cierre de orden
-  - [ ] Animación durante test (velocímetro, progress bar)
-  - [ ] Mostrar resultados al finalizar
-  - [ ] Opción de re-test
-  - [ ] Guardar resultado en estado
+- [x] **Componente: SpeedTestWidget (`/components/speedtest/SpeedTestWidget.tsx`)**
+  - [x] Integrable en formulario de cierre de orden
+  - [x] Animación durante test (velocímetro, progress bar)
+  - [x] Mostrar resultados al finalizar
+  - [x] Opción de re-test
+  - [x] Guardar resultado en estado
 
 ---
 

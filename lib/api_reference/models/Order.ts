@@ -77,7 +77,10 @@ const OrderSchema = new mongoose.Schema(
     },
     assignmentDate: { type: Date },
     completionDate: { type: Date },
-
+    coordinates: {
+      latitude: { type: Number },
+      longitude: { type: Number },
+    },
     // Datos del cierre (a rellenar por el técnico)
     reportDetails: { type: String },
     materialsUsed: [
@@ -87,8 +90,29 @@ const OrderSchema = new mongoose.Schema(
         batchCode: { type: String }, // Optional: identifies specific bobbin used
       },
     ],
-    digitalSignature: { type: String },
-    photoEvidence: [{ type: String }],
+    
+    // Evidencia fotográfica (Array de URLs de las imágenes subidas)
+    photoEvidence: {
+      type: [String],
+      default: [],
+    },
+    
+    // Firma del cliente (String Base64 exportado por react-native-signature-canvas)
+    customerSignature: {
+      type: String,
+    },
+    internetTest:{
+      downloadSpeed: { type: Number },
+      uploadSpeed: { type: Number },
+      ping: { type: Number },
+      provider: { type: String },
+      wifiSSID: { type: String },
+      frecuency: { type: String },
+      coordinates: {
+      latitude: { type: Number },
+      longitude: { type: Number },
+    },
+    },
 
     // Control de reporte a Netuno
     googleFormReported: {

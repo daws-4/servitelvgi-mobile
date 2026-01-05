@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import authService from '@/services/api/auth';
 import apiClient from '@/services/api/client';
+import installerService from '@/services/api/installers';
 import type { InstallerProfile, AuthError } from '@/types/auth';
 
 // ============================================================================
@@ -94,6 +95,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
             const response = await authService.login(username, password);
 
+            // Actualizar status a 'active' al iniciar sesión
+            // Esperar un momento para asegurar que el token esté guardado
+            try {
+                // Verificar que el token está disponible
+                const hasToken = await authService.isAuthenticated();
+                // console.log('🔐 [login] Token disponible:', hasToken);
+
+                if (hasToken) {
+                    await installerService.updateProfile(response.installer._id, {
+                        onDuty: 'active'
+                    });
+                    // Actualizar el perfil local con el nuevo status
+                    response.installer.onDuty = 'active';
+                    // console.log('✅ [login] Status actualizado a active');
+                } else {
+                    // console.warn('⚠️ [login] Token no disponible, no se pudo actualizar status');
+                }
+            } catch (statusErr) {
+                // console.warn('No se pudo actualizar status a activo:', statusErr);
+            }
+
             setInstaller(response.installer);
             setIsAuthenticated(true);
         } catch (err) {
@@ -113,6 +135,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const logout = async () => {
         try {
             setIsLoading(true);
+
+            // Actualizar status a 'inactive' antes de cerrar sesión
+            if (installer?._id) {
+                try {
+                    await installerService.updateProfile(installer._id, {
+                        onDuty: 'inactive'
+                    });
+                } catch (statusErr) {
+                    console.warn('No se pudo actualizar status a inactivo:', statusErr);
+                }
+            }
+
             await authService.logout();
         } catch (err) {
             console.error('Error en logout:', err);

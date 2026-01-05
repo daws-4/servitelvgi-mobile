@@ -88,9 +88,33 @@ class AuthService {
   };
 
   /**
+   * POST /api/mobile/auth/login
+   * Verificar contraseña actual (intento de login sin guardar token)
+   * Retorna true si la contraseña es correcta
+   */
+  verifyPassword = async (username: string, password: string): Promise<boolean> => {
+    try {
+      const payload: LoginRequest = { username, password };
+      
+      // Intentar login para verificar credenciales
+      await httpClient.post<LoginResponse>(
+        '/api/mobile/auth/login',
+        payload
+      );
+      
+      // Si no lanza error, las credenciales son válidas
+      return true;
+    } catch (error) {
+      // Credenciales inválidas
+      return false;
+    }
+  };
+
+  /**
    * Manejar errores de autenticación y convertirlos a formato consistente
    */
   private handleAuthError = (error: ApiError | any): AuthError => {
+
     let code: AuthErrorCode = 'SERVER_ERROR';
     let message: string = 'Error al iniciar sesión';
 

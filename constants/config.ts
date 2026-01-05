@@ -26,6 +26,11 @@ export const Config = {
    */
   API_TIMEOUT: 30000, // 30 segundos
   
+  /**
+   * URL de PocketBase para almacenamiento de archivos
+   */
+  POCKETBASE_URL: getEnvVar('POCKETBASE_URL', 'https://pb.servitelv.com'),
+  
   // ============================================================================
   // GOOGLE MAPS
   // ============================================================================

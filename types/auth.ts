@@ -35,9 +35,11 @@ export interface InstallerProfile {
   email?: string;
   phone?: string;
   status: InstallerStatus;
-  onDuty: boolean;
+  onDuty: OnDutyStatus;  // 'active' | 'inactive' | 'onDuty'
   showInventory: boolean;
   crew: CrewInfo | null;
+  profilePicture?: string | null;
+  pushToken?: string;
 }
 
 /**
@@ -52,6 +54,11 @@ export interface CrewInfo {
  * Estados posibles de un instalador
  */
 export type InstallerStatus = 'active' | 'inactive' | 'suspended';
+
+/**
+ * Estado de servicio del instalador
+ */
+export type OnDutyStatus = 'active' | 'inactive' | 'onDuty';
 
 // ============================================================================
 // TOKEN TYPES

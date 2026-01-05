@@ -12,7 +12,7 @@ class CrewService {
    * Obtener detalle de una cuadrilla
    */
   async getCrewById(crewId: string): Promise<Crew> {
-    const response = await httpClient.get<Crew>(`/api/web/crews/${crewId}`);
+    const response = await httpClient.get<Crew>(`/api/web/crews?id=${crewId}`);
     return response.data;
   }
 

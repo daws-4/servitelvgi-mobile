@@ -4,7 +4,10 @@ import type {
   OrderSummary,
   OrderFilters, 
   OrderCompletionData,
-  OrderStatus 
+  OrderStatus,
+  Coordinates,
+  InternetTestResult,
+  UpdateInternetTestData,
 } from '@/types/Order';
 import type { ApiResponse } from '@/types/api';
 
@@ -38,7 +41,7 @@ class OrderService {
    * Obtener detalle de una orden
    */
   async getOrderById(orderId: string): Promise<Order> {
-    const response = await httpClient.get<Order>(`/api/web/orders/${orderId}`);
+    const response = await httpClient.get<Order>(`/api/web/orders?id=${orderId}`);
     return response.data;
   }
 
@@ -47,7 +50,12 @@ class OrderService {
    * Actualizar estado y datos de una orden
    */
   async updateOrder(orderId: string, data: Partial<Order>): Promise<Order> {
-    const response = await httpClient.put<Order>(`/api/web/orders/${orderId}`, data);
+    // Backend expects ID in the body for PUT requests, similar to installers
+    const payload = {
+      _id: orderId,
+      ...data
+    };
+    const response = await httpClient.put<Order>('/api/web/orders', payload);
     return response.data;
   }
 
@@ -61,21 +69,78 @@ class OrderService {
 
   /**
    * PUT /api/web/orders/:id
-   * Completar una orden con materiales, fotos y firma
+   * Actualizar coordenadas de una orden
+   */
+  async updateOrderCoordinates(orderId: string, coordinates: Coordinates): Promise<Order> {
+    return this.updateOrder(orderId, { coordinates });
+  }
+
+  /**
+   * PUT /api/web/orders/:id
+   * Actualizar prueba de internet de una orden
+   */
+  async updateInternetTest(orderId: string, data: UpdateInternetTestData): Promise<Order> {
+    const payload: Partial<Order> = {
+      internetTest: data.internetTest,
+    };
+    
+    // Si se proporcionan coordenadas, actualizarlas también
+    if (data.coordinates) {
+      payload.coordinates = data.coordinates;
+    }
+    
+    return this.updateOrder(orderId, payload);
+  }
+
+  /**
+   * PUT /api/web/orders/:id
+   * Iniciar una orden (cambiar a in_progress)
+   */
+  async startOrder(orderId: string, coordinates?: Coordinates): Promise<Order> {
+    const payload: Partial<Order> = {
+      status: 'in_progress' as OrderStatus,
+    };
+    
+    if (coordinates) {
+      payload.coordinates = coordinates;
+    }
+    
+    return this.updateOrder(orderId, payload);
+  }
+
+  /**
+   * PUT /api/web/orders/:id
+   * Completar una orden con materiales, fotos, firma y prueba de internet
    */
   async completeOrder(orderId: string, data: OrderCompletionData): Promise<Order> {
-    const payload = {
+    const payload: Partial<Order> = {
       status: 'completed' as OrderStatus,
       materialsUsed: data.materialsUsed,
-      photos: data.photos,
-      signature: data.signature,
-      speedTest: data.speedTest,
-      notes: data.notes,
+      photoEvidence: data.photoEvidence,
+      customerSignature: data.customerSignature,
       completionDate: new Date().toISOString(),
     };
 
+    // Agregar prueba de internet si existe
+    if (data.internetTest) {
+      payload.internetTest = data.internetTest;
+    }
+
+    // Agregar detalles del reporte si existen
+    if (data.reportDetails) {
+      payload.reportDetails = data.reportDetails;
+    }
+
+    // Agregar coordenadas de cierre si existen
+    if (data.coordinates) {
+      payload.coordinates = data.coordinates;
+    }
+
+    // Include _id in the payload for the backend to identify the order
+    (payload as any)._id = orderId;
+
     const response = await httpClient.put<Order>(
-      `/api/web/orders/${orderId}`,
+      '/api/web/orders',
       payload
     );
     
@@ -105,6 +170,9 @@ export const {
   getOrderById,
   updateOrder,
   updateOrderStatus,
+  updateOrderCoordinates,
+  updateInternetTest,
+  startOrder,
   completeOrder,
   getAvailableOrders,
 } = orderService;

@@ -1,8 +1,9 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import CustomTabBar from '@/components/navigation/CustomTabBar';
 import { BrandColors } from '@/constants/colors';
 import { useAuth } from '@/app/contexts/AuthContext';
+import { useNotifications } from '@/hooks/useNotifications';
 
 /**
  * Tab Navigator Layout
@@ -10,6 +11,12 @@ import { useAuth } from '@/app/contexts/AuthContext';
  */
 export default function TabsLayout() {
     const { installer } = useAuth();
+    const { registerForPushNotifications } = useNotifications();
+
+    // Auto-register for push notifications when entering the main app
+    useEffect(() => {
+        registerForPushNotifications();
+    }, [registerForPushNotifications]);
 
     return (
         <Tabs

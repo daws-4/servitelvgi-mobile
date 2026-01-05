@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
+import type { OnDutyStatus } from '@/types/auth';
 
 export interface ProfileStatusBadgeProps {
     /**
      * Current status of the installer
      */
-    status: 'active' | 'onduty' | 'inactive';
+    status: OnDutyStatus;
 
     /**
      * Display text for the status
@@ -25,7 +26,7 @@ export default function ProfileStatusBadge({ status, statusText }: ProfileStatus
     const pulseAnim = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
-        if (status === 'onduty' || status === 'active') {
+        if (status === 'onDuty' || status === 'active') {
             const pulse = Animated.loop(
                 Animated.sequence([
                     Animated.timing(pulseAnim, {
@@ -47,7 +48,7 @@ export default function ProfileStatusBadge({ status, statusText }: ProfileStatus
 
     const getIndicatorColor = () => {
         switch (status) {
-            case 'onduty':
+            case 'onDuty':
             case 'active':
                 return '#4ade80'; // green-400
             case 'inactive':
@@ -64,7 +65,7 @@ export default function ProfileStatusBadge({ status, statusText }: ProfileStatus
                     styles.indicator,
                     {
                         backgroundColor: getIndicatorColor(),
-                        transform: [{ scale: status === 'onduty' || status === 'active' ? pulseAnim : 1 }],
+                        transform: [{ scale: status === 'onDuty' || status === 'active' ? pulseAnim : 1 }],
                     },
                 ]}
             />

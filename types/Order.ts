@@ -35,11 +35,11 @@ export type OrderPriority = 'low' | 'medium' | 'high';
 // ============================================================================
 
 /**
- * Coordenadas geográficas
+ * Coordenadas geográficas (formato del backend)
  */
 export interface Coordinates {
-  lat: number;
-  lng: number;
+  latitude: number;
+  longitude: number;
 }
 
 /**
@@ -53,15 +53,16 @@ export interface MaterialUsed {
 }
 
 /**
- * Resultado de prueba de velocidad
+ * Resultado de prueba de internet (formato del backend)
  */
-export interface SpeedTestResult {
-  download: number;       // Mbps
-  upload: number;         // Mbps
-  ping: number;           // ms
-  jitter: number;         // ms
-  server?: string;        // Servidor usado
-  testedAt: Date | string; // Timestamp de la prueba
+export interface InternetTestResult {
+  downloadSpeed?: number;     // Mbps
+  uploadSpeed?: number;       // Mbps
+  ping?: number;              // ms
+  provider?: string;          // Proveedor de internet
+  wifiSSID?: string;          // Nombre de la red WiFi
+  frecuency?: string;         // Frecuencia WiFi (2.4GHz, 5GHz)
+  coordinates?: Coordinates;  // Coordenadas donde se realizó la prueba
 }
 
 /**
@@ -74,26 +75,40 @@ export interface Order {
   subscriberNumber: string;     // N° de abonado (único)
   subscriberName: string;       // Nombre del abonado
   address: string;              // Dirección completa
-  coordinates?: Coordinates;    // Coordenadas GPS
+  phones?: string[];            // Teléfonos del abonado
+  email?: string;               // Correo electrónico
+  
+  // Coordenadas de la orden
+  coordinates?: Coordinates;    // Coordenadas GPS de la ubicación
   
   // Tipo y estado
   type: OrderType;              // Tipo de orden
   status: OrderStatus;          // Estado actual
   priority?: OrderPriority;     // Prioridad
   
+  // Datos técnicos
+  node?: string;                // Nodo de red
+  servicesToInstall?: string[]; // Servicios a instalar
+  
   // Asignación y programación
   assignedTo?: string;          // ID de la cuadrilla asignada
   assignedToName?: string;      // Nombre de la cuadrilla (populado)
-  assignmentDate?: Date | string;  // Fecha de asignación
-  scheduledDate?: Date | string;   // Fecha programada
+  receptionDate?: Date | string;  // Fecha de recepción
+  assignmentDate?: Date | string; // Fecha de asignación
   
   // Completado
   completionDate?: Date | string;  // Fecha de completado
   completedBy?: string;            // ID del instalador que completó
+  
+  // Datos de cierre
+  reportDetails?: string;          // Detalles del reporte
   materialsUsed?: MaterialUsed[];  // Materiales usados
-  photos?: string[];               // URLs de fotos
-  signature?: string;              // Firma del cliente (base64)
-  speedTest?: SpeedTestResult;     // Resultado de speed test
+  photoEvidence?: string[];        // URLs de fotos (formato backend)
+  customerSignature?: string;      // Firma del cliente (base64)
+  internetTest?: InternetTestResult; // Resultado de prueba de internet
+  
+  // Control de reporte
+  googleFormReported?: boolean;    // Reportado a Google Form
   
   // Información adicional
   description?: string;         // Descripción/notas
@@ -109,10 +124,19 @@ export interface Order {
  */
 export interface OrderCompletionData {
   materialsUsed: MaterialUsed[];
-  photos: string[];               // Base64 o URLs
-  signature: string;              // Base64 de la firma
-  speedTest?: SpeedTestResult;    // Resultado opcional de speed test
-  notes?: string;                 // Notas finales
+  photoEvidence: string[];         // IDs de PocketBase (recordId:filename)
+  customerSignature: string;       // Base64 de la firma
+  internetTest?: InternetTestResult; // Resultado de prueba de internet
+  reportDetails?: string;          // Detalles del reporte
+  coordinates?: Coordinates;       // Coordenadas de cierre
+}
+
+/**
+ * Datos para actualizar prueba de internet
+ */
+export interface UpdateInternetTestData {
+  internetTest: InternetTestResult;
+  coordinates?: Coordinates;       // Coordenadas de la orden actualizadas
 }
 
 /**
@@ -139,7 +163,7 @@ export interface OrderSummary {
   type: OrderType;
   status: OrderStatus;
   priority?: OrderPriority;
-  scheduledDate?: Date | string;
+  receptionDate?: Date | string;
   assignedToName?: string;
 }
 

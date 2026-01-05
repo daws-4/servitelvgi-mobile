@@ -12,6 +12,11 @@
  */
 export type InstallerStatus = 'active' | 'inactive' | 'suspended';
 
+/**
+ * Estado de servicio del instalador
+ */
+export type OnDutyStatus = 'active' | 'inactive' | 'onDuty';
+
 // ============================================================================
 // INTERFACES
 // ============================================================================
@@ -27,7 +32,7 @@ export interface Installer {
   email?: string;                  // Email
   phone?: string;                  // Teléfono
   status: InstallerStatus;         // Estado
-  onDuty: boolean;                 // En servicio actualmente
+  onDuty: OnDutyStatus;             // Estado de servicio ('active' | 'inactive' | 'onDuty')
   showInventory: boolean;          // Mostrar tab de inventario
   currentCrew?: string;            // ID de cuadrilla actual
   crewDetails?: {                  // Detalles de cuadrilla (populado)
@@ -35,6 +40,7 @@ export interface Installer {
     name: string;
   };
   pushToken?: string;              // Token de notificaciones push
+  profilePicture?: string;         // URL de foto de perfil
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -45,5 +51,15 @@ export interface Installer {
 export interface UpdateInstallerProfile {
   email?: string;
   phone?: string;
-  onDuty?: boolean;
+  onDuty?: OnDutyStatus;  // 'active' | 'inactive' | 'onDuty'
+  password?: string; // For password updates (hashed server-side)
+  profilePicture?: string; // URL de foto de perfil
+}
+
+/**
+ * Datos para cambiar contraseña (con verificación)
+ */
+export interface ChangePasswordData {
+  currentPassword: string;
+  newPassword: string;
 }

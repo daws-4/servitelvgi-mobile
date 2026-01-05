@@ -36,16 +36,24 @@ export default function ProfileAvatar({
     size = 112,
     onCameraPress,
 }: ProfileAvatarProps) {
-    const defaultAvatar = 'https://i.pravatar.cc/150?u=servitel_installer';
+    const iconSize = Math.floor(size * 0.4);
+
+    if (imageUri) console.log('🖼️ [ProfileAvatar] Rendering with URI:', imageUri);
 
     return (
         <View style={[styles.container, { width: size, height: size }]}>
             {/* Avatar with white border */}
-            <View style={[styles.avatarWrapper, { width: size, height: size }]}>
-                <Image
-                    source={{ uri: imageUri || defaultAvatar }}
-                    style={[styles.avatar, { width: size - 8, height: size - 8 }]}
-                />
+            <View style={[styles.avatarWrapper, { width: size, height: size, borderRadius: size / 2 }]}>
+                {imageUri ? (
+                    <Image
+                        source={{ uri: imageUri }}
+                        style={[styles.avatar, { width: size - 8, height: size - 8, borderRadius: (size - 8) / 2 }]}
+                    />
+                ) : (
+                    <View style={[styles.placeholder, { width: size - 8, height: size - 8, borderRadius: (size - 8) / 2 }]}>
+                        <FontAwesome name="user" size={iconSize} color="#9ca3af" />
+                    </View>
+                )}
             </View>
 
             {/* Camera Button */}
@@ -97,5 +105,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 4,
         elevation: 4,
+    },
+    placeholder: {
+        backgroundColor: '#f3f4f6',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });

@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BrandColors } from '@/constants/colors';
 import ProfileAvatar from './ProfileAvatar';
 import ProfileStatusBadge from './ProfileStatusBadge';
+import type { OnDutyStatus } from '@/types/auth';
 
 export interface ProfileHeaderProps {
     /**
@@ -17,9 +18,9 @@ export interface ProfileHeaderProps {
     role: string;
 
     /**
-     * Current status
+     * Current status (from onDuty field)
      */
-    status: 'active' | 'onduty' | 'inactive';
+    status: OnDutyStatus;
 
     /**
      * Avatar image URI
@@ -54,7 +55,7 @@ export default function ProfileHeader({
 }: ProfileHeaderProps) {
     const getStatusText = () => {
         switch (status) {
-            case 'onduty':
+            case 'onDuty':
                 return 'En Servicio';
             case 'active':
                 return 'Activo';
