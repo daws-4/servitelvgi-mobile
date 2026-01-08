@@ -14,8 +14,11 @@ interface UseOrdersReturn {
   orders: Order[];
   selectedOrder: Order | null;
   loading: boolean;
+  loadingMore: boolean;
+  hasMore: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  loadMore: () => void;
   selectOrder: (orderId: string | null) => Promise<void>;
   updateStatus: (orderId: string, status: OrderStatus) => Promise<void>;
   updateCoordinates: (orderId: string, coordinates: Coordinates) => Promise<void>;
@@ -34,26 +37,79 @@ export const useOrders = (crewId: string, filters?: OrderFilters): UseOrdersRetu
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const LIMIT = 10;
+
+  // Reset pagination when filters or crewId change
+  useEffect(() => {
+    setPage(1);
+    setHasMore(true);
+    setOrders([]);
+    // We trigger fetch via a separate effect or direct call? 
+    // Ideally, we want to reset and then fetch.
+    // Let's modify the fetchOrders to handle the reset or rely on a `refresh` dependency
+  }, [crewId, JSON.stringify(filters)]);
 
   // Fetch orders
-  const fetchOrders = useCallback(async () => {
+  const fetchOrders = useCallback(async (reset = false) => {
     if (!crewId) {
       setLoading(false);
       return;
     }
 
     try {
-      setLoading(true);
+      if (reset) {
+        setLoading(true);
+        setPage(1);
+      } else {
+        setLoadingMore(true);
+      }
+      
       setError(null);
-      const data = await orderService.getCrewOrders(crewId, filters);
-      setOrders(data);
+      
+      const currentPage = reset ? 1 : page;
+      const data = await orderService.getCrewOrders(crewId, filters, currentPage, LIMIT);
+      
+      // Add null safety checks
+      if (data && data.items && Array.isArray(data.items)) {
+        setOrders(prev => reset ? data.items : [...prev, ...data.items]);
+        setHasMore(data.items.length === LIMIT);
+        
+        if (!reset) {
+          setPage(prev => prev + 1);
+        } else {
+           // If reset, next page is 2
+           setPage(2);
+        }
+      } else {
+        // Fallback for unexpected response format
+        console.warn('Unexpected API response format:', data);
+        setOrders([]);
+        setHasMore(false);
+      }
+
     } catch (err: any) {
       setError(err.message || 'Error al cargar órdenes');
       console.error('Error fetching orders:', err);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  }, [crewId, filters]);
+  }, [crewId, filters, page]);
+
+  const loadMore = useCallback(() => {
+    if (!loading && !loadingMore && hasMore) {
+        fetchOrders(false);
+    }
+  }, [loading, loadingMore, hasMore, fetchOrders]);
+
+  const refetch = useCallback(() => {
+      return fetchOrders(true);
+  }, [fetchOrders]);
 
   // Select an order by ID
   const selectOrder = useCallback(async (orderId: string | null) => {
@@ -172,17 +228,22 @@ export const useOrders = (crewId: string, filters?: OrderFilters): UseOrdersRetu
     }
   }, [selectedOrder]);
 
-  // Fetch orders on mount and when dependencies change
+  // Fetch orders on mount and when filters change
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    if (crewId) {
+      fetchOrders(true); // Reset to page 1 when filters or crew change
+    }
+  }, [crewId, JSON.stringify(filters)]);
 
   return {
     orders,
     selectedOrder,
     loading,
+    loadingMore,
+    hasMore,
     error,
-    refetch: fetchOrders,
+    refetch,
+    loadMore,
     selectOrder,
     updateStatus,
     updateCoordinates,

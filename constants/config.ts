@@ -19,7 +19,7 @@ export const Config = {
    * Base URL del backend de Servitel
    * Debe configurarse en .env como API_BASE_URL
    */
-  API_BASE_URL: getEnvVar('API_BASE_URL', 'http://192.168.0.42:3000'),
+  API_BASE_URL: getEnvVar('API_BASE_URL', 'https://admin.servitelv.com'),
   
   /**
    * Timeout para peticiones HTTP en milisegundos
@@ -72,7 +72,7 @@ export const Config = {
   /**
    * Nombre de la aplicación
    */
-  APP_NAME: Constants.expoConfig?.name || 'Servitel Mobile',
+  APP_NAME: Constants.expoConfig?.name || 'ENLARED TÉCNICOS',
   
   /**
    * Bundle ID
@@ -126,7 +126,7 @@ export const Config = {
    * Configuración de notificaciones
    */
   NOTIFICATIONS: {
-    CHANNEL_ID: 'servitel-orders',
+    CHANNEL_ID: 'enlared-orders',
     CHANNEL_NAME: 'Órdenes de Servicio',
     ICON_COLOR: '#3e78b2',
   },
@@ -153,7 +153,7 @@ export type AppConfig = typeof Config;
 export const validateConfig = (): { valid: boolean; errors: string[] } => {
   const errors: string[] = [];
   
-  if (!Config.API_BASE_URL || Config.API_BASE_URL === 'http://192.168.0.42:3000') {
+  if (!Config.API_BASE_URL || Config.API_BASE_URL === 'https://admin.servitelv.com') {
     errors.push('API_BASE_URL no está configurado en .env');
   }
   

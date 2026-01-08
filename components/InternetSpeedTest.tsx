@@ -3,13 +3,20 @@ import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Animated }
 import { useSpeedTest } from '@/hooks/useSpeedTest';
 import { Colors } from '@/constants/colors';
 
-export const InternetSpeedTest = () => {
+interface InternetSpeedTestProps {
+    onResultsChange?: (results: ReturnType<typeof useSpeedTest>['results']) => void;
+}
+
+export const InternetSpeedTest = ({ onResultsChange }: InternetSpeedTestProps) => {
     const { results, startTest, clearError } = useSpeedTest();
 
-    // Debug: Log when results change
+    // Notify parent of results changes
     useEffect(() => {
-        // console.log('🎨 COMPONENT RECEIVED UPDATE:', results);
-    }, [results]);
+        if (onResultsChange) {
+            console.log('[InternetSpeedTest] Notifying parent of results change:', JSON.stringify(results, null, 2));
+            onResultsChange(results);
+        }
+    }, [results, onResultsChange]);
 
     // Animation values for real-time visual feedback
     const downloadPulse = useRef(new Animated.Value(1)).current;
@@ -274,14 +281,14 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.surface,
     },
     statLabel: {
-        fontSize: 12,
+        fontSize: 10,
         color: Colors.textSecondary,
         marginBottom: 8,
         textTransform: 'uppercase',
         fontWeight: '600',
     },
     statValue: {
-        fontSize: 28,
+        fontSize: 18,
         fontWeight: 'bold',
         color: Colors.text,
         marginBottom: 4,

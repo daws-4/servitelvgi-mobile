@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
 import { BrandColors } from '@/constants/colors';
 
 interface FilterOption {
@@ -10,56 +11,92 @@ interface FilterOption {
 interface InventoryFiltersProps {
     activeFilter: string;
     onSelectFilter: (id: string) => void;
+    lowStockOnly?: boolean;
+    onToggleLowStock?: () => void;
 }
 
 const filters: FilterOption[] = [
     { id: 'all', label: 'Todos' },
-    { id: 'cables', label: 'Cables' },
+    { id: 'material', label: 'Materiales' },
     { id: 'equipment', label: 'Equipos' },
-    { id: 'connectors', label: 'Conectores' },
 ];
 
-export default function InventoryFilters({ activeFilter, onSelectFilter }: InventoryFiltersProps) {
+export default function InventoryFilters({
+    activeFilter,
+    onSelectFilter,
+    lowStockOnly = false,
+    onToggleLowStock,
+}: InventoryFiltersProps) {
     return (
-        <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-        >
-            {filters.map((filter) => {
-                const isActive = activeFilter === filter.id;
-                return (
-                    <TouchableOpacity
-                        key={filter.id}
-                        style={[
-                            styles.chip,
-                            isActive ? styles.activeChip : styles.inactiveChip
-                        ]}
-                        onPress={() => onSelectFilter(filter.id)}
-                    >
-                        <Text style={[
-                            styles.chipText,
-                            isActive ? styles.activeChipText : styles.inactiveChipText
-                        ]}>
-                            {filter.label}
-                        </Text>
-                    </TouchableOpacity>
-                );
-            })}
-        </ScrollView>
+        <View style={styles.container}>
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContent}
+            >
+                {filters.map((filter) => {
+                    const isActive = activeFilter === filter.id;
+                    return (
+                        <TouchableOpacity
+                            key={filter.id}
+                            style={[
+                                styles.chip,
+                                isActive ? styles.activeChip : styles.inactiveChip
+                            ]}
+                            onPress={() => onSelectFilter(filter.id)}
+                        >
+                            <Text style={[
+                                styles.chipText,
+                                isActive ? styles.activeChipText : styles.inactiveChipText
+                            ]}>
+                                {filter.label}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
+
+                {/* Low Stock Toggle */}
+                <TouchableOpacity
+                    style={[
+                        styles.chip,
+                        styles.lowStockChip,
+                        lowStockOnly ? styles.lowStockActive : styles.lowStockInactive
+                    ]}
+                    onPress={onToggleLowStock}
+                >
+                    <FontAwesome
+                        name="exclamation-triangle"
+                        size={10}
+                        color={lowStockOnly ? 'white' : '#ef4444'}
+                        style={styles.lowStockIcon}
+                    />
+                    <Text style={[
+                        styles.chipText,
+                        lowStockOnly ? styles.lowStockActiveText : styles.lowStockInactiveText
+                    ]}>
+                        Stock Bajo
+                    </Text>
+                </TouchableOpacity>
+            </ScrollView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
+    container: {
+        flexDirection: 'row',
+    },
     scrollContent: {
         gap: 8,
+        alignItems: 'center',
     },
     chip: {
-        paddingHorizontal: 20,
+        paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
+        flexDirection: 'row',
     },
     activeChip: {
         backgroundColor: BrandColors.primary,
@@ -74,6 +111,18 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#e2e8f0', // slate-200
     },
+    lowStockChip: {
+        marginLeft: 8,
+    },
+    lowStockActive: {
+        backgroundColor: '#ef4444',
+        borderWidth: 0,
+    },
+    lowStockInactive: {
+        backgroundColor: '#fef2f2',
+        borderWidth: 1,
+        borderColor: '#fecaca',
+    },
     chipText: {
         fontSize: 10,
         fontWeight: '900',
@@ -84,5 +133,14 @@ const styles = StyleSheet.create({
     },
     inactiveChipText: {
         color: '#64748b', // slate-500
+    },
+    lowStockActiveText: {
+        color: 'white',
+    },
+    lowStockInactiveText: {
+        color: '#ef4444',
+    },
+    lowStockIcon: {
+        marginRight: 4,
     },
 });

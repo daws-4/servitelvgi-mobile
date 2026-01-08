@@ -71,7 +71,7 @@ export default function ProfileScreen() {
 
     const roleText = crewName
         ? `Técnico • ${crewName}`
-        : 'Técnico Instalador • Servitel';
+        : 'Técnico Instalador • ENLARED';
 
     // Get status from onDuty field (now a string: 'active' | 'inactive' | 'onDuty')
     const status = installer?.onDuty || 'inactive';
@@ -111,7 +111,10 @@ export default function ProfileScreen() {
 
                 // Fetch all orders for the crew (we filter client-side for now to avoid multiple requests)
                 // In a large production app, we should have a specific /stats endpoint
-                const orders = await getCrewOrders(crewId);
+                const response = await getCrewOrders(crewId);
+
+                // Handle paginated response format
+                const orders = response?.items || [];
 
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);

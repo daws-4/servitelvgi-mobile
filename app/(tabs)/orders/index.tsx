@@ -1,92 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, BackHandler } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, BackHandler, ActivityIndicator, FlatList } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useRouter } from 'expo-router';
-import MapView, { PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { FontAwesome } from '@expo/vector-icons';
 
 import InstallerHeader from '@/components/orders/InstallerHeader';
 import OrderFilters from '@/components/orders/OrderFilters';
-import OrderCard, { Order } from '@/components/orders/OrderCard';
-import OrderDetail from '@/components/orders/OrderDetail';
+import OrderCard from '@/components/orders/OrderCard';
 import { useLocationPermission } from '@/hooks/useLocationPermission';
+import { useOrders } from '@/hooks/useOrders';
+import { useAuth } from '@/app/contexts/AuthContext';
 import { BrandColors } from '@/constants/colors';
+import type { Order, OrderStatus, OrderType } from '@/types/Order';
 
-// Mock Data
-const MOCK_ORDERS: Order[] = [
-    {
-        id: '368063',
-        type: 'Instalación',
-        clientName: 'DANIEL CHACÓN',
-        address: 'MUNICIPIO CÁRDENAS, URB. LA FLORIDA...',
-        timeAgo: 'Hace 2 horas',
-        statusColor: '#4ade80',
-        statusBg: '#dcfce7', // green-100
-        statusText: '#16a34a', // green-600
-    },
-    {
-        id: '369120',
-        type: 'Avería Crítica',
-        clientName: 'MARÍA RODRÍGUEZ',
-        address: 'CALLE 5, SECTOR LAS LOMAS, EDIF...',
-        timeAgo: 'Urgente',
-        statusColor: '#f87171',
-        statusBg: '#fee2e2', // red-100
-        statusText: '#dc2626', // red-600
-    },
-    {
-        id: '36863',
-        type: 'Instalación',
-        clientName: 'DANIEL CHACÓN',
-        address: 'MUNICIPIO CÁRDENAS, URB. LA FLORIDA...',
-        timeAgo: 'Hace 2 horas',
-        statusColor: '#4ade80',
-        statusBg: '#dcfce7', // green-100
-        statusText: '#16a34a', // green-600
-    },
-    {
-        id: '3690',
-        type: 'Avería Crítica',
-        clientName: 'MARÍA RODRÍGUEZ',
-        address: 'CALLE 5, SECTOR LAS LOMAS, EDIF...',
-        timeAgo: 'Urgente',
-        statusColor: '#f87171',
-        statusBg: '#fee2e2', // red-100
-        statusText: '#dc2626', // red-600
-    },
-    {
-        id: '38063',
-        type: 'Instalación',
-        clientName: 'DANIEL CHACÓN',
-        address: 'MUNICIPIO CÁRDENAS, URB. LA FLORIDA...',
-        timeAgo: 'Hace 2 horas',
-        statusColor: '#4ade80',
-        statusBg: '#dcfce7', // green-100
-        statusText: '#16a34a', // green-600
-    },
-    {
-        id: '36910',
-        type: 'Avería Crítica',
-        clientName: 'MARÍA RODRÍGUEZ',
-        address: 'CALLE 5, SECTOR LAS LOMAS, EDIF...',
-        timeAgo: 'Urgente',
-        statusColor: '#f87171',
-        statusBg: '#fee2e2', // red-100
-        statusText: '#dc2626', // red-600
-    },
-];
-
-type ViewMode = 'list' | 'detail' | 'map';
+type ViewMode = 'list' | 'map';
 
 export default function OrdersScreen() {
     const insets = useSafeAreaInsets();
-    const tabBarHeight = useBottomTabBarHeight(); // Get TabBar height
+    const tabBarHeight = useBottomTabBarHeight();
+    const router = useRouter();
+
     const [viewMode, setViewMode] = useState<ViewMode>('list');
-    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-    const [activeFilter, setActiveFilter] = useState('all');
+
+    // Filters
+    const [searchValue, setSearchValue] = useState('');
+    const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
+    const [typeFilter, setTypeFilter] = useState<OrderType | 'all'>('all');
+
+    // Auth context for crew ID
+    const { installer } = useAuth();
+    const crewId = installer?.crew?._id || '';
+
+    // Orders data from API
+    const { orders, loading, loadingMore, loadMore, error, refetch } = useOrders(crewId);
 
     // Map & Location State
     const { hasPermission, requestPermission } = useLocationPermission();
@@ -106,7 +56,6 @@ export default function OrdersScreen() {
         const backAction = () => {
             if (viewMode !== 'list') {
                 setViewMode('list');
-                setSelectedOrder(null);
                 return true;
             }
             return false;
@@ -129,25 +78,39 @@ export default function OrdersScreen() {
         }
     };
 
+    // Filtered orders based on search and filters
+    const filteredOrders = useMemo(() => {
+        let filtered = [...orders];
+
+        // Apply search filter
+        if (searchValue.trim()) {
+            const search = searchValue.toLowerCase().trim();
+            filtered = filtered.filter(order =>
+                order.subscriberNumber.toLowerCase().includes(search) ||
+                order.subscriberName.toLowerCase().includes(search)
+            );
+        }
+
+        // Apply status filter
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter(order => order.status === statusFilter);
+        }
+
+        // Apply type filter
+        if (typeFilter !== 'all') {
+            filtered = filtered.filter(order => order.type === typeFilter);
+        }
+
+        return filtered;
+    }, [orders, searchValue, statusFilter, typeFilter]);
+
     const handleOrderPress = (order: Order) => {
-        setSelectedOrder(order);
-        setViewMode('detail');
+        router.push(`/orders/${order._id}`);
     };
 
     const handleMapPress = () => {
         setViewMode('map');
     };
-
-    // Render Detail View
-    if (viewMode === 'detail' && selectedOrder) {
-        return (
-            <OrderDetail
-                order={selectedOrder}
-                onBack={() => setViewMode('list')}
-                onMap={() => setViewMode('map')}
-            />
-        );
-    }
 
     // Render Map View
     if (viewMode === 'map') {
@@ -180,7 +143,23 @@ export default function OrdersScreen() {
                         showsUserLocation
                         showsMyLocationButton
                         showsCompass
-                    />
+                    >
+                        {/* Show markers for orders with coordinates */}
+                        {filteredOrders
+                            .filter(order => order.coordinates?.latitude && order.coordinates?.longitude)
+                            .map(order => (
+                                <Marker
+                                    key={order._id}
+                                    coordinate={{
+                                        latitude: order.coordinates!.latitude,
+                                        longitude: order.coordinates!.longitude,
+                                    }}
+                                    title={order.subscriberName}
+                                    description={order.address}
+                                    onCalloutPress={() => handleOrderPress(order)}
+                                />
+                            ))}
+                    </MapView>
                 </View>
             </View>
         );
@@ -191,24 +170,87 @@ export default function OrdersScreen() {
         <View style={styles.container}>
             <InstallerHeader />
             <OrderFilters
-                activeFilter={activeFilter}
-                onSelectFilter={setActiveFilter}
+                searchValue={searchValue}
+                onSearchChange={setSearchValue}
+                statusFilter={statusFilter}
+                onStatusChange={setStatusFilter}
+                typeFilter={typeFilter}
+                onTypeChange={setTypeFilter}
             />
 
-            <ScrollView
-                contentContainerStyle={[styles.listContent, { paddingBottom: tabBarHeight + 100 }]}
-                showsVerticalScrollIndicator={true}
-            >
-                {MOCK_ORDERS.map((order) => (
-                    <OrderCard
-                        key={order.id}
-                        order={order}
-                        onPress={() => handleOrderPress(order)}
-                    />
-                ))}
-            </ScrollView>
+            {/* Loading State */}
+            {loading && (
+                <View style={styles.centerContainer}>
+                    <ActivityIndicator size="large" color={BrandColors.primary} />
+                    <Text style={styles.loadingText}>Cargando órdenes...</Text>
+                </View>
+            )}
 
-            {/* Floating Map Button (simulating context action or just extra navigational aid) */}
+            {/* Error State */}
+            {error && !loading && (
+                <View style={styles.centerContainer}>
+                    <FontAwesome name="exclamation-triangle" size={40} color="#ef4444" />
+                    <Text style={styles.errorText}>{error}</Text>
+                    <TouchableOpacity style={styles.retryButton} onPress={refetch}>
+                        <Text style={styles.retryText}>Reintentar</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
+
+            {/* Empty State */}
+            {!loading && !error && filteredOrders.length === 0 && (
+                <View style={styles.centerContainer}>
+                    <FontAwesome name="inbox" size={48} color="#cbd5e1" />
+                    <Text style={styles.emptyTitle}>No se encontraron órdenes</Text>
+                    <Text style={styles.emptyText}>
+                        {searchValue || statusFilter !== 'all' || typeFilter !== 'all'
+                            ? 'Intenta ajustar los filtros de búsqueda'
+                            : 'No hay órdenes asignadas a tu cuadrilla'}
+                    </Text>
+                </View>
+            )}
+
+            {/* Orders List */}
+            {!loading && !error && filteredOrders.length > 0 && (
+                <FlatList
+                    data={filteredOrders}
+                    keyExtractor={(order) => order._id}
+                    renderItem={({ item }) => (
+                        <OrderCard
+                            order={item}
+                            onPress={() => handleOrderPress(item)}
+                        />
+                    )}
+                    contentContainerStyle={[
+                        styles.listContent,
+                        { paddingBottom: tabBarHeight + 100 }
+                    ]}
+                    showsVerticalScrollIndicator={true}
+                    onEndReached={() => {
+                        // Only load more if no filters are active (simple infinite scroll)
+                        // Or we can try to support it with filters too, but logic might be tricky if filters are client-side only?
+                        // Actually, filters are passed to the hook and then to API.
+                        // But wait! logic in index.tsx does client-side filtering on `orders` array returned by hook.
+                        // If we use pagination, we MUST fetch filtered results from backend or else we filter only the loaded page.
+                        // CURRENTLY `filteredOrders` is client-side filtered.
+                        // Since useOrders fetches PAGE 1-N, applying client-side filter to that is partial.
+                        // ideally we should move filters to API param in useOrders.
+                        if (!searchValue && statusFilter === 'all' && typeFilter === 'all') {
+                            loadMore();
+                        }
+                    }}
+                    onEndReachedThreshold={0.5}
+                    ListFooterComponent={
+                        loadingMore ? (
+                            <View style={{ padding: 16, alignItems: 'center' }}>
+                                <ActivityIndicator size="small" color={BrandColors.primary} />
+                            </View>
+                        ) : null
+                    }
+                />
+            )}
+
+            {/* Floating Map Button */}
             <TouchableOpacity
                 style={[styles.floatingMapBtn, { bottom: tabBarHeight + 24 }]}
                 onPress={handleMapPress}
@@ -222,10 +264,51 @@ export default function OrdersScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8fafc', // slate-50
+        backgroundColor: '#f8fafc',
     },
     listContent: {
+        paddingTop: 8,
         paddingBottom: 100,
+    },
+    centerContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 40,
+    },
+    loadingText: {
+        marginTop: 16,
+        fontSize: 14,
+        color: '#64748b',
+    },
+    errorText: {
+        marginTop: 16,
+        fontSize: 14,
+        color: '#ef4444',
+        textAlign: 'center',
+    },
+    retryButton: {
+        marginTop: 16,
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        backgroundColor: '#ef4444',
+        borderRadius: 12,
+    },
+    retryText: {
+        color: '#fff',
+        fontWeight: '600',
+    },
+    emptyTitle: {
+        marginTop: 16,
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#374151',
+    },
+    emptyText: {
+        marginTop: 8,
+        fontSize: 14,
+        color: '#94a3b8',
+        textAlign: 'center',
     },
     mapHeader: {
         position: 'absolute',
@@ -233,7 +316,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         zIndex: 10,
-        backgroundColor: 'rgba(255,255,255,0.9)',
+        backgroundColor: 'rgba(255,255,255,0.95)',
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 24,

@@ -11,6 +11,7 @@ export interface InventoryItemData {
     unit: string;
     icon: string;
     isLowStock?: boolean;
+    isEquipment?: boolean;
 }
 
 interface InventoryItemProps {
@@ -20,12 +21,14 @@ interface InventoryItemProps {
 
 export default function InventoryItem({ item, onPress }: InventoryItemProps) {
     const isLowStock = item.isLowStock || false;
+    const isEquipment = item.isEquipment || false;
 
     return (
         <TouchableOpacity
             style={styles.card}
-            activeOpacity={0.7}
-            onPress={onPress}
+            activeOpacity={isEquipment ? 0.7 : 1}
+            onPress={isEquipment ? onPress : undefined}
+            disabled={!isEquipment}
         >
             <View style={styles.leftSection}>
                 <View style={[
@@ -39,7 +42,14 @@ export default function InventoryItem({ item, onPress }: InventoryItemProps) {
                     />
                 </View>
                 <View style={styles.infoContainer}>
-                    <Text style={styles.name}>{item.name}</Text>
+                    <View style={styles.nameRow}>
+                        <Text style={styles.name}>{item.name}</Text>
+                        {isEquipment && (
+                            <View style={styles.equipmentBadge}>
+                                <FontAwesome name="microchip" size={8} color="#3b82f6" />
+                            </View>
+                        )}
+                    </View>
                     <Text style={styles.code}>CÓD: {item.code}</Text>
                 </View>
             </View>
@@ -58,6 +68,15 @@ export default function InventoryItem({ item, onPress }: InventoryItemProps) {
                     {isLowStock ? 'BAJO STOCK' : item.unit}
                 </Text>
             </View>
+
+            {isEquipment && (
+                <FontAwesome
+                    name="chevron-right"
+                    size={12}
+                    color="#cbd5e1"
+                    style={styles.chevron}
+                />
+            )}
         </TouchableOpacity>
     );
 }
@@ -140,5 +159,20 @@ const styles = StyleSheet.create({
     },
     unitLowStock: {
         color: '#f87171', // red-400
+    },
+    nameRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        flex: 1,
+    },
+    equipmentBadge: {
+        backgroundColor: '#dbeafe',
+        paddingHorizontal: 4,
+        paddingVertical: 2,
+        borderRadius: 4,
+    },
+    chevron: {
+        marginLeft: 8,
     },
 });

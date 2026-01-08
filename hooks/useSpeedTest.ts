@@ -35,6 +35,14 @@ export const useSpeedTest = () => {
     ping: 0
   });
 
+  // Store network data in refs to ensure it persists and is available when test ends
+  const networkDataRef = useRef({
+    isp: 'Desconocido',
+    networkName: 'Desconocido',
+    networkBand: 'Desconocido',
+    coordinates: null as Coordinates | null
+  });
+
   // Helper function to parse speed values (removes "Mbps" and formats)
   const parseSpeed = (speedStr: string | undefined | null): number => {
     if (!speedStr) return 0;
@@ -69,8 +77,9 @@ export const useSpeedTest = () => {
           const currentSpeed = parseSpeed(event.currentSpeed); // Progressive speed during test
           const ping = parsePing(event.ping);
           
+          const isTestFinished = event.status === 'Speed test finished';
+          
           // console.log('📊 Parsed values:', { downloadSpeed, uploadSpeed, currentSpeed, ping, status: event.status });
-          // console.log('✅ UPDATING COMPONENT STATE NOW!');
           
           // Update state preserving previous values
           setResults(prev => {
@@ -83,7 +92,7 @@ export const useSpeedTest = () => {
               // Only update ping if we have a value > 0, otherwise keep previous
               ping: ping > 0 ? ping.toFixed(0) : prev.ping,
               // Update status based on event
-              status: event.status === 'Speed test finished' 
+              status: isTestFinished 
                 ? 'Finalizado' 
                 : event.status === 'Upload Test'
                   ? 'Probando Subida'
@@ -101,7 +110,30 @@ export const useSpeedTest = () => {
               }
             }
             
-            // console.log('🎯 New state being set:', newState);
+            // IMPORTANT: When test finishes, include network data from ref
+            if (isTestFinished) {
+              console.log('[SpeedTest] 🏁 Test finished via testStartedListener. Ref data:', JSON.stringify(networkDataRef.current, null, 2));
+              console.log('[SpeedTest] 📊 Previous state data:', { isp: prev.isp, networkName: prev.networkName, networkBand: prev.networkBand });
+              
+              // Helper function to check if value is a default/loading value
+              const isValidValue = (val: string | null | undefined): boolean => {
+                return !!val && val !== 'Desconocido' && val !== 'Cargando...' && val !== 'N/A';
+              };
+              
+              // Use ref value if valid, else preserve prev value if it's valid
+              const refIsp = networkDataRef.current.isp;
+              const refNetworkName = networkDataRef.current.networkName;
+              const refNetworkBand = networkDataRef.current.networkBand;
+              const refCoordinates = networkDataRef.current.coordinates;
+              
+              newState.isp = isValidValue(refIsp) ? refIsp : (isValidValue(prev.isp) ? prev.isp : refIsp);
+              newState.networkName = isValidValue(refNetworkName) ? refNetworkName : (isValidValue(prev.networkName) ? prev.networkName : refNetworkName);
+              newState.networkBand = isValidValue(refNetworkBand) ? refNetworkBand : (isValidValue(prev.networkBand) ? prev.networkBand : refNetworkBand);
+              newState.coordinates = refCoordinates || prev.coordinates;
+              
+              console.log('[SpeedTest] 🎯 Final state with network data:', JSON.stringify(newState, null, 2));
+            }
+            
             return newState;
           });
         });
@@ -158,21 +190,32 @@ export const useSpeedTest = () => {
         });
 
         const finishListener = SpeedCheckerPlugin.addTestFinishedListener?.((event: any) => {
-          // console.log('🏁 Test finished event:', event);
+          console.log('[SpeedTest] 🏁 Test finished event received');
           
           const downloadSpeed = parseSpeed(event?.downloadSpeed || event?.data?.downloadSpeed);
           const uploadSpeed = parseSpeed(event?.uploadSpeed || event?.data?.uploadSpeed);
           const ping = parsePing(event?.ping || event?.data?.ping);
           
-          // console.log('✅ UPDATING FINAL VALUES');
+          console.log('[SpeedTest] ✅ Final values:', { downloadSpeed, uploadSpeed, ping });
+          console.log('[SpeedTest] 📡 Network data from ref:', JSON.stringify(networkDataRef.current, null, 2));
           
-          setResults(prev => ({
-            ...prev,
-            download: downloadSpeed > 0 ? downloadSpeed.toFixed(2) : prev.download,
-            upload: uploadSpeed > 0 ? uploadSpeed.toFixed(2) : prev.upload,
-            ping: ping > 0 ? ping.toFixed(0) : prev.ping,
-            status: 'Finalizado'
-          }));
+          // Include network data from ref to ensure it persists
+          setResults(prev => {
+            const newState = {
+              ...prev,
+              download: downloadSpeed > 0 ? downloadSpeed.toFixed(2) : prev.download,
+              upload: uploadSpeed > 0 ? uploadSpeed.toFixed(2) : prev.upload,
+              ping: ping > 0 ? ping.toFixed(0) : prev.ping,
+              status: 'Finalizado',
+              // Ensure network data is included from ref (in case state wasn't updated in time)
+              isp: networkDataRef.current.isp || prev.isp,
+              networkName: networkDataRef.current.networkName || prev.networkName,
+              networkBand: networkDataRef.current.networkBand || prev.networkBand,
+              coordinates: networkDataRef.current.coordinates || prev.coordinates
+            };
+            console.log('[SpeedTest] 🎯 Setting final state:', JSON.stringify(newState, null, 2));
+            return newState;
+          });
         });
 
         // console.log('🎧 SpeedChecker listeners registered:', {
@@ -239,19 +282,30 @@ export const useSpeedTest = () => {
       }
 
       // Get WiFi info
+      console.log('[SpeedTest] NetInfo state:', JSON.stringify(netInfoState, null, 2));
+      
       if (netInfoState.type === 'wifi' && netInfoState.details) {
         const wifiDetails = netInfoState.details as any;
         const ssid = wifiDetails.ssid || 'Red WiFi';
         
+        console.log('[SpeedTest] WiFi Details:', JSON.stringify(wifiDetails, null, 2));
+        console.log('[SpeedTest] SSID:', ssid);
+        
         let band = 'Desconocido';
         if (wifiDetails.frequency) {
           const frequency = parseInt(wifiDetails.frequency);
+          console.log('[SpeedTest] Frequency:', frequency);
           if (frequency >= 2400 && frequency <= 2500) {
             band = '2.4 GHz';
           } else if (frequency >= 5000 && frequency <= 5900) {
             band = '5 GHz';
           }
         }
+        
+        // Store in ref for persistence
+        networkDataRef.current.networkName = ssid;
+        networkDataRef.current.networkBand = band;
+        console.log('[SpeedTest] Stored in ref:', networkDataRef.current);
         
         setResults(prev => ({
           ...prev,
@@ -260,13 +314,21 @@ export const useSpeedTest = () => {
           error: null
         }));
       } else if (netInfoState.type === 'cellular') {
+        const cellBand = netInfoState.details?.cellularGeneration || 'Desconocido';
+        console.log('[SpeedTest] Cellular connection:', cellBand);
+        
+        // Store in ref for persistence
+        networkDataRef.current.networkName = 'Datos Móviles';
+        networkDataRef.current.networkBand = cellBand;
+        
         setResults(prev => ({
           ...prev,
           networkName: 'Datos Móviles',
-          networkBand: netInfoState.details?.cellularGeneration || 'Desconocido',
+          networkBand: cellBand,
           error: null
         }));
       } else {
+        console.log('[SpeedTest] Unknown network type:', netInfoState.type);
         setResults(prev => ({
           ...prev,
           networkName: 'Desconocido',
@@ -292,12 +354,17 @@ export const useSpeedTest = () => {
           accuracy: Location.Accuracy.Balanced,
           timeInterval: 5000
         });
+        const coords = {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude
+        };
+        
+        // Store in ref for persistence
+        networkDataRef.current.coordinates = coords;
+        
         setResults(prev => ({
           ...prev,
-          coordinates: {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude
-          }
+          coordinates: coords
         }));
       }
     } catch (e) {
@@ -316,13 +383,26 @@ export const useSpeedTest = () => {
       
       if (response.ok) {
         const data = await response.json();
-        setResults(prev => ({ ...prev, isp: data.isp || 'Desconocido' }));
+        const ispName = data.isp || 'Desconocido';
+        console.log('[SpeedTest] ISP API Response:', ispName);
+        
+        // Store in ref for persistence
+        networkDataRef.current.isp = ispName;
+        
+        setResults(prev => ({ ...prev, isp: ispName }));
       } else {
+        console.log('[SpeedTest] ISP API failed with status:', response.status);
+        networkDataRef.current.isp = 'Desconocido';
         setResults(prev => ({ ...prev, isp: 'Desconocido' }));
       }
     } catch (e) {
+      console.log('[SpeedTest] ISP fetch error:', e);
+      networkDataRef.current.isp = 'Desconocido';
       setResults(prev => ({ ...prev, isp: 'Desconocido' }));
     }
+
+    // Log final ref state before starting speed test
+    console.log('[SpeedTest] Final networkDataRef before starting test:', JSON.stringify(networkDataRef.current, null, 2));
 
     // 3. Iniciar la prueba de velocidad (critical)
     try {

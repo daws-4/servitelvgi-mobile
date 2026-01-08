@@ -17,7 +17,7 @@ export interface UploadResult {
 
 // Input for uploading order evidence
 export interface UploadOrderEvidenceInput {
-  file: File | Blob;
+  file: any; // React Native file object { uri, type, name }
   orderId: string;
   installerId: string;
   crewId: string;

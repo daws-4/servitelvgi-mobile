@@ -31,9 +31,76 @@ export interface UploadProfilePhotoResult {
  */
 class PocketBaseService {
   private baseUrl: string;
+  // Hardcoded credentials as requested
+  private adminEmail = 'casaos@admin.local';
+  private adminPass = 'adminpocketbase';
+  private adminToken: string | null = null;
+
+  /**
+   * Authenticate as admin to get token
+   */
+  /**
+   * Authenticate as admin (or user) to get token
+   */
+  private async getAdminToken(): Promise<string | null> {
+    if (this.adminToken) return this.adminToken;
+
+    const baseUrl = this.baseUrl || Config.POCKETBASE_URL || 'https://pb.servitelv.com';
+
+    // 1. Try Admin Auth
+    try {
+      console.log('🔑 [PocketBase] Authenticating as admin...');
+      const response = await fetch(`${baseUrl}/api/admins/auth-with-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          identity: this.adminEmail,
+          password: this.adminPass,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        this.adminToken = data.token;
+        console.log('✅ [PocketBase] Admin authenticated.');
+        return this.adminToken;
+      } else {
+         console.warn(`⚠️ [PocketBase] Admin auth failed with status ${response.status}. Trying user auth...`);
+      }
+    } catch (error) {
+       console.error('❌ [PocketBase] Admin auth network error:', error);
+    }
+
+    // 2. Fallback: Try User Auth (users collection)
+    try {
+       console.log('🔑 [PocketBase] Attempting auth as user (fallback)...');
+       const response = await fetch(`${baseUrl}/api/collections/users/auth-with-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          identity: this.adminEmail, // Reusing credential
+          password: this.adminPass,
+        }),
+      });
+
+      if (response.ok) {
+         const data = await response.json();
+         this.adminToken = data.token;
+         console.log('✅ [PocketBase] User/Admin authenticated via users collection.');
+         return this.adminToken;
+      } else {
+         console.error(`❌ [PocketBase] User auth failed with status ${response.status}`);
+         return null;
+      }
+    } catch (error) {
+       console.error('❌ [PocketBase] User auth network error:', error);
+       return null;
+    }
+  }
 
   constructor() {
-    this.baseUrl = POCKETBASE_URL;
+    this.baseUrl = Config.POCKETBASE_URL || 'https://pb.servitelv.com';
+    console.log('📝 [PocketBase] Service initialized with URL:', this.baseUrl);
   }
 
   /**
@@ -209,6 +276,77 @@ class PocketBaseService {
       return null;
     }
   }
+
+  /**
+   * Upload signature directly to PocketBase
+   * Creates or updates a record in customers_signatures collection
+   */
+  uploadSignature = async (
+    orderId: string,
+    imageUri: string
+  ): Promise<UploadProfilePhotoResult> => {
+    try {
+      // Get admin token first
+      const token = await this.getAdminToken();
+      
+      // Prepare FormData
+      const formData = new FormData();
+      formData.append('order_id', orderId);
+      formData.append('mobile', 'true');
+      
+      // Create file object
+      const file = {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: `signature_${orderId}_${Date.now()}.jpg`,
+      } as any;
+      formData.append('image', file);
+
+      // Robust baseUrl
+      const baseUrl = this.baseUrl || Config.POCKETBASE_URL || 'https://pb.servitelv.com';
+
+      const headers: HeadersInit = {};
+      if (token) {
+        // PocketBase standard: Authorization: <token>
+        headers['Authorization'] = token; 
+      }
+
+      console.log('📝 [PocketBase] Uploading Signature with Admin Token...');
+      
+      const response = await fetch(
+        `${baseUrl}/api/collections/customers_signatures/records`,
+        {
+          method: 'POST',
+          headers: headers, // Add headers with auth
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('PocketBase signature upload error:', errorData);
+        return {
+          success: false,
+          error: errorData.message || `Error ${response.status}: ${response.statusText}`,
+        };
+      }
+
+      const record: PocketBaseRecord = await response.json();
+      const imageUrl = this.getImageUrl(record);
+
+      return {
+        success: true,
+        record,
+        imageUrl,
+      };
+    } catch (error: any) {
+      console.error('Error uploading signature to PocketBase:', error);
+      return {
+        success: false,
+        error: error.message || 'Error al subir la firma',
+      };
+    }
+  }
 }
 
 // Singleton instance
@@ -222,4 +360,5 @@ export const {
   getProfilePhotoUrl,
   findRecordByUserId,
   getImageUrl,
+  uploadSignature,
 } = pocketBaseService;

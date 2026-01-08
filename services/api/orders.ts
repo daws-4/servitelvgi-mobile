@@ -17,11 +17,12 @@ import type { ApiResponse } from '@/types/api';
  */
 class OrderService {
   /**
-   * GET /api/web/orders?assignedTo=<crewId>
-   * Obtener órdenes asignadas a una cuadrilla
+   * GET /api/web/orders?assignedTo=<crewId>&page=1&limit=10
+   * Obtener órdenes asignadas a una cuadrilla con paginación
+   * Note: Handles both old (array) and new (paginated) response formats
    */
-  async getCrewOrders(crewId: string, filters?: OrderFilters): Promise<Order[]> {
-    const params: any = { assignedTo: crewId };
+  async getCrewOrders(crewId: string, filters?: OrderFilters, page: number = 1, limit: number = 50): Promise<{ items: Order[], total: number }> {
+    const params: any = { assignedTo: crewId, page, limit };
     
     if (filters?.status) {
       params.status = Array.isArray(filters.status) 
@@ -32,8 +33,22 @@ class OrderService {
     if (filters?.startDate) params.startDate = filters.startDate;
     if (filters?.endDate) params.endDate = filters.endDate;
     
-    const response = await httpClient.get<Order[]>('/api/web/orders', { params });
-    return response.data;
+    const response = await httpClient.get<any>('/api/web/orders', { params });
+    
+    // Handle both old (array) and new (paginated object) response formats
+    if (Array.isArray(response.data)) {
+      // Old format - just an array, do client-side pagination
+      const start = (page - 1) * limit;
+      const items = response.data.slice(start, start + limit);
+      return { items, total: response.data.length };
+    } else if (response.data?.items && Array.isArray(response.data.items)) {
+      // New format - paginated response
+      return response.data;
+    } else {
+      // Unexpected format
+      console.error('Unexpected API response:', response.data);
+      return { items: [], total: 0 };
+    }
   }
 
   /**
@@ -157,6 +172,62 @@ class OrderService {
     });
     return response.data;
   }
+
+  /**
+   * DELETE /api/web/upload/signature?orderId=xxx
+   * Eliminar firma del cliente
+   */
+  async deleteSignature(orderId: string): Promise<void> {
+    await httpClient.delete('/api/web/upload/signature', {
+      params: { orderId }
+    });
+  }
+
+  /**
+   * POST /api/web/upload/signature
+   * Subir firma del cliente a PocketBase
+   */
+  async uploadSignature(orderId: string, imageUri: string): Promise<string> {
+    const formData = new FormData();
+    formData.append('order_id', orderId);
+    
+    // Create file object for React Native
+    const file = {
+      uri: imageUri,
+      type: 'image/jpeg', // We convert to jpeg in UI
+      name: `signature_${orderId}_${Date.now()}.jpg`,
+    } as any;
+    
+    formData.append('image', file);
+
+    console.log('📝 [OrderService] Uploading signature via Backend Proxy...');
+    console.log('📝 [OrderService] URI:', imageUri);
+
+    const apiResponse = await httpClient.post<{ success: boolean; url: string }>('/api/web/upload/signature', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+
+    return apiResponse.data.url;
+  }
+
+  /**
+   * POST /api/web/upload/signature (Mobile Flow)
+   * Notificar al backend que se subió una firma a PocketBase (isobile=true)
+   */
+  async saveSignatureUrl(orderId: string, signatureUrl: string): Promise<void> {
+    const formData = new FormData();
+    formData.append('order_id', orderId);
+    formData.append('mobile', 'true');
+    formData.append('signature_url', signatureUrl);
+
+    await httpClient.post('/api/web/upload/signature', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+  }
 }
 
 // Crear instancia singleton
@@ -175,4 +246,7 @@ export const {
   startOrder,
   completeOrder,
   getAvailableOrders,
+  saveSignatureUrl,
+  uploadSignature,
+  deleteSignature,
 } = orderService;

@@ -35,7 +35,7 @@ export interface PermissionDeniedDialogProps {
 const PERMISSION_MESSAGES: Record<PermissionType, { title: string; message: string; icon: keyof typeof Ionicons.glyphMap }> = {
     location: {
         title: 'Permiso de Ubicación',
-        message: 'Servitel necesita acceso a tu ubicación para mostrar tu posición en el mapa y optimizar las rutas de instalación. Esto nos ayuda a asignar las órdenes más cercanas a ti.',
+        message: 'ENLARED necesita acceso a tu ubicación para mostrar tu posición en el mapa y optimizar las rutas de instalación. Esto nos ayuda a asignar las órdenes más cercanas a ti.',
         icon: 'location',
     },
     camera: {

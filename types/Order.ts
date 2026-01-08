@@ -50,6 +50,11 @@ export interface MaterialUsed {
   quantity: number;       // Cantidad usada
   batchCode?: string;     // Código de lote (para bobinas)
   description?: string;   // Descripción (populada desde backend)
+  instanceIds?: string[]; // IDs de instancias de equipos
+  instanceDetails?: Array<{ // Detalles de instancias para visualización
+    uniqueId: string;
+    serialNumber: string;
+  }>;
 }
 
 /**

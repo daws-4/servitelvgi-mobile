@@ -43,7 +43,7 @@ export default function Header({ showBackButton = false, title = '', hasAvatar =
                     {showLogo && (
                         <View className="mr-3">
                             <Text style={{ color: BrandColors.primary }} className="text-2xl font-bold">
-                                Servitel
+                               ENLARED
                             </Text>
                         </View>
                     )}

@@ -5,6 +5,7 @@ import type {
   InventoryHistoryEntry,
   InventoryHistoryFilters,
   AssignedInventoryItem,
+  EquipmentInstance,
 } from '@/types/Inventory';
 
 /**
@@ -13,15 +14,26 @@ import type {
  */
 class InventoryService {
   /**
-   * GET /api/web/inventory
+   * GET /api/web/crews?id=<crewId>
    * Obtener inventario de la cuadrilla
    */
   async getCrewInventory(crewId: string): Promise<AssignedInventoryItem[]> {
-    const response = await httpClient.get<{ assignedInventory: AssignedInventoryItem[] }>(
+    // El API devuelve el objeto crew directamente con assignedInventory como propiedad
+    const response = await httpClient.get<any>(
       `/api/web/crews?id=${crewId}`
     );
     
-    return response.data.assignedInventory || [];
+    // La respuesta puede tener la estructura { assignedInventory: [...] } o ser el crew completo
+    const crew = response.data;
+    
+    // Verificar si es un array (lista de crews) o un objeto (crew individual)
+    if (Array.isArray(crew)) {
+      console.warn('Se esperaba un crew individual, se recibió un array');
+      return [];
+    }
+    
+    // Retornar el inventario asignado o array vacío
+    return crew?.assignedInventory || [];
   }
 
   /**
@@ -83,6 +95,22 @@ class InventoryService {
     
     return response.data;
   }
+
+  /**
+   * GET /api/web/inventory/instances?inventoryId=<id>&status=<status>
+   * Obtener instancias de un equipo
+   */
+  async getEquipmentInstances(inventoryId: string, status?: string): Promise<EquipmentInstance[]> {
+    const params: any = { inventoryId };
+    if (status) params.status = status;
+    
+    const response = await httpClient.get<{ success: boolean; instances: EquipmentInstance[] }>(
+      '/api/web/inventory/instances',
+      { params }
+    );
+    
+    return response.data.instances || [];
+  }
 }
 
 // Crear instancia singleton
@@ -97,4 +125,5 @@ export const {
   getInventoryHistory,
   getInventoryItemById,
   getBatchByCode,
+  getEquipmentInstances,
 } = inventoryService;

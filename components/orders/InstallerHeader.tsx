@@ -18,7 +18,7 @@ export default function InstallerHeader({ onSearch }: InstallerHeaderProps) {
     // Get role/crew info
     const roleText = installer?.crew
         ? `Técnico • ${installer.crew.name}`
-        : 'Técnico Instalador • Servitel';
+        : 'Técnico Instalador • ENLARED';
 
     return (
         <LinearGradient

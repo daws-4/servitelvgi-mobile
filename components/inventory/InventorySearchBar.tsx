@@ -29,7 +29,7 @@ export default function InventorySearchBar({ onSearch }: InventorySearchBarProps
                     styles.input,
                     isFocused && styles.inputFocused,
                 ]}
-                placeholder="Buscar material o código..."
+                placeholder="Buscar por nombre, código, serial o MAC..."
                 placeholderTextColor="#94a3b8"
                 value={searchText}
                 onChangeText={handleTextChange}

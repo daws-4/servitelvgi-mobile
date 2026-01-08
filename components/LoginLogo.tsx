@@ -20,7 +20,7 @@ export function LoginLogo() {
             </View>
 
             {/* Título principal */}
-            <Text style={styles.logoText}>SERVITEL</Text>
+            <Text style={styles.logoText}>ENLARED</Text>
 
             {/* Subtítulo */}
             <Text style={styles.subtitle}>Gestión de Instaladores</Text>
