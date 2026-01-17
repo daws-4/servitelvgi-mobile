@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import orderService from '@/services/api/orders';
-import type { 
-  Order, 
-  OrderFilters, 
-  OrderStatus, 
+import type {
+  Order,
+  OrderFilters,
+  OrderStatus,
   OrderCompletionData,
   Coordinates,
   InternetTestResult,
@@ -17,7 +17,7 @@ interface UseOrdersReturn {
   loadingMore: boolean;
   hasMore: boolean;
   error: string | null;
-  refetch: () => Promise<void>;
+  refetch: (options?: { silent?: boolean }) => Promise<void>;
   loadMore: () => void;
   selectOrder: (orderId: string | null) => Promise<void>;
   updateStatus: (orderId: string, status: OrderStatus) => Promise<void>;
@@ -37,7 +37,7 @@ export const useOrders = (crewId: string, filters?: OrderFilters): UseOrdersRetu
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Pagination State
   const [page, setPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -55,7 +55,7 @@ export const useOrders = (crewId: string, filters?: OrderFilters): UseOrdersRetu
   }, [crewId, JSON.stringify(filters)]);
 
   // Fetch orders
-  const fetchOrders = useCallback(async (reset = false) => {
+  const fetchOrders = useCallback(async (reset = false, silent = false) => {
     if (!crewId) {
       setLoading(false);
       return;
@@ -63,27 +63,29 @@ export const useOrders = (crewId: string, filters?: OrderFilters): UseOrdersRetu
 
     try {
       if (reset) {
-        setLoading(true);
+        if (!silent) {
+          setLoading(true);
+        }
         setPage(1);
       } else {
         setLoadingMore(true);
       }
-      
+
       setError(null);
-      
+
       const currentPage = reset ? 1 : page;
       const data = await orderService.getCrewOrders(crewId, filters, currentPage, LIMIT);
-      
+
       // Add null safety checks
       if (data && data.items && Array.isArray(data.items)) {
         setOrders(prev => reset ? data.items : [...prev, ...data.items]);
         setHasMore(data.items.length === LIMIT);
-        
+
         if (!reset) {
           setPage(prev => prev + 1);
         } else {
-           // If reset, next page is 2
-           setPage(2);
+          // If reset, next page is 2
+          setPage(2);
         }
       } else {
         // Fallback for unexpected response format
@@ -96,19 +98,21 @@ export const useOrders = (crewId: string, filters?: OrderFilters): UseOrdersRetu
       setError(err.message || 'Error al cargar órdenes');
       console.error('Error fetching orders:', err);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
       setLoadingMore(false);
     }
   }, [crewId, filters, page]);
 
   const loadMore = useCallback(() => {
     if (!loading && !loadingMore && hasMore) {
-        fetchOrders(false);
+      fetchOrders(false);
     }
   }, [loading, loadingMore, hasMore, fetchOrders]);
 
-  const refetch = useCallback(() => {
-      return fetchOrders(true);
+  const refetch = useCallback((options?: { silent?: boolean }) => {
+    return fetchOrders(true, options?.silent);
   }, [fetchOrders]);
 
   // Select an order by ID
@@ -133,10 +137,10 @@ export const useOrders = (crewId: string, filters?: OrderFilters): UseOrdersRetu
     try {
       setError(null);
       const updatedOrder = await orderService.updateOrderStatus(orderId, status);
-      
+
       // Update in list
       setOrders(prev => prev.map(o => o._id === orderId ? updatedOrder : o));
-      
+
       // Update selected if it's the same
       if (selectedOrder?._id === orderId) {
         setSelectedOrder(updatedOrder);
@@ -153,10 +157,10 @@ export const useOrders = (crewId: string, filters?: OrderFilters): UseOrdersRetu
     try {
       setError(null);
       const updatedOrder = await orderService.updateOrderCoordinates(orderId, coordinates);
-      
+
       // Update in list
       setOrders(prev => prev.map(o => o._id === orderId ? updatedOrder : o));
-      
+
       // Update selected if it's the same
       if (selectedOrder?._id === orderId) {
         setSelectedOrder(updatedOrder);
@@ -173,10 +177,10 @@ export const useOrders = (crewId: string, filters?: OrderFilters): UseOrdersRetu
     try {
       setError(null);
       const updatedOrder = await orderService.updateInternetTest(orderId, data);
-      
+
       // Update in list
       setOrders(prev => prev.map(o => o._id === orderId ? updatedOrder : o));
-      
+
       // Update selected if it's the same
       if (selectedOrder?._id === orderId) {
         setSelectedOrder(updatedOrder);
@@ -193,10 +197,10 @@ export const useOrders = (crewId: string, filters?: OrderFilters): UseOrdersRetu
     try {
       setError(null);
       const updatedOrder = await orderService.startOrder(orderId, coordinates);
-      
+
       // Update in list
       setOrders(prev => prev.map(o => o._id === orderId ? updatedOrder : o));
-      
+
       // Update selected if it's the same
       if (selectedOrder?._id === orderId) {
         setSelectedOrder(updatedOrder);
@@ -213,10 +217,10 @@ export const useOrders = (crewId: string, filters?: OrderFilters): UseOrdersRetu
     try {
       setError(null);
       const updatedOrder = await orderService.completeOrder(orderId, data);
-      
+
       // Update in list
       setOrders(prev => prev.map(o => o._id === orderId ? updatedOrder : o));
-      
+
       // Update selected if it's the same
       if (selectedOrder?._id === orderId) {
         setSelectedOrder(updatedOrder);

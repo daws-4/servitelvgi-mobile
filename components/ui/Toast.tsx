@@ -2,7 +2,7 @@ import Toast from 'react-native-toast-message';
 import { StatusColors, BrandColors } from '@/constants/colors';
 
 /**
- * Configuración personalizada para Toast con colores corporativos de Servitel
+ * Configuración personalizada para Toast con colores corporativos de ENLARED
  */
 export const toastConfig = {
     success: {

@@ -23,12 +23,12 @@ export interface Vehicle {
  */
 export interface Crew {
   _id: string;
-  name: string;                              // Nombre de la cuadrilla
+  number: number;                            // Número de la cuadrilla
   leader: string;                            // ID del líder
   leaderDetails?: InstallerBasic;            // Detalles del líder (populado)
   members: string[];                         // IDs de miembros
   memberDetails?: InstallerBasic[];          // Detalles de miembros (populado)
-  isActive: boolean;                         // Cuadrilla activa
+  isActive: boolean;                         // Cuad rilla activa
   assignedInventory: AssignedInventoryItem[]; // Inventario asignado
   vehicle?: Vehicle;                         // Información del vehículo
   createdAt: Date | string;
@@ -50,7 +50,7 @@ export interface InstallerBasic {
  */
 export interface CrewSummary {
   _id: string;
-  name: string;
+  number: number;
   leaderName: string;
   memberCount: number;
   isActive: boolean;

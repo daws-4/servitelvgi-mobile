@@ -40,7 +40,7 @@ export interface ProfileHeaderProps {
  * ```tsx
  * <ProfileHeader
  *   installerName="Daniel Hernández"
- *   role="Técnico Nivel 3 • Servitel"
+ *   role="Técnico Nivel 3 • ENLARED"
  *   status="onduty"
  *   avatarUri="https://example.com/avatar.jpg"
  * />

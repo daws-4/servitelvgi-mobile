@@ -21,6 +21,7 @@ const STATUS_OPTIONS: { value: OrderStatus | 'all'; label: string }[] = [
     { value: 'in_progress', label: 'En Progreso' },
     { value: 'completed', label: 'Completadas' },
     { value: 'cancelled', label: 'Canceladas' },
+    { value: 'hard', label: 'HARD' },
 ];
 
 // Type filter options
@@ -56,7 +57,7 @@ export default function OrderFilters({
                 <FontAwesome name="search" size={14} color="#94a3b8" style={styles.searchIcon} />
                 <TextInput
                     style={styles.searchInput}
-                    placeholder="Buscar por nombre o N° abonado..."
+                    placeholder="Buscar por nombre, N° abonado o Ticket ID..."
                     placeholderTextColor="#94a3b8"
                     value={searchValue}
                     onChangeText={onSearchChange}

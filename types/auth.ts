@@ -47,7 +47,7 @@ export interface InstallerProfile {
  */
 export interface CrewInfo {
   _id: string;
-  name: string;
+  number: number;
 }
 
 /**
@@ -76,7 +76,7 @@ export interface InstallerTokenPayload {
   surname: string;
   role: 'installer';
   crewId: string | null;
-  crewName: string | null;
+  crewNumber: number | null;
   iat?: number; // Issued at
   exp?: number; // Expiration
 }

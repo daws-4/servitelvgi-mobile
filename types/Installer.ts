@@ -34,10 +34,10 @@ export interface Installer {
   status: InstallerStatus;         // Estado
   onDuty: OnDutyStatus;             // Estado de servicio ('active' | 'inactive' | 'onDuty')
   showInventory: boolean;          // Mostrar tab de inventario
-  currentCrew?: string;            // ID de cuadrilla actual
+  currentCrew?: string;            // ID de cuadrilla actual (ObjectId)
   crewDetails?: {                  // Detalles de cuadrilla (populado)
     _id: string;
-    name: string;
+    number: number;
   };
   pushToken?: string;              // Token de notificaciones push
   profilePicture?: string;         // URL de foto de perfil

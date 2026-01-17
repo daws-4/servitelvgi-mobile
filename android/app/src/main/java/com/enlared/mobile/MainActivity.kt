@@ -1,4 +1,4 @@
-package com.servitelv.mobile
+package com.enlared.mobile
 
 import android.os.Build
 import android.os.Bundle

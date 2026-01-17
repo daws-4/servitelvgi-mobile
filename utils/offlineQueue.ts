@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const QUEUE_STORAGE_KEY = '@servitel/offline_queue';
+const QUEUE_STORAGE_KEY = '@enlared/offline_queue';
 
 /**
  * Acción offline que será procesada cuando se recupere la conexión

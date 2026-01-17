@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,6 +16,8 @@ import InstallerInfoCard from '@/components/profile/InstallerInfoCard';
 import ProfilePhotoEditor from '@/components/profile/ProfilePhotoEditor';
 import EditProfileModal from '@/components/profile/EditProfileModal';
 import ChangePasswordModal from '@/components/profile/ChangePasswordModal';
+import crewService from '@/services/api/crews';
+import type { Crew } from '@/types/Crew';
 
 /**
  * Profile screen - Display installer profile, statistics, and settings
@@ -43,6 +45,10 @@ export default function ProfileScreen() {
     const [showEditProfile, setShowEditProfile] = useState(false);
     const [showChangePassword, setShowChangePassword] = useState(false);
 
+    // Crew state - fetched separately if needed
+    const [fetchedCrew, setFetchedCrew] = useState<Crew | null>(null);
+    const [loadingCrew, setLoadingCrew] = useState(false);
+
     const handleLogout = async () => {
         Alert.alert(
             'Cerrar Sesión',
@@ -67,11 +73,43 @@ export default function ProfileScreen() {
     // Get role/crew info
     // Handle both simpler Auth structure and populated Installer structure
     const installerAny = installer as any;
-    const crewName = installerAny?.crewDetails?.name || installerAny?.crew?.name || installerAny?.crew || '';
 
-    const roleText = crewName
-        ? `Técnico • ${crewName}`
-        : 'Técnico Instalador • ENLARED';
+    // Extract crew ID from various sources
+    const crewId: string | undefined = installerAny?.crew?._id || installerAny?.currentCrew;
+
+    // Fetch crew data if we have an ID but no number
+    useEffect(() => {
+        const fetchCrewData = async () => {
+            // Check if we have a crew ID but no crew number
+            const hasCrewNumber = installerAny?.crewDetails?.number || installerAny?.crew?.number;
+
+            if (crewId && !hasCrewNumber && !loadingCrew) {
+                try {
+                    setLoadingCrew(true);
+                    const crewData = await crewService.getCrewById(crewId);
+                    setFetchedCrew(crewData);
+                } catch (error) {
+                    console.error('❌ [ProfileScreen] Error fetching crew:', error);
+                } finally {
+                    setLoadingCrew(false);
+                }
+            }
+        };
+
+        fetchCrewData();
+    }, [crewId, installerAny]);
+
+    // Try to get crew number from various sources, including fetched crew
+    let crewNumber: number | undefined =
+        installerAny?.crewDetails?.number ||
+        installerAny?.crew?.number ||
+        fetchedCrew?.number;
+
+    const roleText = crewNumber
+        ? `Técnico • Cuadrilla ${crewNumber}`
+        : crewId
+            ? `Técnico • Cuadrilla ${crewId.slice(-4)}` // Show last 4 chars of ID as fallback
+            : 'Técnico Instalador • ENLARED';
 
     // Get status from onDuty field (now a string: 'active' | 'inactive' | 'onDuty')
     const status = installer?.onDuty || 'inactive';
@@ -208,7 +246,8 @@ export default function ProfileScreen() {
                 <View style={styles.settingsContent}>
                     {/* Installer Info Card */}
                     <InstallerInfoCard
-                        crewName={crewName}
+                        crewNumber={crewNumber}
+                        crewId={crewId}
                         email={installer?.email}
                         phone={installer?.phone}
                         username={installer?.username}

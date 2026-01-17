@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import { Config } from '@/constants/config';
 
 // Token storage keys
-const TOKEN_KEY = 'servitel_auth_token';
+const TOKEN_KEY = 'enlared_auth_token';
 
 /**
  * Cliente HTTP base configurado con:

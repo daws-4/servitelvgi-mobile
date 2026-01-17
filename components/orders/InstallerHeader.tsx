@@ -1,9 +1,13 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome } from '@expo/vector-icons';
 import { BrandColors } from '@/constants/colors';
 import { useAuth } from '@/app/contexts/AuthContext';
+import crewService from '@/services/api/crews';
+import installerService from '@/services/api/installers';
+import type { Crew } from '@/types/Crew';
+import type { Installer } from '@/types/Installer';
 
 interface InstallerHeaderProps {
     onSearch?: (text: string) => void;
@@ -12,12 +16,65 @@ interface InstallerHeaderProps {
 export default function InstallerHeader({ onSearch }: InstallerHeaderProps) {
     const { installer } = useAuth();
 
+    // Crew state - fetched separately if needed
+    const [fetchedCrew, setFetchedCrew] = useState<Crew | null>(null);
+
+    // Installer state - fetched to get complete profile data
+    const [fetchedInstaller, setFetchedInstaller] = useState<Installer | null>(null);
+
+    // Use fetched installer if available, otherwise use auth installer
+    const currentInstaller = fetchedInstaller || installer;
+
     // Get installer's full name
-    const fullName = installer ? `${installer.name} ${installer.surname}` : 'Técnico Instalador';
+    const fullName = currentInstaller ? `${currentInstaller.name} ${currentInstaller.surname}` : 'Técnico Instalador';
+
+    // Extract crew data
+    const installerAny = currentInstaller as any;
+    const crewId: string | undefined = installerAny?.crew?._id || installerAny?.currentCrew;
+
+
+
+    // Fetch complete installer profile if profilePicture is missing
+    useEffect(() => {
+        const fetchInstallerData = async () => {
+            if (installer?._id && !installer?.profilePicture) {
+                try {
+                    const installerData = await installerService.getInstallerById(installer._id);
+                    setFetchedInstaller(installerData);
+                } catch (error) {
+                    console.error('❌ [InstallerHeader] Error fetching installer:', error);
+                }
+            }
+        };
+
+        fetchInstallerData();
+    }, [installer?._id, installer?.profilePicture]);
+
+    // Fetch crew data if we have an ID but no number
+    useEffect(() => {
+        const fetchCrewData = async () => {
+            // Check if we have a crew ID but no crew number
+            const hasCrewNumber = installerAny?.crew?.number;
+
+            if (crewId && !hasCrewNumber) {
+                try {
+                    const crewData = await crewService.getCrewById(crewId);
+                    setFetchedCrew(crewData);
+                } catch (error) {
+                    console.error('❌ [InstallerHeader] Error fetching crew:', error);
+                }
+            }
+        };
+
+        fetchCrewData();
+    }, [crewId, installerAny]);
+
+    // Try to get crew number from various sources
+    const crewNumber: number | undefined = installerAny?.crew?.number || fetchedCrew?.number;
 
     // Get role/crew info
-    const roleText = installer?.crew
-        ? `Técnico • ${installer.crew.name}`
+    const roleText = crewNumber
+        ? `Técnico • Cuadrilla ${crewNumber}`
         : 'Técnico Instalador • ENLARED';
 
     return (
@@ -25,7 +82,7 @@ export default function InstallerHeader({ onSearch }: InstallerHeaderProps) {
             colors={[BrandColors.secondary, BrandColors.primary]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            className="pt-10 pb-8 px-8 rounded-b-[56px] relative overflow-hidden"
+            className="pt-10 px-8 rounded-b-[56px] relative overflow-hidden"
             style={{
                 shadowColor: '#000',
                 shadowOffset: { width: 0, height: 8 },
@@ -41,16 +98,43 @@ export default function InstallerHeader({ onSearch }: InstallerHeaderProps) {
             />
 
             {/* Avatar Button - Positioned absolutely */}
-            <TouchableOpacity
-                className="absolute top-10 right-8 w-12 h-12 rounded-full justify-center items-center z-20"
-                style={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    borderWidth: 1,
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                }}
-            >
-                <FontAwesome name="user-md" size={20} color="white" />
-            </TouchableOpacity>
+            <View className="absolute top-10 right-8 z-20">
+                <TouchableOpacity
+                    className="w-12 h-12 rounded-full justify-center items-center overflow-hidden"
+                    style={{
+                        backgroundColor: 'white',
+                        padding: 3,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 8,
+                        elevation: 8,
+                    }}
+                >
+                    {currentInstaller?.profilePicture ? (
+                        <Image
+                            source={{ uri: currentInstaller.profilePicture }}
+                            className="w-full h-full rounded-full"
+                            style={{
+                                width: 42,
+                                height: 42,
+                            }}
+                            resizeMode="cover"
+                        />
+                    ) : (
+                        <View
+                            className="w-full h-full rounded-full justify-center items-center"
+                            style={{
+                                backgroundColor: '#f3f4f6',
+                                width: 42,
+                                height: 42,
+                            }}
+                        >
+                            <FontAwesome name="user-md" size={18} color="#9ca3af" />
+                        </View>
+                    )}
+                </TouchableOpacity>
+            </View>
 
             {/* Header Content - Centered */}
             <View className="items-center relative z-10 mb-5 px-4">
@@ -71,29 +155,6 @@ export default function InstallerHeader({ onSearch }: InstallerHeaderProps) {
                 >
                     {roleText}
                 </Text>
-            </View>
-
-            {/* Search Bar */}
-            <View className="relative justify-center">
-                <FontAwesome
-                    name="search"
-                    size={14}
-                    color="rgba(255,255,255,0.5)"
-                    className="absolute left-4 z-10"
-                    style={{ position: 'absolute', left: 16, zIndex: 1 }}
-                />
-                <TextInput
-                    className="rounded-2xl py-2.5 pr-4 text-sm text-white"
-                    style={{
-                        backgroundColor: 'rgba(255,255,255,0.1)',
-                        borderColor: 'rgba(255,255,255,0.2)',
-                        borderWidth: 1,
-                        paddingLeft: 44,
-                    }}
-                    placeholder="Buscar abonado o dirección..."
-                    placeholderTextColor="rgba(255,255,255,0.5)"
-                    onChangeText={onSearch}
-                />
             </View>
         </LinearGradient>
     );

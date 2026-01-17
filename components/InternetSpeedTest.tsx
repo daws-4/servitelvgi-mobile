@@ -13,7 +13,7 @@ export const InternetSpeedTest = ({ onResultsChange }: InternetSpeedTestProps) =
     // Notify parent of results changes
     useEffect(() => {
         if (onResultsChange) {
-            console.log('[InternetSpeedTest] Notifying parent of results change:', JSON.stringify(results, null, 2));
+            // console.log('[InternetSpeedTest] Notifying parent of results change:', JSON.stringify(results, null, 2));
             onResultsChange(results);
         }
     }, [results, onResultsChange]);

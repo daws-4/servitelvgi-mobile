@@ -17,6 +17,7 @@ const STATUS_OPTIONS: StatusOption[] = [
     { value: 'in_progress', label: 'En Progreso', color: '#7c3aed', bgColor: '#ede9fe' },
     { value: 'completed', label: 'Completada', color: '#16a34a', bgColor: '#dcfce7' },
     { value: 'cancelled', label: 'Cancelada', color: '#dc2626', bgColor: '#fee2e2' },
+    { value: 'hard', label: 'Hard', color: '#ef4444', bgColor: '#fef2f2' },
 ];
 
 interface StatusPickerProps {

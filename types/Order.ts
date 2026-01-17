@@ -10,17 +10,18 @@
 /**
  * Estados posibles de una orden
  */
-export type OrderStatus = 
+export type OrderStatus =
   | 'pending'       // Pendiente
   | 'assigned'      // Asignada a cuadrilla
   | 'in_progress'   // En progreso
   | 'completed'     // Completada
-  | 'cancelled';    // Cancelada
+  | 'cancelled'     // Cancelada
+  | 'hard';         // Hard
 
 /**
  * Tipos de orden
  */
-export type OrderType = 
+export type OrderType =
   | 'instalacion'   // Instalación nueva
   | 'averia'        // Reparación/avería
   | 'otro';         // Otro tipo
@@ -58,6 +59,15 @@ export interface MaterialUsed {
 }
 
 /**
+ * Entrada de bitácora del instalador
+ */
+export interface InstallerLog {
+  timestamp: Date | string;
+  log: string;
+  status: OrderStatus;
+}
+
+/**
  * Resultado de prueba de internet (formato del backend)
  */
 export interface InternetTestResult {
@@ -75,50 +85,52 @@ export interface InternetTestResult {
  */
 export interface Order {
   _id: string;
-  
+
   // Información del abonado
   subscriberNumber: string;     // N° de abonado (único)
+  ticket_id?: string;           // ID del ticket asociado
   subscriberName: string;       // Nombre del abonado
   address: string;              // Dirección completa
   phones?: string[];            // Teléfonos del abonado
   email?: string;               // Correo electrónico
-  
+
   // Coordenadas de la orden
   coordinates?: Coordinates;    // Coordenadas GPS de la ubicación
-  
+
   // Tipo y estado
   type: OrderType;              // Tipo de orden
   status: OrderStatus;          // Estado actual
   priority?: OrderPriority;     // Prioridad
-  
+
   // Datos técnicos
   node?: string;                // Nodo de red
   servicesToInstall?: string[]; // Servicios a instalar
-  
+
   // Asignación y programación
   assignedTo?: string;          // ID de la cuadrilla asignada
   assignedToName?: string;      // Nombre de la cuadrilla (populado)
   receptionDate?: Date | string;  // Fecha de recepción
   assignmentDate?: Date | string; // Fecha de asignación
-  
+
   // Completado
   completionDate?: Date | string;  // Fecha de completado
   completedBy?: string;            // ID del instalador que completó
-  
+
   // Datos de cierre
   reportDetails?: string;          // Detalles del reporte
   materialsUsed?: MaterialUsed[];  // Materiales usados
+  installerLog?: InstallerLog[];   // Bitácora del instalador
   photoEvidence?: string[];        // URLs de fotos (formato backend)
   customerSignature?: string;      // Firma del cliente (base64)
   internetTest?: InternetTestResult; // Resultado de prueba de internet
-  
+
   // Control de reporte
   googleFormReported?: boolean;    // Reportado a Google Form
-  
+
   // Información adicional
   description?: string;         // Descripción/notas
   notes?: string;               // Notas adicionales
-  
+
   // Timestamps
   createdAt: Date | string;
   updatedAt: Date | string;

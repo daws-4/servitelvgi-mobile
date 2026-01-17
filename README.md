@@ -217,74 +217,74 @@ React Native (Expo) para técnicos de campo.
 haz un plan de implementación para proceder con los siguientes pasos del proyecto en curso
 ##### 📦 **5. Módulo de Órdenes de Servicio**
 
-- [ ] **Servicio API de órdenes (`/services/api/orders.ts`)**
-  - [ ] `getCrewOrders(crewId)` → GET `/api/web/orders?assignedTo={crewId}`
-  - [ ] `getOrderById(orderId)` → GET `/api/web/orders?id={orderId}`
-  - [ ] `updateOrderStatus(orderId, status)` → PUT `/api/web/orders`
-  - [ ] `completeOrder(orderId, data)` → PUT `/api/web/orders` con materiales, fotos, firma
+- [x] **Servicio API de órdenes (`/services/api/orders.ts`)**
+  - [x] `getCrewOrders(crewId)` → GET `/api/web/orders?assignedTo={crewId}`
+  - [x] `getOrderById(orderId)` → GET `/api/web/orders?id={orderId}`
+  - [x] `updateOrderStatus(orderId, status)` → PUT `/api/web/orders`
+  - [x] `completeOrder(orderId, data)` → PUT `/api/web/orders` con materiales, fotos, firma
   
-- [ ] **Pantalla: Lista de Órdenes (`/app/(tabs)/orders/index.tsx`)**
-  - [ ] Fetch de órdenes de la cuadrilla del instalador
-  - [ ] FlatList con tarjetas de orden (OrderCard component)
-  - [ ] Pull-to-refresh
-  - [ ] Filtros por estado (pendiente, en-camino, en-sitio, completada)
-  - [ ] Búsqueda por número de abonado o dirección
-  - [ ] Indicador de carga (skeleton)
-  - [ ] Manejo de estado vacío
+- [x] **Pantalla: Lista de Órdenes (`/app/(tabs)/orders/index.tsx`)**
+  - [x] Fetch de órdenes de la cuadrilla del instalador
+  - [x] FlatList con tarjetas de orden (OrderCard component)
+  - [x] Pull-to-refresh
+  - [x] Filtros por estado (pendiente, en-camino, en-sitio, completada)
+  - [x] Búsqueda por número de abonado o dirección
+  - [x] Indicador de carga (skeleton)
+  - [x] Manejo de estado vacío
   
-- [ ] **Componente: OrderCard (`/components/orders/OrderCard.tsx`)**
-  - [ ] Diseño de tarjeta con:
+- [x] **Componente: OrderCard (`/components/orders/OrderCard.tsx`)**
+  - [x] Diseño de tarjeta con:
     - Número de abonado
     - Nombre del abonado
     - Tipo (instalación/avería) con icono
     - Estado actual con badge de color
     - Dirección (truncada)
     - Prioridad
-  - [ ] onPress → Navegar a detalle
+  - [x] onPress → Navegar a detalle
   
-- [ ] **Pantalla: Detalle de Orden (`/app/(tabs)/orders/[id].tsx`)**
-  - [ ] Mostrar toda la información del modelo Order:
+- [x] **Pantalla: Detalle de Orden (`/app/(tabs)/orders/[id].tsx`)**
+  - [x] Mostrar toda la información del modelo Order:
     - Datos del abonado (nombre, teléfonos, email)
     - Dirección completa
     - Nodo técnico
     - Servicios a instalar (array)
     - Tipo y estado
     - Fecha de recepción y asignación
-  - [ ] Botón "Ver en Mapa" → Abrir mapa con ubicación
-  - [ ] Botón "Iniciar Viaje" → Cambiar estado a `en-camino`
-  - [ ] Botón "Llegué al Sitio" → Cambiar estado a `en-sitio`
-  - [ ] Botón "Completar Orden" → Abrir formulario de cierre
-  - [ ] Actualización optimista de estado
+  - [x] Botón "Ver en Mapa" → Abrir mapa con ubicación
+  - [x] Botón "Iniciar Viaje" → Cambiar estado a `en-camino`
+  - [x] Botón "Llegué al Sitio" → Cambiar estado a `en-sitio`
+  - [x] Botón "Completar Orden" → Abrir formulario de cierre
+  - [x] Actualización optimista de estado
   
-- [ ] **Pantalla: Formulario de Cierre (`/app/(tabs)/orders/complete/[id].tsx`)**
-  - [ ] **Sección: Materiales Usados**
-    - [ ] Lista del inventario de la cuadrilla
-    - [ ] Selección de materiales/equipos
-    - [ ] Input de cantidad para materiales
-    - [ ] Selección de instancia específica para equipos (uniqueId)
-    - [ ] Validación: no exceder stock disponible
-  - [ ] **Sección: Evidencia Fotográfica**
-    - [ ] Botón "Tomar Foto"
-    - [ ] Galería de fotos capturadas (mínimo 2)
-    - [ ] Vista previa y eliminar foto
-    - [ ] Compresión de imágenes
-  - [ ] **Sección: Speed Test**
-    - [ ] Botón "Realizar Test de Velocidad"
-    - [ ] Mostrar resultados (descarga, subida, ping)
-    - [ ] Guardar resultados
-  - [ ] **Sección: Descripción del Trabajo**
-    - [ ] TextArea para observaciones
-    - [ ] Caracteres mínimos (opcional)
-  - [ ] **Sección: Firma del Cliente**
-    - [ ] Canvas de firma
-    - [ ] Botón limpiar firma
-    - [ ] Validación: firma obligatoria
-  - [ ] **Botón Enviar**
-    - [ ] Validar todos los campos
-    - [ ] Subir fotos a servidor
-    - [ ] Enviar datos completos a backend
-    - [ ] Actualizar estado de orden a `completada`
-    - [ ] Navegar de vuelta a lista con mensaje de éxito
+- [x] **Pantalla: Formulario de Cierre (`/app/(tabs)/orders/complete/[id].tsx`)**
+  - [x] **Sección: Materiales Usados**
+    - [x] Lista del inventario de la cuadrilla
+    - [x] Selección de materiales/equipos
+    - [x] Input de cantidad para materiales
+    - [x] Selección de instancia específica para equipos (uniqueId)
+    - [x] Validación: no exceder stock disponible
+  - [x] **Sección: Evidencia Fotográfica**
+    - [x] Botón "Tomar Foto"
+    - [x] Galería de fotos capturadas (mínimo 2)
+    - [x] Vista previa y eliminar foto
+    - [x] Compresión de imágenes
+  - [x] **Sección: Speed Test**
+    - [x] Botón "Realizar Test de Velocidad"
+    - [x] Mostrar resultados (descarga, subida, ping)
+    - [x] Guardar resultados
+  - [x] **Sección: Descripción del Trabajo**
+    - [x] TextArea para observaciones
+    - [x] Caracteres mínimos (opcional)
+  - [x] **Sección: Firma del Cliente**
+    - [x] Canvas de firma
+    - [x] Botón limpiar firma
+    - [x] Validación: firma obligatoria
+  - [x] **Botón Enviar**
+    - [x] Validar todos los campos
+    - [x] Subir fotos a servidor
+    - [x] Enviar datos completos a backend
+    - [x] Actualizar estado de orden a `completada`
+    - [x] Navegar de vuelta a lista con mensaje de éxito
 toma en consideración que las rutas existentes del backend piden token de autenticación, así que maneja las peticiones enviando el token creado con el login
 ---
 
@@ -321,40 +321,40 @@ toma en consideración que las rutas existentes del backend piden token de auten
 
 ##### 📊 **7. Módulo de Inventario**
 
-- [ ] **Servicio API de inventario (`/services/api/inventory.ts`)**
-  - [ ] `getCrewInventory(crewId)` → GET `/api/web/inventory?crewId={id}`
-  - [ ] `getItemInstances(itemId)` → GET `/api/web/inventory/instances?itemId={id}`
-  - [ ] `getInventoryMovements(crewId)` → GET `/api/web/inventory/movements?crewId={id}`
+- [x] **Servicio API de inventario (`/services/api/inventory.ts`)**
+  - [x] `getCrewInventory(crewId)` → GET `/api/web/inventory?crewId={id}`
+  - [x] `getItemInstances(itemId)` → GET `/api/web/inventory/instances?itemId={id}`
+  - [x] `getInventoryMovements(crewId)` → GET `/api/web/inventory/movements?crewId={id}`
   
-- [ ] **Pantalla: Inventario de Cuadrilla (`/app/(tabs)/inventory/index.tsx`)**
-  - [ ] Tabs o secciones:
+- [x] **Pantalla: Inventario de Cuadrilla (`/app/(tabs)/inventory/index.tsx`)**
+  - [x] Tabs o secciones:
     - **Materiales** (cable, conectores, etc.)
     - **Equipos** (ONT, modems, routers)
-  - [ ] Lista de items con:
+  - [x] Lista de items con:
     - Código
     - Descripción
     - Cantidad disponible
     - Unidad
     - Indicador de stock bajo (badge rojo)
-  - [ ] Búsqueda de material
-  - [ ] Pull-to-refresh
+  - [x] Búsqueda de material
+  - [x] Pull-to-refresh
   
-- [ ] **Componente: InventoryItem (`/components/inventory/InventoryItem.tsx`)**
-  - [ ] Diseño de tarjeta de inventario
-  - [ ] Para materiales: mostrar cantidad
-  - [ ] Para equipos: onPress → Ver instancias
+- [x] **Componente: InventoryItem (`/components/inventory/InventoryItem.tsx`)**
+  - [x] Diseño de tarjeta de inventario
+  - [x] Para materiales: mostrar cantidad
+  - [x] Para equipos: onPress → Ver instancias
   
-- [ ] **Pantalla: Instancias de Equipo (`/app/(tabs)/inventory/instances/[itemId].tsx`)**
-  - [ ] Lista de instancias individuales
-  - [ ] Mostrar: uniqueId, serialNumber, macAddress, estado
-  - [ ] Filtrar por estado (disponible, asignado, instalado)
-  - [ ] Ver historial de instancia específica
+- [x] **Pantalla: Instancias de Equipo (`/app/(tabs)/inventory/instances/[itemId].tsx`)**
+  - [x] Lista de instancias individuales
+  - [x] Mostrar: uniqueId, serialNumber, macAddress, estado
+  - [x] Filtrar por estado (disponible, asignado, instalado)
+  - [x] Ver historial de instancia específica
   
-- [ ] **Pantalla: Historial de Movimientos (`/app/(tabs)/inventory/history.tsx`)**
-  - [ ] Lista de movimientos (asignación, consumo, devolución)
-  - [ ] Información: fecha, tipo, cantidad, material, orden asociada
-  - [ ] Filtros por rango de fechas
-  - [ ] Filtro por tipo de movimiento
+- [x] **Pantalla: Historial de Movimientos (`/app/(tabs)/inventory/history.tsx`)**
+  - [x] Lista de movimientos (asignación, consumo, devolución)
+  - [x] Información: fecha, tipo, cantidad, material, orden asociada
+  - [x] Filtros por rango de fechas
+  - [x] Filtro por tipo de movimiento
 
 ---
 
@@ -1175,3 +1175,12 @@ Para soporte técnico o consultas sobre el sistema, contactar al equipo de desar
 **Última actualización:** Diciembre 2024  
 **Versión:** 0.0.1  
 **Estado:** En producción activa
+
+
+por añadir:
+- Bitacora de cambios ✅
+- campo del ticket ✅
+- status hard ✅
+- ordenes de recuperación
+- probar notificaciones push 
+- arreglar sidebar

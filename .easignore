@@ -1,0 +1,117 @@
+# ===================================
+# .easignore - EAS Build Optimization
+# ===================================
+# Este archivo excluye archivos innecesarios del build
+# para reducir el tamaño y acelerar el proceso de compilación
+
+# ==================
+# Control de versión
+# ==================
+.git/
+.gitignore
+.gitattributes
+
+# ==================
+# Documentación
+# ==================
+README.md
+CHANGELOG.md
+LICENSE
+*.md
+
+# ==================
+# Configuración de desarrollo
+# ==================
+# Prettier
+.prettierrc
+.prettierrc.js
+.prettierrc.json
+prettier.config.js
+
+# ESLint
+.eslintrc
+.eslintrc.js
+.eslintrc.json
+.eslintignore
+
+# EditorConfig
+.editorconfig
+
+# ==================
+# IDEs y Editores
+# ==================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ==================
+# Scripts personalizados
+# ==================
+scripts/
+
+# ==================
+# Assets web (no móvil)
+# ==================
+public/
+
+# ==================
+# Builds y temporales
+# ==================
+.expo/
+.expo-shared/
+dist/
+web-build/
+*.log
+*.tsbuildinfo
+
+# ==================
+# Variables de entorno
+# ==================
+# IMPORTANTE: NO excluir .env base, solo los .local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# ==================
+# Testing
+# ==================
+__tests__/
+__mocks__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+coverage/
+.jest/
+
+# ==================
+# Archivos temporales
+# ==================
+*.tmp
+*.temp
+.cache/
+.temp/
+
+# ==================
+# Otros archivos innecesarios
+# ==================
+# Ejemplos y demos
+examples/
+demos/
+
+# Archivos de configuración de CI/CD (si no los usas en EAS)
+.github/
+.gitlab-ci.yml
+.circleci/
+azure-pipelines.yml
+
+# Storybook (si lo tienes)
+.storybook/
+
+# Husky hooks (si lo tienes)
+.husky/

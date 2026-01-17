@@ -1,5 +1,5 @@
 /**
- * Componentes UI reutilizables de Servitel
+ * Componentes UI reutilizables de ENLARED
  * 
  * Exporta todos los componentes de la carpeta ui/
  */

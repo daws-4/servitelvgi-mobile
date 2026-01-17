@@ -9,9 +9,9 @@ export function LoadingScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.content}>
-                {/* Logo de Servitel */}
+                {/* Logo de ENLARED */}
                 <View style={styles.logoContainer}>
-                    <Text style={styles.logoText}>SERVITEL</Text>
+                    <Text style={styles.logoText}>ENLARED</Text>
                     <Text style={styles.subtitle}>Instaladores</Text>
                 </View>
 

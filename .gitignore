@@ -30,6 +30,7 @@ yarn-error.log*
 
 # dependencies
 node_modules/
+web_references/
 
 # Expo
 .expo/

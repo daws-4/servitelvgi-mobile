@@ -11,6 +11,7 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; bg: string; text: stri
     in_progress: { label: 'En Progreso', bg: '#ede9fe', text: '#7c3aed' },
     completed: { label: 'Completada', bg: '#dcfce7', text: '#16a34a' },
     cancelled: { label: 'Cancelada', bg: '#fee2e2', text: '#dc2626' },
+    hard: { label: 'Hard', bg: '#fee2e2', text: '#ef4444' },
 };
 
 // Type label mapping
@@ -78,7 +79,7 @@ export default function OrderCard({ order, onPress }: OrderCardProps) {
                             {statusConfig.label}
                         </Text>
                     </View>
-                    <Text style={styles.orderId}>#{order.subscriberNumber}</Text>
+                    <Text style={styles.orderId}>#{order.ticket_id}</Text>
                 </View>
 
                 {/* Type Tag */}

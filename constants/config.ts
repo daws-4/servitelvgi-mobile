@@ -19,7 +19,7 @@ export const Config = {
    * Base URL del backend de Servitel
    * Debe configurarse en .env como API_BASE_URL
    */
-  API_BASE_URL: getEnvVar('API_BASE_URL', 'https://admin.servitelv.com'),
+  API_BASE_URL: getEnvVar('API_BASE_URL', 'http://192.168.0.42:3000'),
   
   /**
    * Timeout para peticiones HTTP en milisegundos

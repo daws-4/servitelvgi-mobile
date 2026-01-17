@@ -1,12 +1,18 @@
 {
   "expo": {
     "name": "ENLARED TÉCNICOS",
-    "slug": "servitelv-mobile",
+    "slug": "enlared-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "notification": {
+      "icon": "./assets/notification-icon.png",
+      "color": "#000000",
+      "androidMode": "default",
+      "androidCollapsedTitle": "ENLARED"
+    },
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -14,7 +20,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.servitelv.mobile",
+      "bundleIdentifier": "com.enlared.mobile",
       "config": {
         "googleMapsApiKey": "AIzaSyDTyGS8C9ytWCV79-eh3mwE6LHmO2h-vLY"
       },
@@ -25,22 +31,31 @@
       }
     },
     "android": {
+      "minSdkVersion": 26,
+      "targetSdkVersion": 34,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.servitelv.mobile",
+      "package": "com.enlared.mobile",
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyDTyGS8C9ytWCV79-eh3mwE6LHmO2h-vLY"
         }
       },
+      "useNextNotificationsApi": true,
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.VIBRATE",
+        "android.permission.POST_NOTIFICATIONS"
       ],
       "softInputMode": "adjustResize"
     },
@@ -55,13 +70,13 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Permitir que Servitel acceda a tu ubicación."
+          "locationAlwaysAndWhenInUsePermission": "Permitir que ENLARED acceda a tu ubicación."
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Permitir que Servitel use tu cámara para capturar fotos."
+          "cameraPermission": "Permitir que ENLARED use tu cámara para capturar fotos."
         }
       ],
       [
@@ -86,7 +101,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "aa381af0-1677-4006-8b51-888f05d73e1b"
+        "projectId": "29a3ed1f-4766-4082-a596-18a590563bd1"
       }
     },
     "owner": "dawszz_4"

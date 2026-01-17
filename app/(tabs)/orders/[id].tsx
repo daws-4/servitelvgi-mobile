@@ -20,11 +20,12 @@ import PhotoEvidenceManager from '@/components/orders/PhotoEvidenceManager';
 import InventoryAssignmentManager from '@/components/orders/InventoryAssignmentManager';
 import OrderSpeedTest from '@/components/orders/OrderSpeedTest';
 import CustomerSignature from '@/components/orders/CustomerSignature';
+import InstallerLogManager from '@/components/orders/InstallerLogManager';
 import orderService from '@/services/api/orders';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { BrandColors } from '@/constants/colors';
 import { ORDER_TYPE_LABELS } from '@/constants/orderStates';
-import type { Order, OrderStatus, OrderType, MaterialUsed, InternetTestResult } from '@/types/Order';
+import type { Order, OrderStatus, OrderType, MaterialUsed, InternetTestResult, InstallerLog } from '@/types/Order';
 
 export default function OrderDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -255,6 +256,23 @@ export default function OrderDetailScreen() {
         });
     };
 
+    // Handle installer logs change
+    const handleLogsChange = async (logs: InstallerLog[]) => {
+        if (!order) return;
+
+        // Update local state
+        setOrder(prev => prev ? { ...prev, installerLog: logs } : null);
+
+        // Save to backend
+        try {
+            await orderService.updateOrder(order._id, {
+                installerLog: logs
+            });
+        } catch (error) {
+            console.error('Error saving installer logs to backend:', error);
+        }
+    };
+
     const handleCall = (phoneNumber: string) => {
         // Clean phone number (remove non-digits if necessary, but tel: usually handles spaces)
         // Ensure prompt: true is used (default on recent RN versions) or just openURL
@@ -460,9 +478,17 @@ export default function OrderDetailScreen() {
                         />
                         <ReadOnlyField
                             label="Cuadrilla Asignada"
-                            value={order.assignedToName || installer?.crew?.name}
+                            value={order.assignedToName || String(installer?.crew?.number)}
                             icon="users"
                         />
+                        {order.ticket_id && (
+                            <ReadOnlyField
+                                label="Ticket ID"
+                                value={order.ticket_id}
+                                icon="ticket"
+                                selectable={true}
+                            />
+                        )}
                     </View>
 
                     {/* Status Section (Editable) */}
@@ -567,6 +593,22 @@ export default function OrderDetailScreen() {
                             orderId={order._id}
                             existingTest={order.internetTest}
                             onTestSaved={handleTestSaved}
+                            readOnly={order.status === 'completed' || order.status === 'cancelled'}
+                        />
+                    </View>
+
+                    {/* Installer Log Section */}
+                    <View style={styles.section}>
+                        <View style={styles.sectionHeader}>
+                            <FontAwesome name="clipboard" size={14} color={BrandColors.primary} />
+                            <Text style={styles.sectionTitle}>Bitácora del Instalador</Text>
+                        </View>
+
+                        <InstallerLogManager
+                            orderId={order._id}
+                            installerLogs={order.installerLog || []}
+                            onLogsChange={handleLogsChange}
+                            currentStatus={currentStatus}
                             readOnly={order.status === 'completed' || order.status === 'cancelled'}
                         />
                     </View>

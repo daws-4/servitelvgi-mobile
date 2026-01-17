@@ -5,9 +5,14 @@ import { BrandColors } from '@/constants/colors';
 
 interface InstallerInfoCardProps {
     /**
-     * Nombre de la cuadrilla
+     * Número de la cuadrilla
      */
-    crewName?: string;
+    crewNumber?: number;
+
+    /**
+     * ID de la cuadrilla (fallback si no hay número)
+     */
+    crewId?: string;
 
     /**
      * Email del instalador
@@ -29,7 +34,8 @@ interface InstallerInfoCardProps {
  * Tarjeta que muestra información del instalador y su cuadrilla
  */
 export default function InstallerInfoCard({
-    crewName,
+    crewNumber,
+    crewId,
     email,
     phone,
     username,
@@ -56,10 +62,12 @@ export default function InstallerInfoCard({
 
             {/* Content */}
             <View style={styles.content}>
-                {crewName && (
+                {(crewNumber || crewId) && (
                     <View style={styles.crewBadge}>
                         <FontAwesome name="users" size={14} color="#fff" />
-                        <Text style={styles.crewText}>{crewName}</Text>
+                        <Text style={styles.crewText}>
+                            {crewNumber ? `Cuadrilla ${crewNumber}` : `ID: ${crewId?.slice(-4)}`}
+                        </Text>
                     </View>
                 )}
 

@@ -38,7 +38,7 @@ export default function ProfileAvatar({
 }: ProfileAvatarProps) {
     const iconSize = Math.floor(size * 0.4);
 
-    if (imageUri) console.log('🖼️ [ProfileAvatar] Rendering with URI:', imageUri);
+    // if (imageUri) console.log('🖼️ [ProfileAvatar] Rendering with URI:', imageUri);
 
     return (
         <View style={[styles.container, { width: size, height: size }]}>

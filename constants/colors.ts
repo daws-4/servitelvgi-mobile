@@ -1,10 +1,10 @@
 /**
- * Paleta de colores corporativos de Servitel
+ * Paleta de colores corporativos de ENLARED
  * y colores de la aplicación
  */
 
 // ============================================================================
-// COLORES CORPORATIVOS DE SERVITEL
+// COLORES CORPORATIVOS DE ENLARED
 // ============================================================================
 
 export const BrandColors = {

@@ -3,7 +3,7 @@ import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Linking, Platform } from 'react-native';
 
-const NOTIFICATION_PERMISSION_KEY = '@servitel/notification_permission_asked';
+const NOTIFICATION_PERMISSION_KEY = '@enlared/notification_permission_asked';
 
 export interface NotificationPermissionState {
   /**

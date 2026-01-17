@@ -17,6 +17,7 @@ export const ORDER_STATUSES = {
   IN_PROGRESS: 'in_progress',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
+  HARD: 'hard',
 } as const;
 
 /**
@@ -28,6 +29,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   in_progress: 'En Progreso',
   completed: 'Completada',
   cancelled: 'Cancelada',
+  hard: 'Hard',
 };
 
 /**
@@ -39,6 +41,7 @@ export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
   in_progress: '#9c27b0',   // Púrpura
   completed: '#4caf50',     // Verde
   cancelled: '#757575',     // Gris
+  hard: '#f44336',          // Rojo
 };
 
 /**
@@ -50,6 +53,7 @@ export const ORDER_STATUS_ICONS: Record<OrderStatus, string> = {
   in_progress: 'truck',
   completed: 'check-circle',
   cancelled: 'x-circle',
+  hard: 'alert-triangle',
 };
 
 // ============================================================================

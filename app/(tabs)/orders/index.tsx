@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, BackHandler, ActivityIndicator, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, BackHandler, ActivityIndicator, FlatList, RefreshControl } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import MapView, { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { FontAwesome } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
 
 import InstallerHeader from '@/components/orders/InstallerHeader';
 import OrderFilters from '@/components/orders/OrderFilters';
@@ -14,6 +15,8 @@ import OrderCard from '@/components/orders/OrderCard';
 import { useLocationPermission } from '@/hooks/useLocationPermission';
 import { useOrders } from '@/hooks/useOrders';
 import { useAuth } from '@/app/contexts/AuthContext';
+import { useNotifications } from '@/hooks/useNotifications';
+import { useSmartPolling } from '@/hooks/useSmartPolling';
 import { BrandColors } from '@/constants/colors';
 import type { Order, OrderStatus, OrderType } from '@/types/Order';
 
@@ -37,6 +40,54 @@ export default function OrdersScreen() {
 
     // Orders data from API
     const { orders, loading, loadingMore, loadMore, error, refetch } = useOrders(crewId);
+
+    // Pull-to-refresh state
+    const [refreshing, setRefreshing] = useState(false);
+
+    // Push Notifications - Auto register on mount
+    const { notificationsEnabled, registerForPushNotifications } = useNotifications();
+
+    // Smart polling - Refresh every 30 seconds when app is active
+    useSmartPolling({
+        callback: () => refetch({ silent: true }),
+        interval: 30000, // 30 seconds
+        enabled: !loading && !!crewId // Only poll when not loading and have crew ID
+    });
+
+    // Listen for notifications while app is open
+    useEffect(() => {
+        const subscription = Notifications.addNotificationReceivedListener(notification => {
+            console.log('🔔 New order notification received:', notification);
+            // Refetch orders when notification arrives
+            refetch({ silent: true });
+        });
+
+        return () => {
+            subscription.remove();
+        };
+    }, [refetch]);
+
+    // Auto-register for push notifications
+    useEffect(() => {
+        if (installer && !notificationsEnabled) {
+            registerForPushNotifications();
+        }
+    }, [installer, notificationsEnabled]);
+
+    // Handle pull-to-refresh
+    const handleRefresh = async () => {
+        console.log('🔄 Pull-to-refresh triggered!');
+        try {
+            setRefreshing(true);
+            await refetch();
+        } catch (error) {
+            console.error('Error refreshing orders:', error);
+        } finally {
+            // Always stop refreshing, even if there's an error
+            setRefreshing(false);
+            console.log('✅ Refresh completed');
+        }
+    };
 
     // Map & Location State
     const { hasPermission, requestPermission } = useLocationPermission();
@@ -87,7 +138,8 @@ export default function OrdersScreen() {
             const search = searchValue.toLowerCase().trim();
             filtered = filtered.filter(order =>
                 order.subscriberNumber.toLowerCase().includes(search) ||
-                order.subscriberName.toLowerCase().includes(search)
+                order.subscriberName.toLowerCase().includes(search) ||
+                (order.ticket_id && order.ticket_id.toLowerCase().includes(search))
             );
         }
 
@@ -169,6 +221,7 @@ export default function OrdersScreen() {
     return (
         <View style={styles.container}>
             <InstallerHeader />
+
             <OrderFilters
                 searchValue={searchValue}
                 onSearchChange={setSearchValue}
@@ -178,85 +231,94 @@ export default function OrdersScreen() {
                 onTypeChange={setTypeFilter}
             />
 
-            {/* Loading State */}
-            {loading && (
-                <View style={styles.centerContainer}>
-                    <ActivityIndicator size="large" color={BrandColors.primary} />
-                    <Text style={styles.loadingText}>Cargando órdenes...</Text>
-                </View>
-            )}
-
-            {/* Error State */}
-            {error && !loading && (
-                <View style={styles.centerContainer}>
-                    <FontAwesome name="exclamation-triangle" size={40} color="#ef4444" />
-                    <Text style={styles.errorText}>{error}</Text>
-                    <TouchableOpacity style={styles.retryButton} onPress={refetch}>
-                        <Text style={styles.retryText}>Reintentar</Text>
-                    </TouchableOpacity>
-                </View>
-            )}
-
-            {/* Empty State */}
-            {!loading && !error && filteredOrders.length === 0 && (
-                <View style={styles.centerContainer}>
-                    <FontAwesome name="inbox" size={48} color="#cbd5e1" />
-                    <Text style={styles.emptyTitle}>No se encontraron órdenes</Text>
-                    <Text style={styles.emptyText}>
-                        {searchValue || statusFilter !== 'all' || typeFilter !== 'all'
-                            ? 'Intenta ajustar los filtros de búsqueda'
-                            : 'No hay órdenes asignadas a tu cuadrilla'}
-                    </Text>
-                </View>
-            )}
-
-            {/* Orders List */}
-            {!loading && !error && filteredOrders.length > 0 && (
-                <FlatList
-                    data={filteredOrders}
-                    keyExtractor={(order) => order._id}
-                    renderItem={({ item }) => (
-                        <OrderCard
-                            order={item}
-                            onPress={() => handleOrderPress(item)}
-                        />
-                    )}
-                    contentContainerStyle={[
-                        styles.listContent,
-                        { paddingBottom: tabBarHeight + 100 }
-                    ]}
+            <View style={{ flex: 1 }}>
+                <ScrollView
                     showsVerticalScrollIndicator={true}
-                    onEndReached={() => {
-                        // Only load more if no filters are active (simple infinite scroll)
-                        // Or we can try to support it with filters too, but logic might be tricky if filters are client-side only?
-                        // Actually, filters are passed to the hook and then to API.
-                        // But wait! logic in index.tsx does client-side filtering on `orders` array returned by hook.
-                        // If we use pagination, we MUST fetch filtered results from backend or else we filter only the loaded page.
-                        // CURRENTLY `filteredOrders` is client-side filtered.
-                        // Since useOrders fetches PAGE 1-N, applying client-side filter to that is partial.
-                        // ideally we should move filters to API param in useOrders.
-                        if (!searchValue && statusFilter === 'all' && typeFilter === 'all') {
+                    bounces={true}
+                    contentContainerStyle={{
+                        paddingBottom: tabBarHeight + 24,
+                    }}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={handleRefresh}
+                            tintColor={BrandColors.primary}
+                            colors={[BrandColors.primary]}
+                        />
+                    }
+                    onScroll={({ nativeEvent }) => {
+                        const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+                        const paddingToBottom = 20;
+                        const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+
+                        // Load more when close to bottom, no filters active, and not already loading
+                        if (isCloseToBottom && !loadingMore && !searchValue && statusFilter === 'all' && typeFilter === 'all') {
                             loadMore();
                         }
                     }}
-                    onEndReachedThreshold={0.5}
-                    ListFooterComponent={
-                        loadingMore ? (
-                            <View style={{ padding: 16, alignItems: 'center' }}>
-                                <ActivityIndicator size="small" color={BrandColors.primary} />
-                            </View>
-                        ) : null
-                    }
-                />
-            )}
+                    scrollEventThrottle={400}
+                >
+                    {/* Loading State */}
+                    {loading && (
+                        <View style={styles.centerContainer}>
+                            <ActivityIndicator size="large" color={BrandColors.primary} />
+                            <Text style={styles.loadingText}>Cargando órdenes...</Text>
+                        </View>
+                    )}
 
-            {/* Floating Map Button */}
-            <TouchableOpacity
-                style={[styles.floatingMapBtn, { bottom: tabBarHeight + 24 }]}
-                onPress={handleMapPress}
-            >
-                <FontAwesome name="map" size={20} color="white" />
-            </TouchableOpacity>
+                    {/* Error State */}
+                    {error && !loading && (
+                        <View style={styles.centerContainer}>
+                            <FontAwesome name="exclamation-triangle" size={40} color="#ef4444" />
+                            <Text style={styles.errorText}>{error}</Text>
+                            <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+                                <Text style={styles.retryText}>Reintentar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+                    {/* Empty State */}
+                    {!loading && !error && filteredOrders.length === 0 && (
+                        <View style={styles.centerContainer}>
+                            <FontAwesome name="inbox" size={48} color="#cbd5e1" />
+                            <Text style={styles.emptyTitle}>No se encontraron órdenes</Text>
+                            <Text style={styles.emptyText}>
+                                {searchValue || statusFilter !== 'all' || typeFilter !== 'all'
+                                    ? 'Intenta ajustar los filtros de búsqueda'
+                                    : 'No hay órdenes asignadas a tu cuadrilla'}
+                            </Text>
+                        </View>
+                    )}
+
+                    {/* Orders List */}
+                    {!loading && !error && filteredOrders.length > 0 && (
+                        <View style={styles.listContent}>
+                            {filteredOrders.map((order) => (
+                                <OrderCard
+                                    key={order._id}
+                                    order={order}
+                                    onPress={() => handleOrderPress(order)}
+                                />
+                            ))}
+
+                            {/* Load More Indicator */}
+                            {loadingMore && (
+                                <View style={{ padding: 16, alignItems: 'center' }}>
+                                    <ActivityIndicator size="small" color={BrandColors.primary} />
+                                </View>
+                            )}
+                        </View>
+                    )}
+                </ScrollView>
+
+                {/* Floating Map Button */}
+                <TouchableOpacity
+                    style={[styles.floatingMapBtn, { bottom: tabBarHeight + 24 }]}
+                    onPress={handleMapPress}
+                >
+                    <FontAwesome name="map" size={20} color="white" />
+                </TouchableOpacity>
+            </View>
         </View>
     );
 }
@@ -268,7 +330,7 @@ const styles = StyleSheet.create({
     },
     listContent: {
         paddingTop: 8,
-        paddingBottom: 100,
+        paddingBottom: 44,
     },
     centerContainer: {
         flex: 1,
