@@ -7,6 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "scheme": "com.enlared.mobile",
     "notification": {
       "icon": "./assets/notification-icon.png",
       "color": "#000000",
@@ -91,7 +92,9 @@
         {
           "googleMapsApiKey": "AIzaSyDTyGS8C9ytWCV79-eh3mwE6LHmO2h-vLY"
         }
-      ]
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging"
     ],
     "experiments": {
       "typedRoutes": true

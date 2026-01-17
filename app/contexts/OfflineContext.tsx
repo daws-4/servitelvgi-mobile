@@ -177,3 +177,6 @@ export function useOffline(): OfflineContextValue {
     }
     return context;
 }
+
+// Default export for Expo router compatibility
+export default OfflineProvider;

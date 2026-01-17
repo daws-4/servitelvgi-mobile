@@ -179,3 +179,6 @@ export function useSecurity(): SecurityContextValue {
     }
     return context;
 }
+
+// Default export for Expo router compatibility
+export default SecurityProvider;

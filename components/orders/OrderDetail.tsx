@@ -5,7 +5,8 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { FontAwesome } from '@expo/vector-icons';
 import { BrandColors } from '@/constants/colors';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Order } from './OrderCard';
+import OrderCard from './OrderCard';
+import type { Order } from '@/types/Order';
 
 interface OrderDetailProps {
     order: Order;
@@ -21,7 +22,7 @@ export default function OrderDetail({ order, onBack, onMap }: OrderDetailProps) 
 
     return (
         <SafeAreaView className="flex-1 mt-2" style={{ backgroundColor: '#f8fafc' }}>
-            <View style={{ flex: 1, backgroundColor: '#f8fafc'   }} >
+            <View style={{ flex: 1, backgroundColor: '#f8fafc' }} >
                 <View
                     className="flex-row items-center px-6 pb-5 border-b border-slate-100"
                     style={{ backgroundColor: 'rgba(248, 250, 252, 0.9)' }}
@@ -34,7 +35,7 @@ export default function OrderDetail({ order, onBack, onMap }: OrderDetailProps) 
                     </TouchableOpacity>
                     <View>
                         <Text className="text-lg font-bold text-gray-900">Detalle de Orden</Text>
-                        <Text className="text-xs font-bold text-slate-400">Abonado: {order.id}</Text>
+                        <Text className="text-xs font-bold text-slate-400">Abonado: {order.subscriberNumber}</Text>
                     </View>
                     <TouchableOpacity
                         onPress={onMap}
@@ -53,7 +54,7 @@ export default function OrderDetail({ order, onBack, onMap }: OrderDetailProps) 
                     style={{ flex: 1 }}
                 >
                     {/* Top Bar */}
-                    
+
 
                     {/* Client Info Card */}
                     <LinearGradient
@@ -68,7 +69,7 @@ export default function OrderDetail({ order, onBack, onMap }: OrderDetailProps) 
                                 <Text className="text-2xl font-black" style={{ color: BrandColors.primary }}>DC</Text>
                             </View>
                             <View>
-                                <Text className="text-white text-xl font-bold">{order.clientName}</Text>
+                                <Text className="text-white text-xl font-bold">{order.subscriberName}</Text>
                                 <Text className="text-blue-100 text-sm opacity-80">Plan FibraNet 500Mb</Text>
                             </View>
                         </View>

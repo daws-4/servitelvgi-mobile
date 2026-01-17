@@ -35,6 +35,14 @@ export default function TabsLayout() {
                 }}
             />
 
+            {/* Hide order detail page from tab bar */}
+            <Tabs.Screen
+                name="orders/[id]"
+                options={{
+                    href: null,
+                }}
+            />
+
             {/* Conditionally render inventory tab based on installer.showInventory */}
 
             <Tabs.Screen

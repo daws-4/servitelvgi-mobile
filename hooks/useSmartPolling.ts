@@ -9,7 +9,7 @@ export interface UseSmartPollingOptions {
   
   /**
    * Polling interval in milliseconds
-   * @default 30000 (30 seconds)
+   * @default 10000 (30 seconds)
    */
   interval?: number;
   

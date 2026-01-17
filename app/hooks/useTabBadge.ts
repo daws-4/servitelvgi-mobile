@@ -34,3 +34,6 @@ export function useTabBadge() {
     refreshBadgeCount,
   };
 }
+
+// Default export for Expo router compatibility
+export default useTabBadge;

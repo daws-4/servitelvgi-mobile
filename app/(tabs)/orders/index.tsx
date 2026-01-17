@@ -7,7 +7,6 @@ import { useRouter } from 'expo-router';
 import MapView, { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { FontAwesome } from '@expo/vector-icons';
-import * as Notifications from 'expo-notifications';
 
 import InstallerHeader from '@/components/orders/InstallerHeader';
 import OrderFilters from '@/components/orders/OrderFilters';
@@ -15,7 +14,6 @@ import OrderCard from '@/components/orders/OrderCard';
 import { useLocationPermission } from '@/hooks/useLocationPermission';
 import { useOrders } from '@/hooks/useOrders';
 import { useAuth } from '@/app/contexts/AuthContext';
-import { useNotifications } from '@/hooks/useNotifications';
 import { useSmartPolling } from '@/hooks/useSmartPolling';
 import { BrandColors } from '@/constants/colors';
 import type { Order, OrderStatus, OrderType } from '@/types/Order';
@@ -44,35 +42,12 @@ export default function OrdersScreen() {
     // Pull-to-refresh state
     const [refreshing, setRefreshing] = useState(false);
 
-    // Push Notifications - Auto register on mount
-    const { notificationsEnabled, registerForPushNotifications } = useNotifications();
-
     // Smart polling - Refresh every 30 seconds when app is active
     useSmartPolling({
         callback: () => refetch({ silent: true }),
-        interval: 30000, // 30 seconds
+        interval: 10000, // 30 seconds
         enabled: !loading && !!crewId // Only poll when not loading and have crew ID
     });
-
-    // Listen for notifications while app is open
-    useEffect(() => {
-        const subscription = Notifications.addNotificationReceivedListener(notification => {
-            console.log('🔔 New order notification received:', notification);
-            // Refetch orders when notification arrives
-            refetch({ silent: true });
-        });
-
-        return () => {
-            subscription.remove();
-        };
-    }, [refetch]);
-
-    // Auto-register for push notifications
-    useEffect(() => {
-        if (installer && !notificationsEnabled) {
-            registerForPushNotifications();
-        }
-    }, [installer, notificationsEnabled]);
 
     // Handle pull-to-refresh
     const handleRefresh = async () => {

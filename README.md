@@ -1182,5 +1182,22 @@ por añadir:
 - campo del ticket ✅
 - status hard ✅
 - ordenes de recuperación
-- probar notificaciones push 
-- arreglar sidebar
+- probar notificaciones push ✅
+- arreglar sidebar ✅
+
+
+speedchecker credentiasls
+allprojects {
+  repositories {
+    google()
+    mavenCentral()
+    maven { url 'https://www.jitpack.io' }
+    maven {
+      url 'https://maven.speedcheckerapi.com/artifactory/libs-release'
+      credentials {
+        username = "demo"
+        password = "AP85qiz6wYEsCttWU2ZckEWSwJKuA6mSYcizEY"
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import authService from '@/services/api/auth';
 import apiClient from '@/services/api/client';
 import installerService from '@/services/api/installers';
@@ -42,15 +42,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [installer, setInstaller] = useState<InstallerProfile | null>(null);
     const [error, setError] = useState<AuthError | null>(null);
 
+    // Usar ref en lugar de state para evitar re-renders y problemas con useEffect
+    const isLoggingOutRef = useRef(false);
+
     /**
      * Configurar callback para errores 401 del HTTP client
      */
     useEffect(() => {
         apiClient.setUnauthorizedCallback(() => {
+            // Evitar loop infinito si ya estamos en proceso de logout
+            if (isLoggingOutRef.current) {
+                console.log('⚠️ Logout ya en progreso, ignorando callback 401');
+                return;
+            }
             console.log('Token expirado detectado por HTTP client, cerrando sesión...');
             logout();
         });
-    }, []);
+    }, []); // Solo configurar una vez al montar
 
     /**
      * Verificar si hay sesión guardada al iniciar la app
@@ -133,7 +141,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
      * Logout: cerrar sesión
      */
     const logout = async () => {
+        // Evitar llamadas duplicadas de logout
+        if (isLoggingOutRef.current) {
+            console.log('⚠️ Logout ya en progreso, ignorando llamada duplicada');
+            return;
+        }
+
         try {
+            isLoggingOutRef.current = true;
             setIsLoading(true);
 
             // Actualizar status a 'inactive' antes de cerrar sesión
@@ -143,7 +158,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         onDuty: 'inactive'
                     });
                 } catch (statusErr) {
-                    console.warn('No se pudo actualizar status a inactivo:', statusErr);
+                    // Ignorar error silenciosamente (probablemente 401 si token expiró)
+                    // console.warn('Error en logout del backend:', statusErr);
                 }
             }
 
@@ -155,6 +171,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setInstaller(null);
             setError(null);
             setIsLoading(false);
+            isLoggingOutRef.current = false;
         }
     };
 
