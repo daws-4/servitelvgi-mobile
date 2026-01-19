@@ -296,7 +296,7 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
 
                     {/* Version Info */}
-                    <Text style={styles.version}>SGO VERSION 1.0.4-ST</Text>
+                    <Text style={styles.version}>SGO VERSION 1.0.1</Text>
                 </View>
             </ScrollView>
 

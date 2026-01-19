@@ -65,7 +65,16 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
     });
 
     return (
-        <View pointerEvents="box-none" style={[styles.container, { height: 64, paddingBottom: Math.max(insets.bottom, 16) }]}>
+        <View
+            pointerEvents="box-none"
+            style={[
+                styles.container,
+                {
+                    height: 64 + Math.max(insets.bottom, 0),
+                    paddingBottom: Math.max(insets.bottom, 0),
+                }
+            ]}
+        >
             {filteredRoutes
                 .map((route) => {
                     const { options } = descriptors[route.key];
@@ -134,15 +143,14 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
 
 const styles = StyleSheet.create({
     container: {
-        height: 64,
         flexDirection: 'row',
         backgroundColor: 'white',
         borderTopWidth: 1,
         borderTopColor: '#f1f5f9', // slate-100
-        paddingTop: 16,
+        paddingTop: 8,
         paddingHorizontal: 16,
         justifyContent: 'space-around',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         shadowColor: "#000",
@@ -160,6 +168,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         flex: 1,
         gap: 4,
+        paddingVertical: 8,
     },
     iconContainer: {
         marginBottom: 2,

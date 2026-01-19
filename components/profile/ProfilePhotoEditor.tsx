@@ -45,18 +45,53 @@ export default function ProfilePhotoEditor({
     };
 
     const requestPermissions = async (): Promise<boolean> => {
-        const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
-        const { status: libraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        try {
+            console.log('📸 [ProfilePhoto] Verificando permisos actuales...');
 
-        if (cameraStatus !== 'granted' || libraryStatus !== 'granted') {
+            // Primero verificar el estado actual de los permisos
+            const cameraPerms = await ImagePicker.getCameraPermissionsAsync();
+            const libraryPerms = await ImagePicker.getMediaLibraryPermissionsAsync();
+
+            console.log('📸 [ProfilePhoto] Permisos actuales - Cámara:', cameraPerms.status, 'Galería:', libraryPerms.status);
+
+            // Si ya están concedidos, retornar true directamente
+            if (cameraPerms.status === 'granted' && libraryPerms.status === 'granted') {
+                console.log('✅ [ProfilePhoto] Permisos ya concedidos');
+                return true;
+            }
+
+            // Si se pueden solicitar, hacerlo
+            if (cameraPerms.canAskAgain || libraryPerms.canAskAgain) {
+                console.log('📸 [ProfilePhoto] Solicitando permisos...');
+
+                const cameraRequest = await ImagePicker.requestCameraPermissionsAsync();
+                const libraryRequest = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+                console.log('📸 [ProfilePhoto] Resultados - Cámara:', cameraRequest.status, 'Galería:', libraryRequest.status);
+
+                if (cameraRequest.status === 'granted' && libraryRequest.status === 'granted') {
+                    console.log('✅ [ProfilePhoto] Permisos otorgados');
+                    return true;
+                }
+            }
+
+            // Si llegamos aquí, los permisos fueron denegados
+            console.warn('⚠️ [ProfilePhoto] Permisos denegados o bloqueados');
             Alert.alert(
                 'Permisos Requeridos',
-                'Necesitamos acceso a la cámara y galería para cambiar tu foto de perfil.',
+                'Necesitamos acceso a la cámara y galería. Por favor, habilita los permisos en la configuración de la app.',
+                [{ text: 'OK' }]
+            );
+            return false;
+        } catch (error) {
+            console.error('❌ [ProfilePhoto] Error con permisos:', error);
+            Alert.alert(
+                'Error',
+                'Ocurrió un error al verificar los permisos. Intenta nuevamente.',
                 [{ text: 'OK' }]
             );
             return false;
         }
-        return true;
     };
 
     const pickFromCamera = async () => {

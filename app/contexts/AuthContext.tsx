@@ -126,6 +126,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
             setInstaller(response.installer);
             setIsAuthenticated(true);
+
+            // Solicitar permisos de notificaciones y ubicación después del login exitoso
+            requestPostLoginPermissions();
         } catch (err) {
             const authError = err as AuthError;
             setError(authError);
@@ -134,6 +137,92 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             throw authError;
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    /**
+     * Solicitar permisos de notificaciones, ubicación, cámara y galería después del login
+     */
+    const requestPostLoginPermissions = async () => {
+        try {
+            // 1. Solicitar permisos de notificaciones usando FCM
+            try {
+                const { getApp } = await import('@react-native-firebase/app');
+                const { getMessaging, requestPermission, getToken } = await import('@react-native-firebase/messaging');
+                const { Platform, PermissionsAndroid } = await import('react-native');
+
+                const app = getApp();
+                const messaging = getMessaging(app);
+
+                // Para Android 13+
+                if (Platform.OS === 'android' && Platform.Version >= 33) {
+                    const granted = await PermissionsAndroid.request(
+                        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+                    );
+                    if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+                        console.warn('⚠️ [PostLogin] Permiso de notificaciones denegado');
+                    }
+                }
+
+                // Solicitar permiso FCM
+                await requestPermission(messaging);
+
+                // Obtener y registrar token
+                const fcmToken = await getToken(messaging);
+                if (fcmToken && installer?._id) {
+                    await installerService.registerPushToken(fcmToken);
+                    console.log('✅ [PostLogin] Token de notificaciones registrado');
+                }
+            } catch (notifErr) {
+                console.warn('⚠️ [PostLogin] Error solicitando permisos de notificaciones:', notifErr);
+            }
+
+            // 2. Solicitar permisos de ubicación
+            try {
+                const Location = await import('expo-location');
+
+                const { status } = await Location.requestForegroundPermissionsAsync();
+
+                if (status === 'granted') {
+                    console.log('✅ [PostLogin] Permiso de ubicación otorgado');
+                } else {
+                    console.warn('⚠️ [PostLogin] Permiso de ubicación denegado');
+                }
+            } catch (locErr) {
+                console.warn('⚠️ [PostLogin] Error solicitando permisos de ubicación:', locErr);
+            }
+
+            // 3. Solicitar permisos de cámara
+            try {
+                const ImagePicker = await import('expo-image-picker');
+
+                const { status } = await ImagePicker.requestCameraPermissionsAsync();
+
+                if (status === 'granted') {
+                    console.log('✅ [PostLogin] Permiso de cámara otorgado');
+                } else {
+                    console.warn('⚠️ [PostLogin] Permiso de cámara denegado');
+                }
+            } catch (camErr) {
+                console.warn('⚠️ [PostLogin] Error solicitando permiso de cámara:', camErr);
+            }
+
+            // 4. Solicitar permisos de galería/archivos multimedia
+            try {
+                const ImagePicker = await import('expo-image-picker');
+
+                const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+                if (status === 'granted') {
+                    console.log('✅ [PostLogin] Permiso de galería otorgado');
+                } else {
+                    console.warn('⚠️ [PostLogin] Permiso de galería denegado');
+                }
+            } catch (galleryErr) {
+                console.warn('⚠️ [PostLogin] Error solicitando permiso de galería:', galleryErr);
+            }
+        } catch (err) {
+            console.error('❌ [PostLogin] Error general solicitando permisos:', err);
         }
     };
 
