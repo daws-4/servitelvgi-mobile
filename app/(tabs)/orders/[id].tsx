@@ -15,17 +15,19 @@ import { FontAwesome } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import ReadOnlyField from '@/components/orders/ReadOnlyField';
+import EditableField from '@/components/orders/EditableField';
 import StatusPicker from '@/components/orders/StatusPicker';
 import PhotoEvidenceManager from '@/components/orders/PhotoEvidenceManager';
 import InventoryAssignmentManager from '@/components/orders/InventoryAssignmentManager';
 import OrderSpeedTest from '@/components/orders/OrderSpeedTest';
 import CustomerSignature from '@/components/orders/CustomerSignature';
 import InstallerLogManager from '@/components/orders/InstallerLogManager';
+import EquipmentRecoveryForm from '@/components/orders/EquipmentRecoveryForm';
 import orderService from '@/services/api/orders';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { BrandColors } from '@/constants/colors';
 import { ORDER_TYPE_LABELS } from '@/constants/orderStates';
-import type { Order, OrderStatus, OrderType, MaterialUsed, InternetTestResult, InstallerLog } from '@/types/Order';
+import type { Order, OrderStatus, OrderType, MaterialUsed, InternetTestResult, InstallerLog, EquipmentRecovered } from '@/types/Order';
 
 export default function OrderDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -83,13 +85,16 @@ export default function OrderDetailScreen() {
     const canComplete = useMemo(() => {
         if (!order) return false;
 
-        // Must have inventory assigned
+        const isRecoveryOrder = order.type === 'recuperacion';
+
+        if (isRecoveryOrder) {
+            // For recovery: require at least ONT ID to complete
+            return !!order.equipmentRecovered?.ontId?.trim();
+        }
+
+        // For installation/repair: need inventory, signature, and internet test
         const hasInventory = (materialsUsed?.length || 0) > 0;
-
-        // Must have customer signature
         const hasSignature = !!order.customerSignature;
-
-        // Must have internet test
         const hasInternetTest = !!(order.internetTest?.downloadSpeed && order.internetTest?.uploadSpeed);
 
         return hasInventory && hasSignature && hasInternetTest;
@@ -99,16 +104,25 @@ export default function OrderDetailScreen() {
     const getCompletionMessage = useMemo(() => {
         if (!order) return '';
 
+        const isRecoveryOrder = order.type === 'recuperacion';
         const missing: string[] = [];
 
-        if (!materialsUsed?.length) {
-            missing.push('inventario asignado');
-        }
-        if (!order.customerSignature) {
-            missing.push('firma del cliente');
-        }
-        if (!order.internetTest?.downloadSpeed) {
-            missing.push('prueba de internet');
+        if (isRecoveryOrder) {
+            // Recovery order - require ONT ID for completion
+            if (!order.equipmentRecovered?.ontId?.trim()) {
+                missing.push('ID de la ONT');
+            }
+        } else {
+            // Installation/repair requirements
+            if (!materialsUsed?.length) {
+                missing.push('inventario asignado');
+            }
+            if (!order.customerSignature) {
+                missing.push('firma del cliente');
+            }
+            if (!order.internetTest?.downloadSpeed) {
+                missing.push('prueba de internet');
+            }
         }
 
         if (missing.length === 0) return '';
@@ -167,12 +181,14 @@ export default function OrderDetailScreen() {
                         onPress: async () => {
                             try {
                                 setUpdating(true);
+                                const isRecoveryOrder = order.type === 'recuperacion';
+
                                 await orderService.completeOrder(order._id, {
-                                    materialsUsed,
+                                    materialsUsed: isRecoveryOrder ? [] : materialsUsed,
                                     photoEvidence: order.photoEvidence || [],
-                                    customerSignature: order.customerSignature!,
-                                    internetTest: order.internetTest,
-                                    // Add current coordinates if we had them or other details
+                                    customerSignature: isRecoveryOrder ? undefined : order.customerSignature,
+                                    internetTest: isRecoveryOrder ? undefined : order.internetTest,
+                                    equipmentRecovered: isRecoveryOrder ? order.equipmentRecovered : undefined,
                                 });
                                 setCurrentStatus('completed');
                                 setOrder(prev => prev ? { ...prev, status: 'completed' } : null);
@@ -273,6 +289,31 @@ export default function OrderDetailScreen() {
         }
     };
 
+    // Handle equipment recovery data change
+    const handleEquipmentChange = (equipment: EquipmentRecovered) => {
+        if (!order) return;
+
+        // Update local state
+        setOrder(prev => prev ? { ...prev, equipmentRecovered: equipment } : null);
+    };
+
+    // Handle order field updates (for recovery orders)
+    const handleOrderFieldUpdate = async (field: keyof Order, value: any) => {
+        if (!order) return;
+
+        // Update local state
+        setOrder(prev => prev ? { ...prev, [field]: value } : null);
+
+        // Save to backend
+        try {
+            await orderService.updateOrder(order._id, {
+                [field]: value
+            });
+        } catch (error) {
+            console.error(`Error updating ${String(field)}:`, error);
+        }
+    };
+
     const handleCall = (phoneNumber: string) => {
         // Clean phone number (remove non-digits if necessary, but tel: usually handles spaces)
         // Ensure prompt: true is used (default on recent RN versions) or just openURL
@@ -331,7 +372,7 @@ export default function OrderDetailScreen() {
                 </TouchableOpacity>
                 <View style={styles.headerInfo}>
                     <Text style={styles.headerTitle}>Detalle de Orden</Text>
-                    <Text style={styles.headerSubtitle}>#{order.subscriberNumber}</Text>
+                    <Text style={styles.headerSubtitle}>#{order.ticket_id}</Text>
                 </View>
                 {/* Save Button */}
                 {currentStatus !== 'completed' && currentStatus !== 'cancelled' && (
@@ -397,62 +438,104 @@ export default function OrderDetailScreen() {
                         </View>
                     </LinearGradient>
 
-                    {/* Subscriber Data Section (Read-Only) */}
+                    {/* Subscriber Data Section */}
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
                             <FontAwesome name="user" size={14} color={BrandColors.primary} />
                             <Text style={styles.sectionTitle}>Datos del Abonado</Text>
                         </View>
 
-                        <ReadOnlyField
-                            label="Nombre"
-                            value={order.subscriberName}
-                            icon="user"
-                            selectable={true}
-                        />
-                        <ReadOnlyField
-                            label="N° Abonado"
-                            value={order.subscriberNumber}
-                            icon="id-card"
-                            selectable={true}
-                        />
-                        <ReadOnlyField
-                            label="Dirección"
-                            value={order.address}
-                            icon="map-marker"
-                            selectable={true}
-                        />
-
-                        {/* Dynamic Phone Numbers */}
-                        {order.phones && order.phones.length > 0 ? (
-                            order.phones.map((phone, index) => (
-                                <ReadOnlyField
-                                    key={`phone-${index}`}
-                                    label={`Teléfono ${index + 1}`}
-                                    value={phone}
-                                    icon="phone"
-                                    selectable={true}
-                                    onAction={() => handleCall(phone)}
-                                    actionIcon="phone"
+                        {/* Conditional rendering: Editable for recovery orders, ReadOnly for others */}
+                        {order.type === 'recuperacion' && order.status !== 'completed' && order.status !== 'cancelled' ? (
+                            <>
+                                <EditableField
+                                    label="Número de Abonado"
+                                    value={order.subscriberNumber}
+                                    onChangeText={(text) => handleOrderFieldUpdate('subscriberNumber', text)}
+                                    icon="id-card"
+                                    keyboardType="numeric"
                                 />
-                            ))
+                                <EditableField
+                                    label="Nombre"
+                                    value={order.subscriberName}
+                                    onChangeText={(text) => handleOrderFieldUpdate('subscriberName', text)}
+                                    icon="user"
+                                />
+                                <EditableField
+                                    label="Dirección"
+                                    value={order.address}
+                                    onChangeText={(text) => handleOrderFieldUpdate('address', text)}
+                                    icon="map-marker"
+                                    multiline
+                                />
+                                <EditableField
+                                    label="Teléfono"
+                                    value={order.phones?.[0] || ''}
+                                    onChangeText={(text) => handleOrderFieldUpdate('phones', text ? [text] : [])}
+                                    icon="phone"
+                                    keyboardType="phone-pad"
+                                />
+                                <EditableField
+                                    label="Email"
+                                    value={order.email}
+                                    onChangeText={(text) => handleOrderFieldUpdate('email', text)}
+                                    icon="envelope"
+                                    keyboardType="email-address"
+                                />
+                            </>
                         ) : (
-                            <ReadOnlyField
-                                label="Teléfono"
-                                value="No registrado"
-                                icon="phone"
-                            />
-                        )}
+                            <>
+                                <ReadOnlyField
+                                    label="Nombre"
+                                    value={order.subscriberName}
+                                    icon="user"
+                                    selectable={true}
+                                />
+                                <ReadOnlyField
+                                    label="N° Abonado"
+                                    value={order.subscriberNumber}
+                                    icon="id-card"
+                                    selectable={true}
+                                />
+                                <ReadOnlyField
+                                    label="Dirección"
+                                    value={order.address}
+                                    icon="map-marker"
+                                    selectable={true}
+                                />
 
-                        <ReadOnlyField
-                            label="Email"
-                            value={order.email}
-                            icon="envelope"
-                            selectable={true}
-                        />
+                                {/* Dynamic Phone Numbers */}
+                                {order.phones && order.phones.length > 0 ? (
+                                    order.phones.map((phone, index) => (
+                                        <ReadOnlyField
+                                            key={`phone-${index}`}
+                                            label={`Teléfono ${index + 1}`}
+                                            value={phone}
+                                            icon="phone"
+                                            selectable={true}
+                                            onAction={() => handleCall(phone)}
+                                            actionIcon="phone"
+                                        />
+                                    ))
+                                ) : (
+                                    <ReadOnlyField
+                                        label="Teléfono"
+                                        value="No registrado"
+                                        icon="phone"
+                                    />
+                                )}
+
+                                <ReadOnlyField
+                                    label="Email"
+                                    value={order.email}
+                                    icon="envelope"
+                                    selectable={true}
+                                />
+                            </>
+                        )}
                     </View>
 
-                    {/* Technical Data Section (Read-Only) */}
+                    {/* Technical Data Section */}
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
                             <FontAwesome name="cogs" size={14} color={BrandColors.primary} />
@@ -465,12 +548,45 @@ export default function OrderDetailScreen() {
                             icon="tag"
                             selectable={true}
                         />
-                        <ReadOnlyField
-                            label="Nodo"
-                            value={order.node}
-                            icon="sitemap"
-                            selectable={true}
-                        />
+
+                        {/* Ticket ID: Editable for recovery orders */}
+                        {order.type === 'recuperacion' && order.status !== 'completed' && order.status !== 'cancelled' ? (
+                            <EditableField
+                                label="Número de Ticket"
+                                value={order.ticket_id}
+                                onChangeText={(text) => handleOrderFieldUpdate('ticket_id', text)}
+                                icon="ticket"
+                                placeholder="Ej: TKT-2024-001"
+                            />
+                        ) : (
+                            order.ticket_id && (
+                                <ReadOnlyField
+                                    label="Ticket ID"
+                                    value={order.ticket_id}
+                                    icon="ticket"
+                                    selectable={true}
+                                />
+                            )
+                        )}
+
+                        {/* Node field: Editable for recovery orders */}
+                        {order.type === 'recuperacion' && order.status !== 'completed' && order.status !== 'cancelled' ? (
+                            <EditableField
+                                label="Nodo"
+                                value={order.node}
+                                onChangeText={(text) => handleOrderFieldUpdate('node', text)}
+                                icon="sitemap"
+                                placeholder="Ej: SCRVEG20112A-GPON"
+                            />
+                        ) : (
+                            <ReadOnlyField
+                                label="Nodo"
+                                value={order.node}
+                                icon="sitemap"
+                                selectable={true}
+                            />
+                        )}
+
                         <ReadOnlyField
                             label="Servicios a Instalar"
                             value={order.servicesToInstall?.join(', ')}
@@ -481,14 +597,6 @@ export default function OrderDetailScreen() {
                             value={order.assignedToName || String(installer?.crew?.number)}
                             icon="users"
                         />
-                        {order.ticket_id && (
-                            <ReadOnlyField
-                                label="Ticket ID"
-                                value={order.ticket_id}
-                                icon="ticket"
-                                selectable={true}
-                            />
-                        )}
                     </View>
 
                     {/* Status Section (Editable) */}
@@ -510,51 +618,79 @@ export default function OrderDetailScreen() {
                         {currentStatus !== 'completed' && (
                             <View style={styles.requirementsCard}>
                                 <Text style={styles.requirementsTitle}>Requisitos para Finalizar:</Text>
-                                <View style={styles.requirementRow}>
-                                    <FontAwesome
-                                        name={materialsUsed?.length ? 'check-circle' : 'circle-o'}
-                                        size={16}
-                                        color={materialsUsed?.length ? '#22c55e' : '#94a3b8'}
-                                    />
-                                    <Text style={styles.requirementText}>Inventario asignado</Text>
-                                </View>
-                                <View style={styles.requirementRow}>
-                                    <FontAwesome
-                                        name={order.customerSignature ? 'check-circle' : 'circle-o'}
-                                        size={16}
-                                        color={order.customerSignature ? '#22c55e' : '#94a3b8'}
-                                    />
-                                    <Text style={styles.requirementText}>Firma del cliente</Text>
-                                </View>
-                                <View style={styles.requirementRow}>
-                                    <FontAwesome
-                                        name={order.internetTest?.downloadSpeed ? 'check-circle' : 'circle-o'}
-                                        size={16}
-                                        color={order.internetTest?.downloadSpeed ? '#22c55e' : '#94a3b8'}
-                                    />
-                                    <Text style={styles.requirementText}>Prueba de internet</Text>
-                                </View>
+
+                                {order.type === 'recuperacion' ? (
+                                    // Recovery order - require ONT ID
+                                    <View style={styles.requirementRow}>
+                                        <FontAwesome
+                                            name={order.equipmentRecovered?.ontId?.trim() ? 'check-circle' : 'circle-o'}
+                                            size={16}
+                                            color={order.equipmentRecovered?.ontId?.trim() ? '#22c55e' : '#94a3b8'}
+                                        />
+                                        <Text style={styles.requirementText}>ID de la ONT recuperada</Text>
+                                    </View>
+                                ) : (
+                                    // Installation/Repair requirements
+                                    <>
+                                        <View style={styles.requirementRow}>
+                                            <FontAwesome
+                                                name={materialsUsed?.length ? 'check-circle' : 'circle-o'}
+                                                size={16}
+                                                color={materialsUsed?.length ? '#22c55e' : '#94a3b8'}
+                                            />
+                                            <Text style={styles.requirementText}>Inventario asignado</Text>
+                                        </View>
+                                        <View style={styles.requirementRow}>
+                                            <FontAwesome
+                                                name={order.customerSignature ? 'check-circle' : 'circle-o'}
+                                                size={16}
+                                                color={order.customerSignature ? '#22c55e' : '#94a3b8'}
+                                            />
+                                            <Text style={styles.requirementText}>Firma del cliente</Text>
+                                        </View>
+                                        <View style={styles.requirementRow}>
+                                            <FontAwesome
+                                                name={order.internetTest?.downloadSpeed ? 'check-circle' : 'circle-o'}
+                                                size={16}
+                                                color={order.internetTest?.downloadSpeed ? '#22c55e' : '#94a3b8'}
+                                            />
+                                            <Text style={styles.requirementText}>Prueba de internet</Text>
+                                        </View>
+                                    </>
+                                )}
                             </View>
                         )}
                     </View>
 
-                    {/* Inventory Assignment Section */}
-                    <View style={styles.section}>
-                        <View style={styles.sectionHeader}>
-                            <FontAwesome name="cube" size={14} color={BrandColors.primary} />
-                            <Text style={styles.sectionTitle}>Materiales e Inventario</Text>
-                        </View>
-
-                        <InventoryAssignmentManager
-                            crewId={installer?.crew?._id || ''}
-                            materialsUsed={materialsUsed}
-                            onMaterialsChange={handleMaterialsChange}
-                            onImmediateSave={handleImmediateSave}
+                    {/* Equipment Recovery Section (Only for recuperacion orders) */}
+                    {order.type === 'recuperacion' && (
+                        <EquipmentRecoveryForm
+                            orderId={order._id}
+                            initialData={order.equipmentRecovered}
+                            onDataChange={handleEquipmentChange}
                             readOnly={order.status === 'completed' || order.status === 'cancelled'}
                         />
-                    </View>
+                    )}
 
-                    {/* Photo Evidence Section */}
+                    {/* Inventory Assignment Section (Only for installation/repair) */}
+                    {order.type !== 'recuperacion' && (
+                        <View style={styles.section}>
+                            <View style={styles.sectionHeader}>
+                                <FontAwesome name="cube" size={14} color={BrandColors.primary} />
+                                <Text style={styles.sectionTitle}>Materiales e Inventario</Text>
+                            </View>
+
+                            <InventoryAssignmentManager
+                                crewId={installer?.crew?._id || ''}
+                                materialsUsed={materialsUsed}
+                                onMaterialsChange={handleMaterialsChange}
+                                onImmediateSave={handleImmediateSave}
+                                readOnly={order.status === 'completed' || order.status === 'cancelled'}
+                            />
+                        </View>
+                    )}
+
+                    {/* Photo Evidence Section (Always visible) */}
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
                             <FontAwesome name="camera" size={14} color={BrandColors.primary} />
@@ -571,31 +707,35 @@ export default function OrderDetailScreen() {
                         />
                     </View>
 
-                    {/* Signature Section */}
-                    <View style={styles.section}>
-                        <CustomerSignature
-                            orderId={order._id}
-                            signature={order.customerSignature}
-                            onSignatureChange={handleSignatureChange}
-                            onUploadSignature={orderService.saveSignatureUrl.bind(orderService)}
-                            readOnly={order.status === 'completed' || order.status === 'cancelled'}
-                        />
-                    </View>
-
-                    {/* Internet Test Section */}
-                    <View style={styles.section}>
-                        <View style={styles.sectionHeader}>
-                            <FontAwesome name="wifi" size={14} color={BrandColors.primary} />
-                            <Text style={styles.sectionTitle}>Prueba de Internet</Text>
+                    {/* Signature Section (Only for installation/repair) */}
+                    {order.type !== 'recuperacion' && (
+                        <View style={styles.section}>
+                            <CustomerSignature
+                                orderId={order._id}
+                                signature={order.customerSignature}
+                                onSignatureChange={handleSignatureChange}
+                                onUploadSignature={orderService.saveSignatureUrl.bind(orderService)}
+                                readOnly={order.status === 'completed' || order.status === 'cancelled'}
+                            />
                         </View>
+                    )}
 
-                        <OrderSpeedTest
-                            orderId={order._id}
-                            existingTest={order.internetTest}
-                            onTestSaved={handleTestSaved}
-                            readOnly={order.status === 'completed' || order.status === 'cancelled'}
-                        />
-                    </View>
+                    {/* Internet Test Section (Only for installation/repair) */}
+                    {order.type !== 'recuperacion' && (
+                        <View style={styles.section}>
+                            <View style={styles.sectionHeader}>
+                                <FontAwesome name="wifi" size={14} color={BrandColors.primary} />
+                                <Text style={styles.sectionTitle}>Prueba de Internet</Text>
+                            </View>
+
+                            <OrderSpeedTest
+                                orderId={order._id}
+                                existingTest={order.internetTest}
+                                onTestSaved={handleTestSaved}
+                                readOnly={order.status === 'completed' || order.status === 'cancelled'}
+                            />
+                        </View>
+                    )}
 
                     {/* Installer Log Section */}
                     <View style={styles.section}>

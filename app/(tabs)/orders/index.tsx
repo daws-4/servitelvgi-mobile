@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, BackHandler, ActivityIndicato
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import MapView, { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
@@ -15,6 +16,7 @@ import { useLocationPermission } from '@/hooks/useLocationPermission';
 import { useOrders } from '@/hooks/useOrders';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useSmartPolling } from '@/hooks/useSmartPolling';
+import { useNotifications } from '@/hooks/useNotifications';
 import { BrandColors } from '@/constants/colors';
 import type { Order, OrderStatus, OrderType } from '@/types/Order';
 
@@ -31,6 +33,7 @@ export default function OrdersScreen() {
     const [searchValue, setSearchValue] = useState('');
     const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
     const [typeFilter, setTypeFilter] = useState<OrderType | 'all'>('all');
+    const [refreshing, setRefreshing] = useState(false);
 
     // Auth context for crew ID
     const { installer } = useAuth();
@@ -39,13 +42,26 @@ export default function OrdersScreen() {
     // Orders data from API
     const { orders, loading, loadingMore, loadMore, error, refetch } = useOrders(crewId);
 
-    // Pull-to-refresh state
-    const [refreshing, setRefreshing] = useState(false);
+    // Notifications hook
+    const { setupNotificationHandlers } = useNotifications();
 
-    // Smart polling - Refresh every 30 seconds when app is active
+    // Refetch orders when screen is focused
+    useFocusEffect(
+        React.useCallback(() => {
+            refetch({ silent: true });
+        }, [refetch])
+    );
+
+    // Setup notification handlers to refetch on new notifications
+    useEffect(() => {
+        const cleanup = setupNotificationHandlers(() => refetch({ silent: true }));
+        return cleanup;
+    }, [setupNotificationHandlers, refetch]);
+
+    // Enable smart polling for order updates
     useSmartPolling({
         callback: () => refetch({ silent: true }),
-        interval: 10000, // 30 seconds
+        interval: 30000, // Poll every 30 seconds when app is active
         enabled: !loading && !!crewId // Only poll when not loading and have crew ID
     });
 
@@ -54,7 +70,8 @@ export default function OrdersScreen() {
         console.log('🔄 Pull-to-refresh triggered!');
         try {
             setRefreshing(true);
-            await refetch();
+            // Force refetch even if recently fetched (user explicitly requested)
+            await refetch({ force: true });
         } catch (error) {
             console.error('Error refreshing orders:', error);
         } finally {
@@ -286,6 +303,14 @@ export default function OrdersScreen() {
                     )}
                 </ScrollView>
 
+                {/* Floating Create Recovery Order Button */}
+                <TouchableOpacity
+                    style={[styles.floatingCreateBtn, { bottom: tabBarHeight + 90 }]}
+                    onPress={() => router.push('/orders/create-recovery')}
+                >
+                    <FontAwesome name="plus-square" size={20} color="white" />
+                </TouchableOpacity>
+
                 {/* Floating Map Button */}
                 <TouchableOpacity
                     style={[styles.floatingMapBtn, { bottom: tabBarHeight + 24 }]}
@@ -372,6 +397,21 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         color: '#0f0f0f',
+    },
+    floatingCreateBtn: {
+        position: 'absolute',
+        right: 24,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: '#3B82F6', // Blue for recovery
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#3B82F6',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 6,
     },
     floatingMapBtn: {
         position: 'absolute',

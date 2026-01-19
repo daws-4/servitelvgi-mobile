@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import orderService from '@/services/api/orders';
 import type {
   Order,
@@ -17,7 +17,7 @@ interface UseOrdersReturn {
   loadingMore: boolean;
   hasMore: boolean;
   error: string | null;
-  refetch: (options?: { silent?: boolean }) => Promise<void>;
+  refetch: (options?: { silent?: boolean; force?: boolean }) => Promise<void>;
   loadMore: () => void;
   selectOrder: (orderId: string | null) => Promise<void>;
   updateStatus: (orderId: string, status: OrderStatus) => Promise<void>;
@@ -43,6 +43,10 @@ export const useOrders = (crewId: string, filters?: OrderFilters): UseOrdersRetu
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const LIMIT = 10;
+
+  // Debouncing - Track last fetch time to prevent redundant calls
+  const lastFetchTime = useRef<number>(0);
+  const DEBOUNCE_TIME = 3000; // 3 seconds
 
   // Reset pagination when filters or crewId change
   useEffect(() => {
@@ -111,7 +115,18 @@ export const useOrders = (crewId: string, filters?: OrderFilters): UseOrdersRetu
     }
   }, [loading, loadingMore, hasMore, fetchOrders]);
 
-  const refetch = useCallback((options?: { silent?: boolean }) => {
+  const refetch = useCallback((options?: { silent?: boolean; force?: boolean }) => {
+    const now = Date.now();
+    const timeSinceLastFetch = now - lastFetchTime.current;
+
+    // Skip if recently fetched (within DEBOUNCE_TIME) unless forced
+    if (!options?.force && timeSinceLastFetch < DEBOUNCE_TIME) {
+      console.log(`⏭️ [useOrders] Skipping refetch (${Math.round(timeSinceLastFetch / 1000)}s ago)`);
+      return Promise.resolve();
+    }
+
+    console.log('🔄 [useOrders] Executing refetch');
+    lastFetchTime.current = now;
     return fetchOrders(true, options?.silent);
   }, [fetchOrders]);
 

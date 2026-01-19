@@ -42,7 +42,12 @@ export default function TabsLayout() {
                     href: null,
                 }}
             />
-
+            <Tabs.Screen
+                name="orders/create-recovery"
+                options={{
+                    href: null,
+                }}
+            />
             {/* Conditionally render inventory tab based on installer.showInventory */}
 
             <Tabs.Screen

@@ -24,6 +24,7 @@ export type OrderStatus =
 export type OrderType =
   | 'instalacion'   // Instalación nueva
   | 'averia'        // Reparación/avería
+  | 'recuperacion'  // Recuperación de equipos
   | 'otro';         // Otro tipo
 
 /**
@@ -81,6 +82,18 @@ export interface InternetTestResult {
 }
 
 /**
+ * Datos del equipo ONT recuperado (solo para registro, NO se añade al inventario)
+ */
+export interface EquipmentRecovered {
+  ontId: string;              // ID de la ONT (obligatorio)
+  serialNumber?: string;      // Número de serie
+  macAddress?: string;        // Dirección MAC
+  model?: string;             // Modelo del equipo
+  condition?: 'good' | 'damaged' | 'defective'; // Estado del equipo
+  notes?: string;             // Observaciones adicionales
+}
+
+/**
  * Orden de servicio completa
  */
 export interface Order {
@@ -123,6 +136,7 @@ export interface Order {
   photoEvidence?: string[];        // URLs de fotos (formato backend)
   customerSignature?: string;      // Firma del cliente (base64)
   internetTest?: InternetTestResult; // Resultado de prueba de internet
+  equipmentRecovered?: EquipmentRecovered; // Equipo recuperado (solo para recuperación)
 
   // Control de reporte
   googleFormReported?: boolean;    // Reportado a Google Form
@@ -140,10 +154,11 @@ export interface Order {
  * Datos para completar una orden
  */
 export interface OrderCompletionData {
-  materialsUsed: MaterialUsed[];
+  materialsUsed?: MaterialUsed[];  // Opcional para recuperación
   photoEvidence: string[];         // IDs de PocketBase (recordId:filename)
-  customerSignature: string;       // Base64 de la firma
-  internetTest?: InternetTestResult; // Resultado de prueba de internet
+  customerSignature?: string;      // Base64 de la firma (no aplica para recuperación)
+  internetTest?: InternetTestResult; // Resultado de prueba de internet (no aplica para recuperación)
+  equipmentRecovered?: EquipmentRecovered; // Equipo recuperado (solo para recuperación)
   reportDetails?: string;          // Detalles del reporte
   coordinates?: Coordinates;       // Coordenadas de cierre
 }

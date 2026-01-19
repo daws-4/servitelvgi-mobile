@@ -66,15 +66,17 @@ export const ORDER_STATUS_ICONS: Record<OrderStatus, string> = {
 export const ORDER_TYPES = {
   INSTALLATION: 'instalacion',
   REPAIR: 'averia',
+  RECOVERY: 'recuperacion',
   OTHER: 'otro',
 } as const;
 
 /**
  * Etiquetas legibles de tipos
  */
-export const ORDER_TYPE_LABELS: Record<OrderType, string> = {
+export const ORDER_TYPE_LABELS: Record<string, string> = {
   instalacion: 'Instalación',
-  averia: 'Avería/Reparación',
+  averia: 'Avería',
+  recuperacion: 'Recuperación',
   otro: 'Otro',
 };
 
@@ -84,6 +86,7 @@ export const ORDER_TYPE_LABELS: Record<OrderType, string> = {
 export const ORDER_TYPE_COLORS: Record<OrderType, string> = {
   instalacion: '#4caf50',    // Verde
   averia: '#ff9800',         // Naranja
+  recuperacion: '#3B82F6',   // Azul
   otro: '#9e9e9e',           // Gris
 };
 
@@ -93,6 +96,7 @@ export const ORDER_TYPE_COLORS: Record<OrderType, string> = {
 export const ORDER_TYPE_ICONS: Record<OrderType, string> = {
   instalacion: 'home',
   averia: 'tool',
+  recuperacion: 'archive',
   otro: 'file-text',
 };
 

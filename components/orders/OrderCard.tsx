@@ -18,6 +18,7 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; bg: string; text: stri
 const TYPE_LABELS: Record<OrderType, string> = {
     instalacion: 'Instalación',
     averia: 'Avería',
+    recuperacion: 'Recuperación',
     otro: 'Otro',
 };
 
@@ -25,6 +26,7 @@ const TYPE_LABELS: Record<OrderType, string> = {
 const TYPE_COLORS: Record<OrderType, string> = {
     instalacion: '#4ade80', // green
     averia: '#f87171',      // red
+    recuperacion: '#3B82F6', // blue
     otro: '#fbbf24',        // yellow
 };
 

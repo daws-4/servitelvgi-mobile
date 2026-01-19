@@ -29,6 +29,7 @@ const TYPE_OPTIONS: { value: OrderType | 'all'; label: string }[] = [
     { value: 'all', label: 'Todos' },
     { value: 'instalacion', label: 'Instalación' },
     { value: 'averia', label: 'Avería' },
+    { value: 'recuperacion', label: 'Recuperación' },
     { value: 'otro', label: 'Otro' },
 ];
 

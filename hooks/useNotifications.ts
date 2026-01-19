@@ -20,6 +20,7 @@ export interface UseNotificationsReturn {
   registerForPushNotifications: () => Promise<void>;
   loading: boolean;
   error: string | null;
+  setupNotificationHandlers: (refetchOrders: () => Promise<void>) => () => void;
 }
 
 // Configure how notifications are handled when app is in foreground
@@ -49,8 +50,8 @@ export const useNotifications = (): UseNotificationsReturn => {
     }
   }, [installer?.pushToken]);
 
-  // Configure background message handler
-  useEffect(() => {
+  // Setup notification handlers - extracted to be callable with refetch function
+  const setupNotificationHandlers = useCallback((refetchOrders: () => Promise<void>) => {
     // Track shown notification IDs to prevent duplicates
     const shownNotifications = new Set<string>();
 
@@ -60,29 +61,22 @@ export const useNotifications = (): UseNotificationsReturn => {
 
     // Handle background messages
     setBackgroundMessageHandler(messaging, async remoteMessage => {
-      // console.log('═══════════════════════════════════════════════════');
-      // console.log('📨 [FCM Background] Mensaje recibido en background');
-      // console.log('Title:', remoteMessage.notification?.title);
-      // console.log('Body:', remoteMessage.notification?.body);
-      // console.log('Data:', JSON.stringify(remoteMessage.data, null, 2));
-      // console.log('═══════════════════════════════════════════════════');
+      // Trigger order refetch when notification arrives
+      console.log('📨 [FCM Background] Refreshing orders after notification...');
+      await refetchOrders();
     });
 
     // Handle foreground messages - Manual scheduling with content-based deduplication
     const unsubscribe = onMessage(messaging, async remoteMessage => {
-      // console.log('═══════════════════════════════════════════════════');
-      // console.log('📨 [FCM Foreground] Mensaje recibido en foreground');
-      // console.log('Title:', remoteMessage.notification?.title);
-      // console.log('Body:', remoteMessage.notification?.body);
-      // console.log('Data:', JSON.stringify(remoteMessage.data, null, 2));
-      // console.log('═══════════════════════════════════════════════════');
+      // Trigger order refetch when notification arrives
+      console.log('📨 [FCM Foreground] Refreshing orders after notification...');
+      await refetchOrders();
 
       // Create unique ID based on notification content
       const notificationId = `${remoteMessage.notification?.title}-${remoteMessage.notification?.body}-${Date.now()}`;
 
       // Check if we already showed this notification
       if (shownNotifications.has(notificationId)) {
-        // console.log('⚠️ [FCM] Duplicate notification detected, skipping...');
         return;
       }
 
@@ -105,13 +99,30 @@ export const useNotifications = (): UseNotificationsReturn => {
           },
           trigger: null, // Show immediately
         });
-        // console.log('✅ [FCM] Notification scheduled successfully');
       } catch (error) {
         console.error('❌ [FCM] Error scheduling notification:', error);
       }
     });
 
-    return unsubscribe;
+    // Handle notification tap/response - Navigate to order when user taps notification
+    const notificationResponseListener = Notifications.addNotificationResponseReceivedListener(response => {
+      const data = response.notification.request.content.data;
+
+      // Check if notification contains order information
+      if (data && data.orderId) {
+        // Import router dynamically to avoid circular dependencies
+        import('expo-router').then(({ router }) => {
+          // Navigate to order detail screen
+          router.push(`/orders/${data.orderId}`);
+          console.log('📱 [Notifications] Navigating to order:', data.orderId);
+        });
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      notificationResponseListener.remove();
+    };
   }, []);
 
   const registerForPushNotificationsAsync = async () => {
@@ -232,6 +243,7 @@ export const useNotifications = (): UseNotificationsReturn => {
     notificationsEnabled,
     registerForPushNotifications,
     loading,
-    error
+    error,
+    setupNotificationHandlers,
   };
 };

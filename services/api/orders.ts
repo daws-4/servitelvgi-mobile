@@ -1,8 +1,8 @@
 import { httpClient } from './client';
-import type { 
-  Order, 
+import type {
+  Order,
   OrderSummary,
-  OrderFilters, 
+  OrderFilters,
   OrderCompletionData,
   OrderStatus,
   Coordinates,
@@ -23,18 +23,18 @@ class OrderService {
    */
   async getCrewOrders(crewId: string, filters?: OrderFilters, page: number = 1, limit: number = 50): Promise<{ items: Order[], total: number }> {
     const params: any = { assignedTo: crewId, page, limit };
-    
+
     if (filters?.status) {
-      params.status = Array.isArray(filters.status) 
-        ? filters.status.join(',') 
+      params.status = Array.isArray(filters.status)
+        ? filters.status.join(',')
         : filters.status;
     }
     if (filters?.type) params.type = filters.type;
     if (filters?.startDate) params.startDate = filters.startDate;
     if (filters?.endDate) params.endDate = filters.endDate;
-    
+
     const response = await httpClient.get<any>('/api/web/orders', { params });
-    
+
     // Handle both old (array) and new (paginated object) response formats
     if (Array.isArray(response.data)) {
       // Old format - just an array, do client-side pagination
@@ -98,12 +98,12 @@ class OrderService {
     const payload: Partial<Order> = {
       internetTest: data.internetTest,
     };
-    
+
     // Si se proporcionan coordenadas, actualizarlas también
     if (data.coordinates) {
       payload.coordinates = data.coordinates;
     }
-    
+
     return this.updateOrder(orderId, payload);
   }
 
@@ -115,11 +115,11 @@ class OrderService {
     const payload: Partial<Order> = {
       status: 'in_progress' as OrderStatus,
     };
-    
+
     if (coordinates) {
       payload.coordinates = coordinates;
     }
-    
+
     return this.updateOrder(orderId, payload);
   }
 
@@ -158,7 +158,16 @@ class OrderService {
       '/api/web/orders',
       payload
     );
-    
+
+    return response.data;
+  }
+
+  /**
+   * POST /api/web/orders
+   * Crear una nueva orden (principalmente para órdenes de recuperación)
+   */
+  async createOrder(data: Partial<Order>): Promise<Order> {
+    const response = await httpClient.post<Order>('/api/web/orders', data);
     return response.data;
   }
 
@@ -190,23 +199,23 @@ class OrderService {
   async uploadSignature(orderId: string, imageUri: string): Promise<string> {
     const formData = new FormData();
     formData.append('order_id', orderId);
-    
+
     // Create file object for React Native
     const file = {
       uri: imageUri,
       type: 'image/jpeg', // We convert to jpeg in UI
       name: `signature_${orderId}_${Date.now()}.jpg`,
     } as any;
-    
+
     formData.append('image', file);
 
     console.log('📝 [OrderService] Uploading signature via Backend Proxy...');
     console.log('📝 [OrderService] URI:', imageUri);
 
     const apiResponse = await httpClient.post<{ success: boolean; url: string }>('/api/web/upload/signature', formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
 
     return apiResponse.data.url;
@@ -223,9 +232,9 @@ class OrderService {
     formData.append('signature_url', signatureUrl);
 
     await httpClient.post('/api/web/upload/signature', formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
   }
 }
@@ -245,8 +254,10 @@ export const {
   updateInternetTest,
   startOrder,
   completeOrder,
+  createOrder,
   getAvailableOrders,
   saveSignatureUrl,
   uploadSignature,
   deleteSignature,
 } = orderService;
+
