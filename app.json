@@ -32,6 +32,7 @@
       }
     },
     "android": {
+      "googleServicesFile": "./google-services.json",
       "minSdkVersion": 26,
       "targetSdkVersion": 34,
       "adaptiveIcon": {

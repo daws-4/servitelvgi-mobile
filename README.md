@@ -215,6 +215,7 @@ React Native (Expo) para técnicos de campo.
 
 ---
 haz un plan de implementación para proceder con los siguientes pasos del proyecto en curso
+
 ##### 📦 **5. Módulo de Órdenes de Servicio**
 
 - [x] **Servicio API de órdenes (`/services/api/orders.ts`)**
@@ -380,56 +381,56 @@ toma en consideración que las rutas existentes del backend piden token de auten
 
 ##### 🔔 **9. Notificaciones Push**
 
-- [ ] **Configurar Firebase**
-  - [ ] Crear proyecto en Firebase Console
-  - [ ] Descargar `google-services.json` (Android) y `GoogleService-Info.plist` (iOS)
-  - [ ] Agregar archivos al proyecto según docs de Expo
+- [x] **Configurar Firebase**
+  - [x] Crear proyecto en Firebase Console
+  - [x] Descargar `google-services.json` (Android) y `GoogleService-Info.plist` (iOS)
+  - [x] Agregar archivos al proyecto según docs de Expo
   
-- [ ] **Instalar y configurar**
-  - [ ] `expo install expo-notifications expo-device`
-  - [ ] Configurar permisos en `app.json`
+- [x] **Instalar y configurar**
+  - [x] `expo install expo-notifications expo-device`
+  - [x] Configurar permisos en `app.json`
   
-- [ ] **Servicio de notificaciones (`/services/notifications.ts`)**
-  - [ ] `registerForPushNotifications()` - Obtener token
-  - [ ] `sendTokenToBackend(token)` - POST `/api/web/installers/register-token`
-  - [ ] `handleNotification(notification)` - Procesar notificación recibida
-  - [ ] `setupNotificationListeners()` - Listeners de foreground/background
+- [x] **Servicio de notificaciones (`/services/notifications.ts`)**
+  - [x] `registerForPushNotifications()` - Obtener token
+  - [x] `sendTokenToBackend(token)` - POST `/api/web/installers/register-token`
+  - [x] `handleNotification(notification)` - Procesar notificación recibida
+  - [x] `setupNotificationListeners()` - Listeners de foreground/background
   
-- [ ] **Integración en app**
-  - [ ] Registrar token al hacer login
-  - [ ] Actualizar token si cambia
-  - [ ] Al tocar notificación → Navegar a orden específica
-  - [ ] Mostrar badge en tab de órdenes con contador
+- [x] **Integración en app**
+  - [x] Registrar token al hacer login
+  - [x] Actualizar token si cambia
+  - [x] Al tocar notificación → Navegar a orden específica
+  - [x] Mostrar badge en tab de órdenes con contador
 
 ---
 
 ##### 👤 **10. Perfil de Usuario**
 
-- [ ] **Pantalla: Perfil (`/app/(tabs)/profile/index.tsx`)**
-  - [ ] Foto de perfil (editable)
-  - [ ] Nombre del instalador
-  - [ ] Email
-  - [ ] Teléfono
-  - [ ] Cuadrilla asignada
-  - [ ] Líder de cuadrilla
-  - [ ] Vehículo asignado (si aplica)
+- [x] **Pantalla: Perfil (`/app/(tabs)/profile/index.tsx`)**
+  - [x] Foto de perfil (editable)
+  - [x] Nombre del instalador
+  - [x] Email
+  - [x] Teléfono
+  - [x] Cuadrilla asignada
+  - [x] Líder de cuadrilla
+  - [x] Vehículo asignado (si aplica)
   
-- [ ] **Configuraciones**
-  - [ ] Toggle: Notificaciones activadas/desactivadas
-  - [ ] Selector: Idioma (español/inglés)
-  - [ ] Toggle: Modo oscuro/claro (reusar ThemeContext)
-  - [ ] Botón: Limpiar caché
+- [x] **Configuraciones**
+  - [x] Toggle: Notificaciones activadas/desactivadas
+  - [x] Selector: Idioma (español/inglés)
+  - [x] Toggle: Modo oscuro/claro (reusar ThemeContext)
+  - [x] Botón: Limpiar caché
   
-- [ ] **Estadísticas del instalador** (opcional)
-  - [ ] Órdenes completadas este mes
-  - [ ] Órdenes completadas total
-  - [ ] Promedio de tiempo por orden
+- [x] **Estadísticas del instalador** (opcional)
+  - [x] Órdenes completadas este mes
+  - [x] Órdenes completadas total
+  - [x] Promedio de tiempo por orden
   
-- [ ] **Botón de Cerrar Sesión**
-  - [ ] Confirmar con diálogo
-  - [ ] Limpiar token de SecureStore
-  - [ ] Limpiar caché local
-  - [ ] Navegar a pantalla de login
+- [x] **Botón de Cerrar Sesión**
+  - [x] Confirmar con diálogo
+  - [x] Limpiar token de SecureStore
+  - [x] Limpiar caché local
+  - [x] Navegar a pantalla de login
 
 ---
 
@@ -1176,7 +1177,7 @@ Para soporte técnico o consultas sobre el sistema, contactar al equipo de desar
 **Versión:** 0.0.1  
 **Estado:** En producción activa
 
-
+## por hacer
 por añadir:
 - Bitacora de cambios ✅
 - campo del ticket ✅
@@ -1184,20 +1185,9 @@ por añadir:
 - ordenes de recuperación
 - probar notificaciones push ✅
 - arreglar sidebar ✅
-
-
-speedchecker credentiasls
-allprojects {
-  repositories {
-    google()
-    mavenCentral()
-    maven { url 'https://www.jitpack.io' }
-    maven {
-      url 'https://maven.speedcheckerapi.com/artifactory/libs-release'
-      credentials {
-        username = "demo"
-        password = "AP85qiz6wYEsCttWU2ZckEWSwJKuA6mSYcizEY"
-      }
-    }
-  }
-}
+Primera versión de uso oficial para los técnicos de ENLARED 
+Añadidos:
+-Campo de bitácora
+-Notificaciones
+-Status HARD
+-Ordenes de Recuperación de equipos

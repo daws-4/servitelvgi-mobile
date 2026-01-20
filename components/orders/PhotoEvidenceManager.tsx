@@ -75,67 +75,68 @@ export default function PhotoEvidenceManager({
         }
     };
 
-    const requestPermissions = async (): Promise<boolean> => {
+    /**
+     * Solicitar permiso de cámara SOLAMENTE
+     */
+    const requestCameraPermission = async (): Promise<boolean> => {
         try {
-            console.log('📸 [PhotoEvidence] Verificando permisos actuales...');
-
-            // Verificar el estado actual de los permisos
             const cameraPerms = await ImagePicker.getCameraPermissionsAsync();
-            const libraryPerms = await ImagePicker.getMediaLibraryPermissionsAsync();
 
-            console.log('📸 [PhotoEvidence] Permisos actuales - Cámara:', cameraPerms.status, 'canAskAgain:', cameraPerms.canAskAgain);
-            console.log('📸 [PhotoEvidence] Permisos actuales - Galería:', libraryPerms.status, 'canAskAgain:', libraryPerms.canAskAgain);
-
-            let cameraGranted = cameraPerms.status === 'granted';
-            let libraryGranted = libraryPerms.status === 'granted';
-
-            // Solicitar SOLO los permisos que se pueden preguntar
-            if (!cameraGranted && cameraPerms.canAskAgain) {
-                console.log('📸 [PhotoEvidence] Solicitando permiso de cámara...');
-                const result = await ImagePicker.requestCameraPermissionsAsync();
-                cameraGranted = result.status === 'granted';
-                console.log('📸 [PhotoEvidence] Resultado cámara:', result.status);
-            }
-
-            if (!libraryGranted && libraryPerms.canAskAgain) {
-                console.log('📸 [PhotoEvidence] Solicitando permiso de galería...');
-                const result = await ImagePicker.requestMediaLibraryPermissionsAsync();
-                libraryGranted = result.status === 'granted';
-                console.log('📸 [PhotoEvidence] Resultado galería:', result.status);
-            }
-
-            // Si ambos están concedidos
-            if (cameraGranted && libraryGranted) {
-                console.log('✅ [PhotoEvidence] Todos los permisos concedidos');
+            if (cameraPerms.status === 'granted') {
                 return true;
             }
 
-            // Determinar cuáles faltan
-            const missing = [];
-            if (!cameraGranted) missing.push('Cámara');
-            if (!libraryGranted) missing.push('Galería');
-
-            // Si no se pueden solicitar (bloqueados permanentemente)
-            if ((!cameraGranted && !cameraPerms.canAskAgain) || (!libraryGranted && !libraryPerms.canAskAgain)) {
-                console.warn('⚠️ [PhotoEvidence] Permisos bloqueados:', missing.join(', '));
-                Alert.alert(
-                    'Permisos Bloqueados',
-                    `Los permisos de ${missing.join(' y ')} están bloqueados.\n\nPor favor, actívalos en:\nConfigura ción → Aplicaciones → ENLARED → Permisos`,
-                    [{ text: 'Entendido' }]
-                );
-                return false;
+            if (cameraPerms.canAskAgain) {
+                const result = await ImagePicker.requestCameraPermissionsAsync();
+                if (result.status === 'granted') {
+                    return true;
+                }
             }
 
-            // Fueron denegados en este intento
-            console.warn('⚠️ [PhotoEvidence] Permisos denegados');
+            // Bloqueado o denegado
             Alert.alert(
-                'Permisos Requeridos',
-                `Necesitamos acceso a ${missing.join(' y ')} para subir evidencias.`,
-                [{ text: 'OK' }]
+                'Permiso de Cámara Requerido',
+                cameraPerms.canAskAgain
+                    ? 'Por favor, permite el acceso a la cámara para tomar fotos.'
+                    : 'El permiso de cámara está bloqueado. Por favor, actívalo en:\nConfiguración → Aplicaciones → ENLARED → Permisos → Cámara',
+                [{ text: 'Entendido' }]
             );
             return false;
         } catch (error) {
-            console.error('❌ [PhotoEvidence] Error con permisos:', error);
+            console.error('❌ Error solicitando permiso de cámara:', error);
+            return false;
+        }
+    };
+
+    /**
+     * Solicitar permiso de galería SOLAMENTE
+     */
+    const requestGalleryPermission = async (): Promise<boolean> => {
+        try {
+            const libraryPerms = await ImagePicker.getMediaLibraryPermissionsAsync();
+
+            if (libraryPerms.status === 'granted') {
+                return true;
+            }
+
+            if (libraryPerms.canAskAgain) {
+                const result = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                if (result.status === 'granted') {
+                    return true;
+                }
+            }
+
+            // Bloqueado o denegado
+            Alert.alert(
+                'Permiso de Galería Requerido',
+                libraryPerms.canAskAgain
+                    ? 'Por favor, permite el acceso a la galería para seleccionar fotos.'
+                    : 'El permiso de galería está bloqueado. Por favor, actívalo en:\nConfiguración → Aplicaciones → ENLARED → Permisos → Fotos y Videos',
+                [{ text: 'Entendido' }]
+            );
+            return false;
+        } catch (error) {
+            console.error('❌ Error solicitando permiso de galería:', error);
             return false;
         }
     };
@@ -153,7 +154,7 @@ export default function PhotoEvidenceManager({
     };
 
     const pickFromCamera = async () => {
-        const hasPermission = await requestPermissions();
+        const hasPermission = await requestCameraPermission();
         if (!hasPermission) return;
 
         const result = await ImagePicker.launchCameraAsync({
@@ -168,7 +169,7 @@ export default function PhotoEvidenceManager({
     };
 
     const pickFromGallery = async () => {
-        const hasPermission = await requestPermissions();
+        const hasPermission = await requestGalleryPermission();
         if (!hasPermission) return;
 
         const result = await ImagePicker.launchImageLibraryAsync({
