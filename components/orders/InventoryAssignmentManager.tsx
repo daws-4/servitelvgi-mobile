@@ -280,7 +280,7 @@ export default function InventoryAssignmentManager({
         // We identify if we are in batch mode if we have valid batches for this item
         // But simpler: check viewState or if selectedBatch is set/required
         const itemId = typeof selectedItem.item === 'string' ? selectedItem.item : (selectedItem.item as any)._id;
-        const itemBatches = batches.filter(b => (typeof b.item === 'string' ? b.item : (b.item as any)._id) === itemId);
+        const itemBatches = batches.filter(b => b && b.item && (typeof b.item === 'string' ? b.item : (b.item as any)._id) === itemId);
         const isBatchItem = itemBatches.length > 0;
 
         if (isEquipment) {
@@ -469,7 +469,7 @@ export default function InventoryAssignmentManager({
             setViewState('instances');
         } else {
             // Check for batches
-            const itemBatches = batches.filter(b => (typeof b.item === 'string' ? b.item : (b.item as any)._id) === itemId);
+            const itemBatches = batches.filter(b => b && b.item && (typeof b.item === 'string' ? b.item : (b.item as any)._id) === itemId);
             if (itemBatches.length > 0) {
                 setViewState('batches');
             } else {

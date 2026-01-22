@@ -1185,9 +1185,7 @@ por añadir:
 - ordenes de recuperación
 - probar notificaciones push ✅
 - arreglar sidebar ✅
-Primera versión de uso oficial para los técnicos de ENLARED 
-Añadidos:
--Campo de bitácora
--Notificaciones
--Status HARD
--Ordenes de Recuperación de equipos
+
+-----------
+
+-buscar ONT por el código de barras con la cámara
