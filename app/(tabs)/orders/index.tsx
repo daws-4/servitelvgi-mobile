@@ -114,10 +114,15 @@ export default function OrdersScreen() {
 
     const getCurrentLocation = async () => {
         try {
-            const loc = await Location.getCurrentPositionAsync({});
+            const loc = await Location.getCurrentPositionAsync({
+                accuracy: Location.Accuracy.Balanced,
+            });
             setLocation(loc);
-        } catch (error) {
-            console.error('Error getting location:', error);
+        } catch (error: any) {
+            // Location is optional for map functionality - silently fail
+            // Common errors: GPS disabled, location services off, timeout
+            console.log('Location unavailable:', error?.message || 'Unknown error');
+            setLocation(null);
         }
     };
 

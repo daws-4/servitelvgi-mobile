@@ -22,16 +22,16 @@ class InventoryService {
     const response = await httpClient.get<any>(
       `/api/web/crews?id=${crewId}`
     );
-    
+
     // La respuesta puede tener la estructura { assignedInventory: [...] } o ser el crew completo
     const crew = response.data;
-    
+
     // Verificar si es un array (lista de crews) o un objeto (crew individual)
     if (Array.isArray(crew)) {
       console.warn('Se esperaba un crew individual, se recibió un array');
       return [];
     }
-    
+
     // Retornar el inventario asignado o array vacío
     return crew?.assignedInventory || [];
   }
@@ -45,7 +45,7 @@ class InventoryService {
       '/api/web/inventory/batches',
       { params: { crewId } }
     );
-    
+
     return response.data;
   }
 
@@ -58,17 +58,17 @@ class InventoryService {
     filters?: InventoryHistoryFilters
   ): Promise<InventoryHistoryEntry[]> {
     const params: any = { crewId };
-    
+
     if (filters?.itemId) params.itemId = filters.itemId;
     if (filters?.type) params.type = filters.type;
     if (filters?.startDate) params.startDate = filters.startDate;
     if (filters?.endDate) params.endDate = filters.endDate;
-    
+
     const response = await httpClient.get<InventoryHistoryEntry[]>(
       '/api/web/inventory/history',
       { params }
     );
-    
+
     return response.data;
   }
 
@@ -80,7 +80,7 @@ class InventoryService {
     const response = await httpClient.get<InventoryItem>(
       `/api/web/inventory?id=${itemId}`
     );
-    
+
     return response.data;
   }
 
@@ -92,7 +92,7 @@ class InventoryService {
     const response = await httpClient.get<InventoryBatch>(
       `/api/web/inventory/batches?code=${batchCode}`
     );
-    
+
     return response.data;
   }
 
@@ -100,15 +100,24 @@ class InventoryService {
    * GET /api/web/inventory/instances?inventoryId=<id>&status=<status>
    * Obtener instancias de un equipo
    */
-  async getEquipmentInstances(inventoryId: string, status?: string): Promise<EquipmentInstance[]> {
+  async getEquipmentInstances(inventoryId: string, status?: string, crewId?: string): Promise<EquipmentInstance[]> {
     const params: any = { inventoryId };
     if (status) params.status = status;
-    
+    if (crewId) params.crewId = crewId;
+
+    console.log('[inventoryService.getEquipmentInstances] Request params:', params);
+
     const response = await httpClient.get<{ success: boolean; instances: EquipmentInstance[] }>(
       '/api/web/inventory/instances',
       { params }
     );
-    
+
+    // console.log('[inventoryService.getEquipmentInstances] Response:', {
+    //   success: response.data.success,
+    //   instanceCount: response.data.instances?.length || 0,
+    //   instances: response.data.instances
+    // });
+
     return response.data.instances || [];
   }
 }

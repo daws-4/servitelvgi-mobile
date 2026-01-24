@@ -18,6 +18,7 @@ import EditProfileModal from '@/components/profile/EditProfileModal';
 import ChangePasswordModal from '@/components/profile/ChangePasswordModal';
 import crewService from '@/services/api/crews';
 import type { Crew } from '@/types/Crew';
+// import { BandwidthStats } from '@/components/BandwidthStats';
 
 /**
  * Profile screen - Display installer profile, statistics, and settings
@@ -274,7 +275,7 @@ export default function ProfileScreen() {
                             onPress={() => setShowPhotoEditor(true)}
                         />
                     </SettingsSection>
-
+                    {/* <BandwidthStats /> */}
                     {/* Application Section */}
                     <SettingsSection title="Aplicación">
                         <SettingsMenuItem

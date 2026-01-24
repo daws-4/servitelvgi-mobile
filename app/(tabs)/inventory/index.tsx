@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesome } from '@expo/vector-icons';
 
 import InventoryHeader from '@/components/inventory/InventoryHeader';
@@ -15,6 +16,7 @@ import { InternetSpeedTest } from '@/components/InternetSpeedTest';
 import { BrandColors } from '@/constants/colors';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useInventory } from '@/hooks/useInventory';
+import { useSmartPolling } from '@/hooks/useSmartPolling';
 import type { AssignedInventoryItem, InventoryItem as InventoryItemType, InventoryType } from '@/types/Inventory';
 
 // Helper to get item details from either item or itemDetails (API returns item as populated object)
@@ -62,6 +64,20 @@ export default function InventoryScreen() {
     const [searchText, setSearchText] = useState('');
     const [selectedEquipment, setSelectedEquipment] = useState<InventoryItemType | null>(null);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
+
+    // Refetch inventory when screen is focused
+    useFocusEffect(
+        useCallback(() => {
+            refetch();
+        }, [refetch])
+    );
+
+    // Enable smart polling for inventory updates
+    useSmartPolling({
+        callback: refetch,
+        interval: 30000, // Poll every 30 seconds when app is active
+        enabled: !loading && !!crewId
+    });
 
     // Calculate summary stats
     const stats = useMemo(() => {
@@ -260,6 +276,7 @@ export default function InventoryScreen() {
                 visible={!!selectedEquipment}
                 onClose={() => setSelectedEquipment(null)}
                 item={selectedEquipment}
+                crewId={crewId}
             />
 
             {/* Movement History Modal */}
@@ -267,6 +284,7 @@ export default function InventoryScreen() {
                 visible={showHistoryModal}
                 onClose={() => setShowHistoryModal(false)}
                 crewId={crewId}
+                inventory={inventory}
             />
         </View>
     );

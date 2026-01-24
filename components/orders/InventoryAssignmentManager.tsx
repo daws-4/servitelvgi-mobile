@@ -16,6 +16,7 @@ import {
     Keyboard
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { BrandColors } from '@/constants/colors';
 import inventoryService from '@/services/api/inventory';
 import { useEquipmentInstances } from '@/hooks/useEquipmentInstances';
@@ -38,6 +39,13 @@ const getItemDetails = (assignedItem: AssignedInventoryItem): InventoryItem | nu
         return assignedItem.item as unknown as InventoryItem;
     }
     return null;
+};
+
+// Helper to safely get item ID handling nulls/objects
+const getSafeItemId = (item: string | InventoryItem | { _id: string } | null | undefined): string => {
+    if (!item) return '';
+    if (typeof item === 'string') return item;
+    return (item as any)._id || '';
 };
 
 // Helper to get material description - resolves from inventory if needed
@@ -120,6 +128,10 @@ export default function InventoryAssignmentManager({
     const [selectedBatch, setSelectedBatch] = useState<InventoryBatch | null>(null);
     const [batches, setBatches] = useState<InventoryBatch[]>([]);
     const [quantity, setQuantity] = useState('1');
+    const [showScanner, setShowScanner] = useState(false);
+
+    // Camera permissions
+    const [cameraPermission, requestCameraPermission] = useCameraPermissions();
 
     // Equipment instances hook
     const {
@@ -279,8 +291,8 @@ export default function InventoryAssignmentManager({
         // Check if item needs batch selection (coils)
         // We identify if we are in batch mode if we have valid batches for this item
         // But simpler: check viewState or if selectedBatch is set/required
-        const itemId = typeof selectedItem.item === 'string' ? selectedItem.item : (selectedItem.item as any)._id;
-        const itemBatches = batches.filter(b => b && b.item && (typeof b.item === 'string' ? b.item : (b.item as any)._id) === itemId);
+        const itemId = getSafeItemId(selectedItem.item);
+        const itemBatches = batches.filter(b => b && getSafeItemId(b.item) === itemId);
         const isBatchItem = itemBatches.length > 0;
 
         if (isEquipment) {
@@ -454,7 +466,7 @@ export default function InventoryAssignmentManager({
     const handleSelectItem = (item: AssignedInventoryItem) => {
         setSelectedItem(item);
         const details = getItemDetails(item);
-        const itemId = typeof item.item === 'string' ? item.item : (item.item as any)._id;
+        const itemId = getSafeItemId(item.item);
 
         // Reset selections
         setSelectedInstance(null);
@@ -464,12 +476,18 @@ export default function InventoryAssignmentManager({
 
         if (details?.type === 'equipment') {
             // Fetch instances
-            fetchInstances(itemId, 'assigned');
+            // console.log('[InventoryAssignmentManager] Equipment selected, fetching instances:', {
+            //     itemId,
+            //     status: 'assigned',
+            //     crewId,
+            //     itemDescription: details?.description
+            // });
+            fetchInstances(itemId, 'assigned', crewId);
             // Switch view to instances
             setViewState('instances');
         } else {
             // Check for batches
-            const itemBatches = batches.filter(b => b && b.item && (typeof b.item === 'string' ? b.item : (b.item as any)._id) === itemId);
+            const itemBatches = batches.filter(b => b && getSafeItemId(b.item) === itemId);
             if (itemBatches.length > 0) {
                 setViewState('batches');
             } else {
@@ -493,6 +511,49 @@ export default function InventoryAssignmentManager({
         // Let's keep manual confirmation via footer for consistency/safety
     };
 
+    // Handle barcode scan result
+    const handleBarcodeScan = (scannedData: string) => {
+        setShowScanner(false);
+
+        // Try to find matching instance by uniqueId, serialNumber, or macAddress
+        const normalizedData = scannedData.trim();
+        const matchedInstance = equipmentInstances.find(
+            i => i.uniqueId === normalizedData ||
+                i.serialNumber === normalizedData ||
+                i.macAddress === normalizedData ||
+                i.uniqueId?.toLowerCase() === normalizedData.toLowerCase() ||
+                i.serialNumber?.toLowerCase() === normalizedData.toLowerCase()
+        );
+
+        if (matchedInstance) {
+            setSelectedInstance(matchedInstance);
+            // Set the search query to show what was found
+            setInstanceSearchQuery(normalizedData);
+        } else {
+            Alert.alert(
+                'Equipo no encontrado',
+                `No se encontró equipo con ID: ${normalizedData}`,
+                [{ text: 'OK' }]
+            );
+        }
+    };
+
+    // Open barcode scanner
+    const openScanner = async () => {
+        if (!cameraPermission?.granted) {
+            const result = await requestCameraPermission();
+            if (!result.granted) {
+                Alert.alert(
+                    'Permiso requerido',
+                    'Se necesita acceso a la cámara para escanear códigos',
+                    [{ text: 'OK' }]
+                );
+                return;
+            }
+        }
+        setShowScanner(true);
+    };
+
     // Filter instances based on search query
     const filteredInstances = equipmentInstances.filter(i => {
         if (!instanceSearchQuery.trim()) return true;
@@ -511,36 +572,12 @@ export default function InventoryAssignmentManager({
         onMaterialsChange(newMaterials);
 
         // Restore quantities to local inventory
-        const itemId = typeof materialToRemove.item === 'string'
-            ? materialToRemove.item
-            : (materialToRemove.item as any)._id;
+        const itemId = getSafeItemId(materialToRemove.item);
 
         // Case 1: Bobbin (identified by batchCode)
         if (materialToRemove.batchCode) {
-            setBatches(prev => {
-                // Check if the batch exists in current state
-                const batchExists = prev.some(b => b.batchCode === materialToRemove.batchCode);
-
-                if (batchExists) {
-                    // Update existing batch
-                    return prev.map(b => {
-                        if (b.batchCode === materialToRemove.batchCode) {
-                            return {
-                                ...b,
-                                currentQuantity: b.currentQuantity + materialToRemove.quantity
-                            };
-                        }
-                        return b;
-                    });
-                } else {
-                    // Batch not in local state, need to add it back
-                    // This happens when batches weren't loaded or batch was fully consumed
-                    console.log('[handleRemoveItem] Batch not found in local state, adding placeholder');
-                    return prev; // Can't restore without full batch data
-                }
-            });
-
             // IMPORTANT: Save changes to server to persist bobbin restoration
+            // The backend handles inventory restoration, so we DON'T update local state here
             if (onImmediateSave) {
                 (async () => {
                     try {
@@ -552,24 +589,34 @@ export default function InventoryAssignmentManager({
                         Alert.alert('Error', 'No se pudo sincronizar la devolución de bobina con el servidor');
                     }
                 })();
+            } else {
+                // Only update local batch state if NOT saving to backend (offline mode)
+                setBatches(prev => {
+                    const batchExists = prev.some(b => b.batchCode === materialToRemove.batchCode);
+
+                    if (batchExists) {
+                        return prev.map(b => {
+                            if (b.batchCode === materialToRemove.batchCode) {
+                                return {
+                                    ...b,
+                                    currentQuantity: b.currentQuantity + materialToRemove.quantity
+                                };
+                            }
+                            return b;
+                        });
+                    } else {
+                        console.log('[handleRemoveItem] Batch not found in local state');
+                        return prev;
+                    }
+                });
             }
             return;
         }
 
         // Case 2: Equipment (identified by instanceIds)
         if (materialToRemove.instanceIds && materialToRemove.instanceIds.length > 0) {
-            setInventory(prev => prev.map(inv => {
-                const invItemId = typeof inv.item === 'string' ? inv.item : (inv.item as any)._id;
-                if (invItemId.toString() === itemId.toString()) {
-                    return {
-                        ...inv,
-                        quantity: inv.quantity + materialToRemove.instanceIds!.length
-                    };
-                }
-                return inv;
-            }));
-
             // IMPORTANT: Save changes to server to persist equipment restoration
+            // The backend handles inventory restoration, so we DON'T update local inventory here
             if (onImmediateSave) {
                 (async () => {
                     try {
@@ -581,6 +628,18 @@ export default function InventoryAssignmentManager({
                         Alert.alert('Error', 'No se pudo sincronizar la devolución de equipo con el servidor');
                     }
                 })();
+            } else {
+                // Only update local inventory if NOT saving to backend (offline mode)
+                setInventory(prev => prev.map(inv => {
+                    const invItemId = typeof inv.item === 'string' ? inv.item : (inv.item as any)._id;
+                    if (invItemId.toString() === itemId.toString()) {
+                        return {
+                            ...inv,
+                            quantity: inv.quantity + materialToRemove.instanceIds!.length
+                        };
+                    }
+                    return inv;
+                }));
             }
             return;
         }
@@ -763,7 +822,7 @@ export default function InventoryAssignmentManager({
                                         <FlatList
                                             data={filteredInventory}
                                             renderItem={renderInventoryItem}
-                                            keyExtractor={(item, index) => `${typeof item.item === 'string' ? item.item : (item.item as any)._id}-${index}`}
+                                            keyExtractor={(item, index) => `${getSafeItemId(item.item)}-${index}`}
                                             contentContainerStyle={styles.inventoryList}
                                             ListEmptyComponent={
                                                 <View style={styles.centerContainer}>
@@ -802,6 +861,12 @@ export default function InventoryAssignmentManager({
                                                 <FontAwesome name="times-circle" size={16} color="#94a3b8" />
                                             </TouchableOpacity>
                                         )}
+                                        <TouchableOpacity
+                                            onPress={openScanner}
+                                            style={styles.scanButton}
+                                        >
+                                            <FontAwesome name="camera" size={20} color={BrandColors.primary} />
+                                        </TouchableOpacity>
                                     </View>
 
                                     {/* Instances List */}
@@ -827,7 +892,7 @@ export default function InventoryAssignmentManager({
                                                             styles.instanceSerial,
                                                             selectedInstance?.uniqueId === item.uniqueId && styles.selectedInstanceText
                                                         ]}>
-                                                            {item.serialNumber || 'Sin Serial'}
+                                                            ID: {item.uniqueId}
                                                         </Text>
                                                         {item.macAddress && (
                                                             <Text style={[
@@ -837,12 +902,6 @@ export default function InventoryAssignmentManager({
                                                                 MAC: {item.macAddress}
                                                             </Text>
                                                         )}
-                                                        <Text style={[
-                                                            styles.instanceId,
-                                                            selectedInstance?.uniqueId === item.uniqueId && styles.selectedInstanceSubtext
-                                                        ]}>
-                                                            ID: {item.uniqueId}
-                                                        </Text>
                                                     </View>
                                                     {selectedInstance?.uniqueId === item.uniqueId && (
                                                         <FontAwesome name="check-circle" size={20} color="#fff" />
@@ -876,7 +935,7 @@ export default function InventoryAssignmentManager({
                                     <FlatList
                                         data={batches.filter(b =>
                                             b.currentQuantity > 0 &&
-                                            (typeof b.item === 'string' ? b.item : (b.item as any)._id) === (typeof selectedItem!.item === 'string' ? selectedItem!.item : (selectedItem!.item as any)._id)
+                                            getSafeItemId(b.item) === getSafeItemId(selectedItem?.item)
                                         )}
                                         keyExtractor={b => b.batchCode}
                                         renderItem={({ item }) => (
@@ -980,6 +1039,44 @@ export default function InventoryAssignmentManager({
                     </Animated.View>
                 </View>
             </Modal>
+
+            {/* Barcode Scanner Modal */}
+            <Modal
+                visible={showScanner}
+                animationType="slide"
+                onRequestClose={() => setShowScanner(false)}
+            >
+                <View style={styles.scannerContainer}>
+                    <CameraView
+                        style={styles.camera}
+                        facing="back"
+                        barcodeScannerSettings={{
+                            barcodeTypes: ['code128', 'code39', 'code93', 'ean13', 'ean8', 'qr', 'datamatrix'],
+                        }}
+                        onBarcodeScanned={(result) => {
+                            if (result.data) {
+                                handleBarcodeScan(result.data);
+                            }
+                        }}
+                    />
+                    <View style={styles.scannerOverlay}>
+                        <View style={styles.scannerHeader}>
+                            <TouchableOpacity
+                                onPress={() => setShowScanner(false)}
+                                style={styles.scannerCloseButton}
+                            >
+                                <FontAwesome name="times" size={24} color="#fff" />
+                            </TouchableOpacity>
+                            <Text style={styles.scannerTitle}>Escanear Código</Text>
+                            <View style={{ width: 40 }} />
+                        </View>
+                        <View style={styles.scannerTargetArea}>
+                            <View style={styles.scannerCorner} />
+                        </View>
+                        <Text style={styles.scannerHint}>Apunta la cámara al código de barras del equipo</Text>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -987,6 +1084,61 @@ export default function InventoryAssignmentManager({
 const styles = StyleSheet.create({
     container: {
         width: '100%',
+    },
+    scanButton: {
+        marginLeft: 8,
+        padding: 8,
+        backgroundColor: 'rgba(156, 163, 98, 0.1)',
+        borderRadius: 8,
+    },
+    scannerContainer: {
+        flex: 1,
+        backgroundColor: '#000',
+    },
+    camera: {
+        flex: 1,
+    },
+    scannerOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 60,
+    },
+    scannerHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+        paddingHorizontal: 16,
+    },
+    scannerCloseButton: {
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    scannerTitle: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: '700',
+    },
+    scannerTargetArea: {
+        width: 280,
+        height: 160,
+        borderWidth: 2,
+        borderColor: BrandColors.primary,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    scannerCorner: {
+        // Visual guide corners could be added here
+    },
+    scannerHint: {
+        color: 'rgba(255,255,255,0.8)',
+        fontSize: 14,
+        textAlign: 'center',
+        paddingHorizontal: 32,
     },
     listContainer: {
         marginBottom: 12,

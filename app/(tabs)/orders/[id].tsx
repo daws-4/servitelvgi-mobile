@@ -86,13 +86,19 @@ export default function OrderDetailScreen() {
         if (!order) return false;
 
         const isRecoveryOrder = order.type === 'recuperacion';
+        const isAveriaOrder = order.type === 'averia';
 
         if (isRecoveryOrder) {
             // For recovery: require at least ONT ID to complete
             return !!order.equipmentRecovered?.ontId?.trim();
         }
 
-        // For installation/repair: need inventory, signature, and internet test
+        if (isAveriaOrder) {
+            // For AVERIA orders: no mandatory requirements (inventory, signature, internet test are optional)
+            return true;
+        }
+
+        // For installation: need inventory, signature, and internet test
         const hasInventory = (materialsUsed?.length || 0) > 0;
         const hasSignature = !!order.customerSignature;
         const hasInternetTest = !!(order.internetTest?.downloadSpeed && order.internetTest?.uploadSpeed);
@@ -105,6 +111,7 @@ export default function OrderDetailScreen() {
         if (!order) return '';
 
         const isRecoveryOrder = order.type === 'recuperacion';
+        const isAveriaOrder = order.type === 'averia';
         const missing: string[] = [];
 
         if (isRecoveryOrder) {
@@ -112,8 +119,11 @@ export default function OrderDetailScreen() {
             if (!order.equipmentRecovered?.ontId?.trim()) {
                 missing.push('ID de la ONT');
             }
+        } else if (isAveriaOrder) {
+            // AVERIA orders have no mandatory requirements
+            // All fields are optional
         } else {
-            // Installation/repair requirements
+            // Installation requirements
             if (!materialsUsed?.length) {
                 missing.push('inventario asignado');
             }
@@ -140,8 +150,15 @@ export default function OrderDetailScreen() {
 
         try {
             setSaving(true);
+
+            // Sanitize materialsUsed to ensure item is always a string ID (not an object)
+            const sanitizedMaterials = materialsUsed.map(m => ({
+                ...m,
+                item: typeof m.item === 'string' ? m.item : (m.item as any)?._id?.toString() || m.item
+            }));
+
             await orderService.updateOrder(order._id, {
-                materialsUsed,
+                materialsUsed: sanitizedMaterials,
                 photoEvidence: order.photoEvidence,
                 customerSignature: order.customerSignature,
                 internetTest: order.internetTest
@@ -262,13 +279,19 @@ export default function OrderDetailScreen() {
     const handleImmediateSave = async (materials: MaterialUsed[]) => {
         if (!order) return;
 
+        // Sanitize materialsUsed to ensure item is always a string ID (not an object)
+        const sanitizedMaterials = materials.map(m => ({
+            ...m,
+            item: typeof m.item === 'string' ? m.item : (m.item as any)?._id?.toString() || m.item
+        }));
+
         // Update local state
-        setMaterialsUsed(materials);
-        setOrder(prev => prev ? { ...prev, materialsUsed: materials } : null);
+        setMaterialsUsed(sanitizedMaterials);
+        setOrder(prev => prev ? { ...prev, materialsUsed: sanitizedMaterials } : null);
 
         // Save to backend immediately
         await orderService.updateOrder(order._id, {
-            materialsUsed: materials
+            materialsUsed: sanitizedMaterials
         });
     };
 
@@ -629,8 +652,18 @@ export default function OrderDetailScreen() {
                                         />
                                         <Text style={styles.requirementText}>ID de la ONT recuperada</Text>
                                     </View>
+                                ) : order.type === 'averia' ? (
+                                    // AVERIA orders - all optional
+                                    <View style={styles.requirementRow}>
+                                        <FontAwesome
+                                            name={'check-circle'}
+                                            size={16}
+                                            color={'#22c55e'}
+                                        />
+                                        <Text style={styles.requirementText}>Sin requisitos obligatorios</Text>
+                                    </View>
                                 ) : (
-                                    // Installation/Repair requirements
+                                    // Installation requirements
                                     <>
                                         <View style={styles.requirementRow}>
                                             <FontAwesome

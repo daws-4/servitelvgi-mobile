@@ -21,6 +21,10 @@ interface MovementHistoryModalProps {
     visible: boolean;
     onClose: () => void;
     crewId: string;
+    inventory?: Array<{
+        item: any;
+        itemDetails?: any;
+    }>;
 }
 
 const formatDate = (date: Date): string => {
@@ -73,6 +77,7 @@ export default function MovementHistoryModal({
     visible,
     onClose,
     crewId,
+    inventory = [],
 }: MovementHistoryModalProps) {
     // Default to last 7 days
     const [startDate, setStartDate] = useState(() => {
@@ -188,18 +193,31 @@ export default function MovementHistoryModal({
                     <View style={styles.materialsContainer}>
                         {Array.isArray(item.newValue) ? (
                             item.newValue.map((mat: any, index: number) => {
-                                // El API puede devolver diferentes estructuras:
-                                // 1. { item: { description: "..." }, quantity: X }
-                                // 2. { description: "...", quantity: X }
-                                // 3. { name: "...", amount: X }
-                                const materialName =
-                                    mat.item?.description ||  // Estructura con item populado
-                                    mat.itemDetails?.description ||
-                                    mat.description ||
-                                    mat.name ||
-                                    mat.item?.code ||
-                                    mat.code ||
-                                    'Material';
+                                // console.log('[MovementHistory] Material structure:', JSON.stringify(mat, null, 2));
+
+                                // Look up item details from inventory by ID
+                                const itemId = typeof mat.item === 'string' ? mat.item : mat.item?._id;
+                                const inventoryMatch = inventory.find(inv => {
+                                    const invItemId = typeof inv.item === 'string'
+                                        ? inv.item
+                                        : (inv.item as any)?._id;
+                                    return invItemId === itemId || (inv.itemDetails as any)?._id === itemId;
+                                });
+
+                                // Get item details from inventory match
+                                const itemDetails = inventoryMatch?.itemDetails ||
+                                    (typeof inventoryMatch?.item === 'object' ? inventoryMatch?.item : null);
+
+                                // Extract code and description
+                                const materialCode = itemDetails?.code || mat.item?.code || mat.code || '';
+                                const materialDescription = itemDetails?.description || mat.item?.description || mat.description || mat.name || 'Material';
+
+                                // Format: [CODE] Description or just Description if no code
+                                const materialName = materialCode
+                                    ? `[${materialCode}] ${materialDescription}`
+                                    : materialDescription;
+
+                                // console.log('[MovementHistory] Extracted:', { code: materialCode, desc: materialDescription, final: materialName });
 
                                 const qty = mat.quantity || mat.amount || mat.used || 1;
 

@@ -1182,10 +1182,26 @@ por añadir:
 - Bitacora de cambios ✅
 - campo del ticket ✅
 - status hard ✅
-- ordenes de recuperación
+- ordenes de recuperación✅
 - probar notificaciones push ✅
 - arreglar sidebar ✅
 
 -----------
-
--buscar ONT por el código de barras con la cámara
+# MOBILE
+-buscar ONT por el código de barras con la cámara ✅
+-Conteo de gasto de datos de la APP
+-Añadir status de Visita
+-Contador de visitas
+-campos de Potencias: Nap, Roseta y Puertos restantes
+-Apartado de visita técnica y que genere igual una orden pero se cuente como visita.
+-bug de subida de bobinas de fibra ✅
+-En las averias no tener las condiciones de speed test firma y materiales para poder cerrar la orden. ✅
+# N8n
+-Flujo condicional del registro en excel para instalación y avería ✅
+-Envío de carta de finalización de orden por whatsapp ✅
+-Ingreso automático del inventario
+-Calificación del servicio por parte del cliente
+# WEB
+-Impresión y descarga de imagen de finalización de orden ✅
+-Reportes
+-contador de visitas

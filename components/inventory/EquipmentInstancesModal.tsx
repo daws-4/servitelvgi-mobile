@@ -20,6 +20,7 @@ interface EquipmentInstancesModalProps {
     visible: boolean;
     onClose: () => void;
     item: InventoryItem | null;
+    crewId?: string; // Optional: if provided, only show instances assigned to this crew
 }
 
 const getStatusLabel = (status: string) => {
@@ -52,6 +53,7 @@ export default function EquipmentInstancesModal({
     visible,
     onClose,
     item,
+    crewId,
 }: EquipmentInstancesModalProps) {
     const { instances, loading, error, fetchInstances } = useEquipmentInstances();
     const [search, setSearch] = useState('');
@@ -93,10 +95,15 @@ export default function EquipmentInstancesModal({
 
     useEffect(() => {
         if (visible && item?._id) {
-            fetchInstances(item._id);
+            // If crewId is provided, fetch only instances assigned to this crew
+            if (crewId) {
+                fetchInstances(item._id, 'assigned', crewId);
+            } else {
+                fetchInstances(item._id);
+            }
             translateY.setValue(0);
         }
-    }, [visible, item?._id, fetchInstances]);
+    }, [visible, item?._id, crewId, fetchInstances]);
 
     const filteredInstances = instances.filter((instance) => {
         if (!search) return true;

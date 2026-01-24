@@ -28,7 +28,7 @@ export const useInventory = (crewId: string): UseInventoryReturn => {
       setLoading(true);
       setError(null);
       const data = await inventoryService.getCrewInventory(crewId);
-      console.log('📦 Inventario cargado:', data?.length || 0, 'items', data);
+      // console.log('📦 Inventario cargado:', data?.length || 0, 'items', data);
       setInventory(data);
     } catch (err: any) {
       setError(err.message || 'Error al cargar inventario');

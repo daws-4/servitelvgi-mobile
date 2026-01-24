@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { Config } from '@/constants/config';
+import { BandwidthService } from '../bandwidthService';
 
 // Token storage keys
 const TOKEN_KEY = 'enlared_auth_token';
@@ -36,6 +37,16 @@ class ApiClient {
     // Request interceptor: agregar token JWT automáticamente
     this.client.interceptors.request.use(
       async (config: InternalAxiosRequestConfig) => {
+        // Track request size (approximate)
+        try {
+          const dataSize = config.data ? JSON.stringify(config.data).length : 0;
+          // Add estimated header size overhead (very rough estimate)
+          const headersSize = JSON.stringify(config.headers || {}).length + 200;
+          BandwidthService.trackRequest(dataSize + headersSize);
+        } catch (e) {
+          console.warn('Error tracking request size', e);
+        }
+
         // Obtener token del estado o de secure storage
         if (!this.token) {
           this.token = await this.getStoredToken();
@@ -55,13 +66,34 @@ class ApiClient {
 
     // Response interceptor: manejar errores globales
     this.client.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        // Track response size (approximate)
+        try {
+          const dataSize = response.data ? JSON.stringify(response.data).length : 0;
+          const headersSize = JSON.stringify(response.headers || {}).length + 100;
+          BandwidthService.trackResponse(dataSize + headersSize);
+        } catch (e) {
+          console.warn('Error tracking response size', e);
+        }
+        return response;
+      },
       async (error: AxiosError) => {
+        // Track error response size too if available
+        if (error.response) {
+          try {
+            const dataSize = error.response.data ? JSON.stringify(error.response.data).length : 0;
+            const headersSize = JSON.stringify(error.response.headers || {}).length + 100;
+            BandwidthService.trackResponse(dataSize + headersSize);
+          } catch (e) {
+            // ignore
+          }
+        }
+
         // Error 401: token inválido o expirado
         if (error.response?.status === 401) {
           // Limpiar token
           await this.clearToken();
-          
+
           // Notificar al AuthContext para logout
           if (this.onUnauthorized) {
             this.onUnauthorized();
@@ -159,13 +191,13 @@ class ApiClient {
    */
   public async hasToken(): Promise<boolean> {
     if (this.token) return true;
-    
+
     const storedToken = await this.getStoredToken();
     if (storedToken) {
       this.token = storedToken;
       return true;
     }
-    
+
     return false;
   }
 }

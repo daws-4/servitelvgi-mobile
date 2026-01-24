@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { FontAwesome } from '@expo/vector-icons';
 import { BrandColors } from '@/constants/colors';
 
@@ -33,6 +34,7 @@ export default function InventoryFilters({
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
+                nestedScrollEnabled={true}
             >
                 {filters.map((filter) => {
                     const isActive = activeFilter === filter.id;
@@ -84,11 +86,13 @@ export default function InventoryFilters({
 
 const styles = StyleSheet.create({
     container: {
-        flexDirection: 'row',
+        // Removed flexDirection: 'row' which was interfering with horizontal scroll
     },
     scrollContent: {
+        flexDirection: 'row',
         gap: 8,
         alignItems: 'center',
+        paddingRight: 16, // Extra padding for scrolling
     },
     chip: {
         paddingHorizontal: 16,
