@@ -16,7 +16,8 @@ export type OrderStatus =
   | 'in_progress'   // En progreso
   | 'completed'     // Completada
   | 'cancelled'     // Cancelada
-  | 'hard';         // Hard
+  | 'hard'          // Hard
+  | 'visita';       // Visita técnica
 
 /**
  * Tipos de orden
@@ -140,6 +141,12 @@ export interface Order {
 
   // Control de reporte
   googleFormReported?: boolean;    // Reportado a Google Form
+
+  // Datos Técnicos Adicionales
+  powerNap?: string;             // Potencia en NAP
+  powerRoseta?: string;          // Potencia en Roseta
+  remainingPorts?: number;       // Puertos restantes
+  visitCount?: number;           // Contador de visitas
 
   // Información adicional
   description?: string;         // Descripción/notas

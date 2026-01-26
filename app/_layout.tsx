@@ -11,6 +11,7 @@ import { LoadingScreen } from '@/components/LoadingScreen';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { InactivityMonitor } from '@/components/InactivityMonitor';
 import useThemedNavigation from './hooks/useThemedNavigation';
+import { BandwidthSync } from '@/components/BandwidthSync';
 
 /**
  * Componente que protege las rutas y maneja redirecciones
@@ -44,6 +45,20 @@ function ProtectedLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10,  // 10 minutes
+      retry: 2,
+    },
+  },
+});
+
+
 /**
  * Layout raíz de la aplicación
  */
@@ -52,41 +67,44 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <SecurityProvider>
-          <ThemeProvider>
-            <OfflineProvider>
-              <ProtectedLayout>
-                <InactivityMonitor>
-                  <OfflineBanner />
-                  <Stack screenOptions={screenOptions}>
-                    <Stack.Screen
-                      name="login"
-                      options={{
-                        headerShown: false,
-                        animation: 'fade'
-                      }}
-                    />
-                    <Stack.Screen
-                      name="(tabs)"
-                      options={{
-                        headerShown: false
-                      }}
-                    />
-                    <Stack.Screen
-                      name="index"
-                      options={{
-                        headerShown: false
-                      }}
-                    />
-                  </Stack>
-                  <Toast />
-                </InactivityMonitor>
-              </ProtectedLayout>
-            </OfflineProvider>
-          </ThemeProvider>
-        </SecurityProvider>
-      </AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <SecurityProvider>
+            <ThemeProvider>
+              <OfflineProvider>
+                <ProtectedLayout>
+                  <BandwidthSync />
+                  <InactivityMonitor>
+                    <OfflineBanner />
+                    <Stack screenOptions={screenOptions}>
+                      <Stack.Screen
+                        name="login"
+                        options={{
+                          headerShown: false,
+                          animation: 'fade'
+                        }}
+                      />
+                      <Stack.Screen
+                        name="(tabs)"
+                        options={{
+                          headerShown: false
+                        }}
+                      />
+                      <Stack.Screen
+                        name="index"
+                        options={{
+                          headerShown: false
+                        }}
+                      />
+                    </Stack>
+                    <Toast />
+                  </InactivityMonitor>
+                </ProtectedLayout>
+              </OfflineProvider>
+            </ThemeProvider>
+          </SecurityProvider>
+        </AuthProvider>
+      </QueryClientProvider>
     </GestureHandlerRootView>
   );
 }

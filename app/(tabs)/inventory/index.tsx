@@ -75,7 +75,7 @@ export default function InventoryScreen() {
     // Enable smart polling for inventory updates
     useSmartPolling({
         callback: refetch,
-        interval: 30000, // Poll every 30 seconds when app is active
+        interval: 60000 * 5, // Poll every 5 minutes when app is active
         enabled: !loading && !!crewId
     });
 

@@ -1,6 +1,7 @@
 import { httpClient } from './client';
-import type { 
-  UploadResult, 
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import type {
+  UploadResult,
   UploadOrderEvidenceInput,
   UploadProfilePhotoInput,
   GetImageUrlInput,
@@ -13,6 +14,26 @@ import type {
  * Handles order photo evidences and installer profile photos
  */
 class UploadsService {
+  /**
+   * Helper to compress image before upload
+   * Resizes to max width 1024px and compresses to 0.7 quality
+   */
+  private async compressImage(uri: string): Promise<string> {
+    try {
+      console.log('🔄 [UploadsService] Compressing image...', uri);
+      const result = await manipulateAsync(
+        uri,
+        [{ resize: { width: 1024 } }],
+        { compress: 0.7, format: SaveFormat.JPEG }
+      );
+      console.log('✅ [UploadsService] Image compressed:', result.uri);
+      return result.uri;
+    } catch (error) {
+      console.warn('⚠️ [UploadsService] Compression failed, using original:', error);
+      return uri;
+    }
+  }
+
   // ============================================================================
   // ORDER PHOTO EVIDENCE
   // ============================================================================
@@ -22,8 +43,18 @@ class UploadsService {
    * Upload photo evidence for an order
    */
   async uploadOrderEvidence(input: UploadOrderEvidenceInput): Promise<UploadResult> {
+    const compressedUri = await this.compressImage(input.file.uri);
+
     const formData = new FormData();
-    formData.append('imagen', input.file);
+    // Update the file URI with the compressed one
+    const file = {
+      ...input.file,
+      uri: compressedUri,
+      name: 'evidence.jpg', // Ensure valid extension
+      type: 'image/jpeg'
+    };
+
+    formData.append('imagen', file as any);
     formData.append('order_id', input.orderId);
     formData.append('installer_id', input.installerId);
     formData.append('crew_id', input.crewId);
@@ -79,8 +110,18 @@ class UploadsService {
    * Upload installer profile photo
    */
   async uploadProfilePhoto(input: UploadProfilePhotoInput): Promise<UploadResult> {
+    const compressedUri = await this.compressImage(input.file.uri);
+
     const formData = new FormData();
-    formData.append('imagen', input.file);
+
+    const file = {
+      ...input.file,
+      uri: compressedUri,
+      name: 'profile.jpg',
+      type: 'image/jpeg'
+    };
+
+    formData.append('imagen', file as any);
     formData.append('installer_id', input.installerId);
 
     const response = await httpClient.post<UploadResult>(

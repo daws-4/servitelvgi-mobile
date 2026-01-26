@@ -1177,31 +1177,49 @@ Para soporte técnico o consultas sobre el sistema, contactar al equipo de desar
 **Versión:** 0.0.1  
 **Estado:** En producción activa
 
-## por hacer
-por añadir:
+
+# MOBILE
 - Bitacora de cambios ✅
 - campo del ticket ✅
 - status hard ✅
 - ordenes de recuperación✅
 - probar notificaciones push ✅
 - arreglar sidebar ✅
-
+/25/01/2025
+- buscar ONT por el código de barras con la cámara ✅
+- bug de subida de bobinas de fibra ✅
+- En las averias no tener las condiciones de speed test firma y materiales para poder cerrar la orden. ✅
+- Añadir status de Visita ✅
+- Contador de visitas ✅
+- campos de Potencias: Nap, Roseta y Puertos restantes ✅
+- Apartado de visita técnica y que genere igual una orden pero se cuente como visita. ✅
+- scrollView horizontal de filtros en la vista de inventario arreglado ✅
+- Error de que se cargaban todas las ONT existentes en vez de las asignadas a la cuadrilla ✅
 -----------
-# MOBILE
--buscar ONT por el código de barras con la cámara ✅
--Conteo de gasto de datos de la APP
--Añadir status de Visita
--Contador de visitas
--campos de Potencias: Nap, Roseta y Puertos restantes
--Apartado de visita técnica y que genere igual una orden pero se cuente como visita.
--bug de subida de bobinas de fibra ✅
--En las averias no tener las condiciones de speed test firma y materiales para poder cerrar la orden. ✅
+## por hacer
+-Conteo de gasto de datos de la APP - A MEDIAS 
+-Verificar que no se pueda hacer speedTest en ordenes de status VISITA
+-arreglar botón de confirmación de creación de orden de status VISITA
+-en inventario arreglar la carga del historial
+-opción de mensaje directo con soporte técnico
+-opción de autogestión de contraseña
+-opción de passkey para iniciar sesión
+-logo para notificaciones push
+-logo para la app
+
 # N8n
 -Flujo condicional del registro en excel para instalación y avería ✅
 -Envío de carta de finalización de orden por whatsapp ✅
+ -----------
+## por hacer
 -Ingreso automático del inventario
 -Calificación del servicio por parte del cliente
+
+
 # WEB
--Impresión y descarga de imagen de finalización de orden ✅
+- Impresión y descarga de imagen de finalización de orden ✅
+- contador de visitas ✅
+ -----------
+## por hacer
 -Reportes
--contador de visitas
+-poder ingresar código de ont a través de la cámara

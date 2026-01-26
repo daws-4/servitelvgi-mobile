@@ -116,7 +116,8 @@ export const useOrderEvidence = (): UseOrderEvidenceReturn => {
     try {
       return await uploadsService.getImageUrl({ recordId, thumb });
     } catch (err: any) {
-      console.error('❌ [useOrderEvidence] getImageUrl failed:', err);
+      // Use warn instead of error to avoid Red Box in development for expected missing images
+      console.warn('⚠️ [useOrderEvidence] getImageUrl failed (handled):', err.message);
       return '';
     }
   }, []);

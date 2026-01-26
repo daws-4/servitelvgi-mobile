@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import inventoryService from '@/services/api/inventory';
 import type { AssignedInventoryItem } from '@/types/Inventory';
 
@@ -11,41 +11,33 @@ interface UseInventoryReturn {
 
 /**
  * Hook for managing crew inventory
+ * Uses React Query for caching
  * @param crewId - ID of the crew
  */
 export const useInventory = (crewId: string): UseInventoryReturn => {
-  const [inventory, setInventory] = useState<AssignedInventoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchInventory = useCallback(async () => {
-    if (!crewId) {
-      setLoading(false);
-      return;
-    }
+  const {
+    data: inventory = [],
+    isLoading: loading,
+    error: queryError,
+    refetch: queryRefetch
+  } = useQuery({
+    queryKey: ['inventory', crewId],
+    queryFn: () => inventoryService.getCrewInventory(crewId),
+    enabled: !!crewId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await inventoryService.getCrewInventory(crewId);
-      // console.log('📦 Inventario cargado:', data?.length || 0, 'items', data);
-      setInventory(data);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar inventario');
-      console.error('Error fetching inventory:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [crewId]);
-
-  useEffect(() => {
-    fetchInventory();
-  }, [fetchInventory]);
+  // Wrapper for refetch to match Promise<void> signature
+  const refetch = async () => {
+    await queryRefetch();
+  };
 
   return {
     inventory,
     loading,
-    error,
-    refetch: fetchInventory,
+    error: queryError ? (queryError as Error).message : null,
+    refetch,
   };
 };

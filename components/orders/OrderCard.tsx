@@ -12,6 +12,7 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; bg: string; text: stri
     completed: { label: 'Completada', bg: '#dcfce7', text: '#16a34a' },
     cancelled: { label: 'Cancelada', bg: '#fee2e2', text: '#dc2626' },
     hard: { label: 'Hard', bg: '#fee2e2', text: '#ef4444' },
+    visita: { label: 'Visita', bg: '#dcfce7', text: '#16a34a' },
 };
 
 // Type label mapping

@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import orderService from '@/services/api/orders';
 import type {
   Order,
@@ -6,7 +7,6 @@ import type {
   OrderStatus,
   OrderCompletionData,
   Coordinates,
-  InternetTestResult,
   UpdateInternetTestData,
 } from '@/types/Order';
 
@@ -29,238 +29,170 @@ interface UseOrdersReturn {
 
 /**
  * Hook for managing orders for a crew
+ * Uses React Query Infinite Scroll
  * @param crewId - ID of the crew
  * @param filters - Optional filters for orders
  */
 export const useOrders = (crewId: string, filters?: OrderFilters): UseOrdersReturn => {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Pagination State
-  const [page, setPage] = useState(1);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const queryClient = useQueryClient();
   const LIMIT = 10;
+  // Key includes filters to separate lists
+  const queryKey = ['orders', crewId, JSON.stringify(filters)];
 
-  // Debouncing - Track last fetch time to prevent redundant calls
-  const lastFetchTime = useRef<number>(0);
-  const DEBOUNCE_TIME = 3000; // 3 seconds
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  // Reset pagination when filters or crewId change
-  useEffect(() => {
-    setPage(1);
-    setHasMore(true);
-    setOrders([]);
-    // We trigger fetch via a separate effect or direct call? 
-    // Ideally, we want to reset and then fetch.
-    // Let's modify the fetchOrders to handle the reset or rely on a `refresh` dependency
-  }, [crewId, JSON.stringify(filters)]);
+  // Infinite Query for pagination
+  const {
+    data,
+    isLoading: loading,
+    isFetchingNextPage: loadingMore,
+    hasNextPage: hasMore,
+    error: queryError,
+    fetchNextPage,
+    refetch: queryRefetch,
+  } = useInfiniteQuery({
+    queryKey,
+    queryFn: async ({ pageParam = 1 }) => {
+      // If no crewId, return empty result strictly
+      if (!crewId) return { items: [], total: 0 };
 
-  // Fetch orders
-  const fetchOrders = useCallback(async (reset = false, silent = false) => {
-    if (!crewId) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      if (reset) {
-        if (!silent) {
-          setLoading(true);
-        }
-        setPage(1);
-      } else {
-        setLoadingMore(true);
+      const res = await orderService.getCrewOrders(crewId, filters, pageParam as number, LIMIT);
+      return res;
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage || !lastPage.items || lastPage.items.length < LIMIT) {
+        return undefined; // Reached end
       }
+      return allPages.length + 1; // Next page index
+    },
+    enabled: !!crewId,
+    staleTime: 1000 * 60 * 1, // 1 minute
+    gcTime: 1000 * 60 * 5,    // 5 minutes
+  });
 
-      setError(null);
+  // Flatten items
+  const orders = data?.pages.flatMap((page) => page.items) || [];
 
-      const currentPage = reset ? 1 : page;
-      const data = await orderService.getCrewOrders(crewId, filters, currentPage, LIMIT);
+  // Helper to update an order in the cache (Optimistic Update pattern)
+  const updateOrderInCache = useCallback((updatedOrder: Order) => {
+    queryClient.setQueryData(queryKey, (oldData: any) => {
+      if (!oldData) return oldData;
+      return {
+        ...oldData,
+        pages: oldData.pages.map((page: any) => ({
+          ...page,
+          items: page.items.map((order: Order) =>
+            order._id === updatedOrder._id ? updatedOrder : order
+          ),
+        })),
+      };
+    });
+  }, [queryClient, queryKey]);
 
-      // Add null safety checks
-      if (data && data.items && Array.isArray(data.items)) {
-        setOrders(prev => reset ? data.items : [...prev, ...data.items]);
-        setHasMore(data.items.length === LIMIT);
-
-        if (!reset) {
-          setPage(prev => prev + 1);
-        } else {
-          // If reset, next page is 2
-          setPage(2);
-        }
-      } else {
-        // Fallback for unexpected response format
-        console.warn('Unexpected API response format:', data);
-        setOrders([]);
-        setHasMore(false);
-      }
-
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar órdenes');
-      console.error('Error fetching orders:', err);
-    } finally {
-      if (!silent) {
-        setLoading(false);
-      }
-      setLoadingMore(false);
-    }
-  }, [crewId, filters, page]);
-
+  // Load More wrapper
   const loadMore = useCallback(() => {
-    if (!loading && !loadingMore && hasMore) {
-      fetchOrders(false);
+    if (hasMore && !loadingMore && !loading) {
+      fetchNextPage();
     }
-  }, [loading, loadingMore, hasMore, fetchOrders]);
+  }, [hasMore, loadingMore, loading, fetchNextPage]);
 
-  const refetch = useCallback((options?: { silent?: boolean; force?: boolean }) => {
-    const now = Date.now();
-    const timeSinceLastFetch = now - lastFetchTime.current;
+  // Refetch wrapper
+  const refetch = async (options?: { silent?: boolean; force?: boolean }) => {
+    await queryRefetch();
+  };
 
-    // Skip if recently fetched (within DEBOUNCE_TIME) unless forced
-    if (!options?.force && timeSinceLastFetch < DEBOUNCE_TIME) {
-      console.log(`⏭️ [useOrders] Skipping refetch (${Math.round(timeSinceLastFetch / 1000)}s ago)`);
-      return Promise.resolve();
-    }
-
-    console.log('🔄 [useOrders] Executing refetch');
-    lastFetchTime.current = now;
-    return fetchOrders(true, options?.silent);
-  }, [fetchOrders]);
-
-  // Select an order by ID
+  // Select Order
   const selectOrder = useCallback(async (orderId: string | null) => {
     if (!orderId) {
       setSelectedOrder(null);
       return;
     }
 
+    // 1. Try to find in cache first
+    const cachedOrder = orders.find(o => o._id === orderId);
+    if (cachedOrder) {
+      setSelectedOrder(cachedOrder);
+    }
+
+    // 2. Refresh details from API (keep existing logic)
     try {
-      setError(null);
       const order = await orderService.getOrderById(orderId);
       setSelectedOrder(order);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar orden');
-      console.error('Error selecting order:', err);
+    } catch (err) {
+      console.error('Error fetching order details:', err);
+      // Keep cached version if fetch fails
     }
-  }, []);
+  }, [orders]);
 
-  // Update order status
+
+  // Update Status
   const updateStatus = useCallback(async (orderId: string, status: OrderStatus) => {
     try {
-      setError(null);
       const updatedOrder = await orderService.updateOrderStatus(orderId, status);
-
-      // Update in list
-      setOrders(prev => prev.map(o => o._id === orderId ? updatedOrder : o));
-
-      // Update selected if it's the same
-      if (selectedOrder?._id === orderId) {
-        setSelectedOrder(updatedOrder);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Error al actualizar estado');
+      updateOrderInCache(updatedOrder);
+      if (selectedOrder?._id === orderId) setSelectedOrder(updatedOrder);
+    } catch (err) {
       console.error('Error updating status:', err);
       throw err;
     }
-  }, [selectedOrder]);
+  }, [updateOrderInCache, selectedOrder]);
 
-  // Update order coordinates
+  // Update Coordinates
   const updateCoordinates = useCallback(async (orderId: string, coordinates: Coordinates) => {
     try {
-      setError(null);
       const updatedOrder = await orderService.updateOrderCoordinates(orderId, coordinates);
-
-      // Update in list
-      setOrders(prev => prev.map(o => o._id === orderId ? updatedOrder : o));
-
-      // Update selected if it's the same
-      if (selectedOrder?._id === orderId) {
-        setSelectedOrder(updatedOrder);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Error al actualizar coordenadas');
+      updateOrderInCache(updatedOrder);
+      if (selectedOrder?._id === orderId) setSelectedOrder(updatedOrder);
+    } catch (err) {
       console.error('Error updating coordinates:', err);
       throw err;
     }
-  }, [selectedOrder]);
+  }, [updateOrderInCache, selectedOrder]);
 
-  // Update internet test data
+  // Update Internet Test
   const updateInternetTest = useCallback(async (orderId: string, data: UpdateInternetTestData) => {
     try {
-      setError(null);
       const updatedOrder = await orderService.updateInternetTest(orderId, data);
-
-      // Update in list
-      setOrders(prev => prev.map(o => o._id === orderId ? updatedOrder : o));
-
-      // Update selected if it's the same
-      if (selectedOrder?._id === orderId) {
-        setSelectedOrder(updatedOrder);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Error al actualizar prueba de internet');
+      updateOrderInCache(updatedOrder);
+      if (selectedOrder?._id === orderId) setSelectedOrder(updatedOrder);
+    } catch (err) {
       console.error('Error updating internet test:', err);
       throw err;
     }
-  }, [selectedOrder]);
+  }, [updateOrderInCache, selectedOrder]);
 
-  // Start an order (change to in_progress)
+  // Start Order
   const startOrder = useCallback(async (orderId: string, coordinates?: Coordinates) => {
     try {
-      setError(null);
       const updatedOrder = await orderService.startOrder(orderId, coordinates);
-
-      // Update in list
-      setOrders(prev => prev.map(o => o._id === orderId ? updatedOrder : o));
-
-      // Update selected if it's the same
-      if (selectedOrder?._id === orderId) {
-        setSelectedOrder(updatedOrder);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Error al iniciar orden');
+      updateOrderInCache(updatedOrder);
+      if (selectedOrder?._id === orderId) setSelectedOrder(updatedOrder);
+    } catch (err) {
       console.error('Error starting order:', err);
       throw err;
     }
-  }, [selectedOrder]);
+  }, [updateOrderInCache, selectedOrder]);
 
-  // Complete an order
+  // Complete Order
   const completeOrder = useCallback(async (orderId: string, data: OrderCompletionData) => {
     try {
-      setError(null);
       const updatedOrder = await orderService.completeOrder(orderId, data);
-
-      // Update in list
-      setOrders(prev => prev.map(o => o._id === orderId ? updatedOrder : o));
-
-      // Update selected if it's the same
-      if (selectedOrder?._id === orderId) {
-        setSelectedOrder(updatedOrder);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Error al completar orden');
+      updateOrderInCache(updatedOrder);
+      if (selectedOrder?._id === orderId) setSelectedOrder(updatedOrder);
+    } catch (err) {
       console.error('Error completing order:', err);
       throw err;
     }
-  }, [selectedOrder]);
-
-  // Fetch orders on mount and when filters change
-  useEffect(() => {
-    if (crewId) {
-      fetchOrders(true); // Reset to page 1 when filters or crew change
-    }
-  }, [crewId, JSON.stringify(filters)]);
+  }, [updateOrderInCache, selectedOrder]);
 
   return {
     orders,
     selectedOrder,
     loading,
-    loadingMore,
+    loadingMore, // isFetchingNextPage
     hasMore,
-    error,
+    error: queryError ? (queryError as Error).message : null,
     refetch,
     loadMore,
     selectOrder,

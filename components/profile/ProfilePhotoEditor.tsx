@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import {
     View,
     Text,
-    Image,
     Modal,
     TouchableOpacity,
     StyleSheet,
     ActivityIndicator,
     Alert,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { FontAwesome } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { BrandColors } from '@/constants/colors';
@@ -224,7 +224,13 @@ export default function ProfilePhotoEditor({
                     {/* Image Preview */}
                     <View style={styles.imageContainer}>
                         {displayImage ? (
-                            <Image source={{ uri: displayImage }} style={styles.image} />
+                            <Image
+                                source={{ uri: displayImage }}
+                                style={styles.image}
+                                contentFit="cover"
+                                transition={200}
+                                cachePolicy="disk"
+                            />
                         ) : (
                             <View style={styles.placeholder}>
                                 <FontAwesome name="user" size={48} color="#9ca3af" />

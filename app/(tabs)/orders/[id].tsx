@@ -75,6 +75,21 @@ export default function OrderDetailScreen() {
             setMaterialsUsed(data.materialsUsed || []);
         } catch (err: any) {
             console.error('Error fetching order:', err);
+
+            if (err.response?.status === 404 || err.status === 404) {
+                Alert.alert(
+                    'Orden no encontrada',
+                    'La orden que intentas ver no existe o fue eliminada.',
+                    [
+                        {
+                            text: 'Volver a la lista',
+                            onPress: () => router.replace('/(tabs)/orders/')
+                        }
+                    ]
+                );
+                return;
+            }
+
             setError(err.message || 'Error al cargar la orden');
         } finally {
             setLoading(false);
@@ -176,6 +191,16 @@ export default function OrderDetailScreen() {
     const handleStatusChange = async (newStatus: OrderStatus) => {
         if (!order || newStatus === currentStatus) return;
 
+        // LOCKING: If current status is HARD, only allow transition to completed
+        if (currentStatus === 'hard' && newStatus !== 'completed') {
+            Alert.alert(
+                'Orden Bloqueada',
+                'Una orden en estado HARD solo puede cambiar a COMPLETADA cuando se haya resuelto.',
+                [{ text: 'Entendido' }]
+            );
+            return;
+        }
+
         // Validate completion requirements
         if (newStatus === 'completed') {
             if (!canComplete) {
@@ -227,9 +252,22 @@ export default function OrderDetailScreen() {
         // Normal status update (not completed)
         try {
             setUpdating(true);
-            await orderService.updateOrderStatus(order._id, newStatus);
+
+            // SPECIAL CASE: Switching to HARD increments visit count
+            if (newStatus === 'hard') {
+                const newVisitCount = (order.visitCount || 0) + 1;
+                await orderService.updateOrder(order._id, {
+                    status: newStatus,
+                    visitCount: newVisitCount
+                });
+                // Update local state with new count
+                setOrder(prev => prev ? { ...prev, status: newStatus, visitCount: newVisitCount } : null);
+            } else {
+                await orderService.updateOrderStatus(order._id, newStatus);
+                setOrder(prev => prev ? { ...prev, status: newStatus } : null);
+            }
+
             setCurrentStatus(newStatus);
-            setOrder(prev => prev ? { ...prev, status: newStatus } : null);
             Alert.alert('Éxito', 'Estado actualizado correctamente');
         } catch (err: any) {
             console.error('Error updating status:', err);
@@ -398,7 +436,7 @@ export default function OrderDetailScreen() {
                     <Text style={styles.headerSubtitle}>#{order.ticket_id}</Text>
                 </View>
                 {/* Save Button */}
-                {currentStatus !== 'completed' && currentStatus !== 'cancelled' && (
+                {currentStatus !== 'completed' && currentStatus !== 'cancelled' && currentStatus !== 'visita' && (
                     <TouchableOpacity
                         onPress={saveProgress}
                         style={styles.saveBtn}
@@ -469,7 +507,7 @@ export default function OrderDetailScreen() {
                         </View>
 
                         {/* Conditional rendering: Editable for recovery orders, ReadOnly for others */}
-                        {order.type === 'recuperacion' && order.status !== 'completed' && order.status !== 'cancelled' ? (
+                        {order.type === 'recuperacion' && order.status !== 'completed' && order.status !== 'cancelled' && order.status !== 'visita' ? (
                             <>
                                 <EditableField
                                     label="Número de Abonado"
@@ -573,7 +611,7 @@ export default function OrderDetailScreen() {
                         />
 
                         {/* Ticket ID: Editable for recovery orders */}
-                        {order.type === 'recuperacion' && order.status !== 'completed' && order.status !== 'cancelled' ? (
+                        {order.type === 'recuperacion' && order.status !== 'completed' && order.status !== 'cancelled' && order.status !== 'visita' ? (
                             <EditableField
                                 label="Número de Ticket"
                                 value={order.ticket_id}
@@ -593,7 +631,7 @@ export default function OrderDetailScreen() {
                         )}
 
                         {/* Node field: Editable for recovery orders */}
-                        {order.type === 'recuperacion' && order.status !== 'completed' && order.status !== 'cancelled' ? (
+                        {order.type === 'recuperacion' && order.status !== 'completed' && order.status !== 'cancelled' && order.status !== 'visita' ? (
                             <EditableField
                                 label="Nodo"
                                 value={order.node}
@@ -608,6 +646,58 @@ export default function OrderDetailScreen() {
                                 icon="sitemap"
                                 selectable={true}
                             />
+                        )}
+
+                        {/* Power and Ports Fields (Only for Instalacion/Averia) */}
+                        {(order.type === 'instalacion' || order.type === 'averia') && (
+                            <>
+                                {order.status !== 'completed' && order.status !== 'cancelled' && order.status !== 'visita' ? (
+                                    <>
+                                        <EditableField
+                                            label="Potencia NAP (dBm)"
+                                            value={order.powerNap}
+                                            onChangeText={(text) => handleOrderFieldUpdate('powerNap', text)}
+                                            icon="bolt"
+                                            placeholder="-20.5"
+                                            keyboardType="numeric"
+                                        />
+                                        <EditableField
+                                            label="Potencia Roseta (dBm)"
+                                            value={order.powerRoseta}
+                                            onChangeText={(text) => handleOrderFieldUpdate('powerRoseta', text)}
+                                            icon="plug"
+                                            placeholder="-22.0"
+                                            keyboardType="numeric"
+                                        />
+                                        <EditableField
+                                            label="Puertos Restantes"
+                                            value={order.remainingPorts?.toString()}
+                                            onChangeText={(text) => handleOrderFieldUpdate('remainingPorts', parseInt(text) || 0)}
+                                            icon="sort-numeric-asc"
+                                            placeholder="4"
+                                            keyboardType="numeric"
+                                        />
+                                    </>
+                                ) : (
+                                    <>
+                                        <ReadOnlyField
+                                            label="Potencia NAP"
+                                            value={order.powerNap ? `${order.powerNap} dBm` : 'No registra'}
+                                            icon="bolt"
+                                        />
+                                        <ReadOnlyField
+                                            label="Potencia Roseta"
+                                            value={order.powerRoseta ? `${order.powerRoseta} dBm` : 'No registra'}
+                                            icon="plug"
+                                        />
+                                        <ReadOnlyField
+                                            label="Puertos Restantes"
+                                            value={order.remainingPorts?.toString() || 'No registra'}
+                                            icon="sort-numeric-asc"
+                                        />
+                                    </>
+                                )}
+                            </>
                         )}
 
                         <ReadOnlyField
@@ -629,16 +719,32 @@ export default function OrderDetailScreen() {
                             <Text style={styles.sectionTitle}>Estado y Asignación</Text>
                         </View>
 
-                        <StatusPicker
-                            value={currentStatus}
-                            onChange={handleStatusChange}
-                            disabled={updating || currentStatus === 'completed'}
-                            canComplete={canComplete}
-                            completionMessage={getCompletionMessage}
-                        />
+                        {currentStatus === 'visita' ? (
+                            <View style={{
+                                backgroundColor: '#dcfce7',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: 16,
+                                borderRadius: 12,
+                                borderWidth: 1,
+                                borderColor: '#bbf7d0'
+                            }}>
+                                <FontAwesome name="check-circle" size={20} color="#16a34a" style={{ marginRight: 8 }} />
+                                <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#16a34a' }}>Visita</Text>
+                            </View>
+                        ) : (
+                            <StatusPicker
+                                value={currentStatus}
+                                onChange={handleStatusChange}
+                                disabled={updating || currentStatus === 'completed'}
+                                canComplete={canComplete}
+                                completionMessage={getCompletionMessage}
+                            />
+                        )}
 
                         {/* Completion requirements info */}
-                        {currentStatus !== 'completed' && (
+                        {currentStatus !== 'completed' && currentStatus !== 'visita' && (
                             <View style={styles.requirementsCard}>
                                 <Text style={styles.requirementsTitle}>Requisitos para Finalizar:</Text>
 
@@ -701,7 +807,7 @@ export default function OrderDetailScreen() {
                             orderId={order._id}
                             initialData={order.equipmentRecovered}
                             onDataChange={handleEquipmentChange}
-                            readOnly={order.status === 'completed' || order.status === 'cancelled'}
+                            readOnly={order.status === 'completed' || order.status === 'cancelled' || order.status === 'visita'}
                         />
                     )}
 
@@ -718,7 +824,7 @@ export default function OrderDetailScreen() {
                                 materialsUsed={materialsUsed}
                                 onMaterialsChange={handleMaterialsChange}
                                 onImmediateSave={handleImmediateSave}
-                                readOnly={order.status === 'completed' || order.status === 'cancelled'}
+                                readOnly={order.status === 'completed' || order.status === 'cancelled' || order.status === 'visita'}
                             />
                         </View>
                     )}
@@ -736,7 +842,7 @@ export default function OrderDetailScreen() {
                             crewId={installer?.crew?._id || ''}
                             existingPhotos={order.photoEvidence}
                             onPhotosChange={handlePhotosChange}
-                            readOnly={order.status === 'completed' || order.status === 'cancelled'}
+                            readOnly={order.status === 'completed' || order.status === 'cancelled' || order.status === 'visita'}
                         />
                     </View>
 
@@ -748,7 +854,7 @@ export default function OrderDetailScreen() {
                                 signature={order.customerSignature}
                                 onSignatureChange={handleSignatureChange}
                                 onUploadSignature={orderService.saveSignatureUrl.bind(orderService)}
-                                readOnly={order.status === 'completed' || order.status === 'cancelled'}
+                                readOnly={order.status === 'completed' || order.status === 'cancelled' || order.status === 'visita'}
                             />
                         </View>
                     )}
@@ -765,7 +871,7 @@ export default function OrderDetailScreen() {
                                 orderId={order._id}
                                 existingTest={order.internetTest}
                                 onTestSaved={handleTestSaved}
-                                readOnly={order.status === 'completed' || order.status === 'cancelled'}
+                                readOnly={order.status === 'completed' || order.status === 'cancelled' || order.status === 'visita'}
                             />
                         </View>
                     )}
@@ -782,7 +888,7 @@ export default function OrderDetailScreen() {
                             installerLogs={order.installerLog || []}
                             onLogsChange={handleLogsChange}
                             currentStatus={currentStatus}
-                            readOnly={order.status === 'completed' || order.status === 'cancelled'}
+                            readOnly={order.status === 'completed' || order.status === 'cancelled' || order.status === 'visita'}
                         />
                     </View>
 

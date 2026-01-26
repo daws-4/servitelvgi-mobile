@@ -134,7 +134,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setError(authError);
             setIsAuthenticated(false);
             setInstaller(null);
-            throw authError;
+            // Error handling is managed by state (error), no need to re-throw
+            // throw authError; 
         } finally {
             setIsLoading(false);
         }

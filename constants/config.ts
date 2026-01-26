@@ -20,7 +20,7 @@ export const Config = {
    * Debe configurarse en .env como API_BASE_URL
    * https://admin.servitelv.com
    */
-  API_BASE_URL: getEnvVar('API_BASE_URL', 'http://192.168.0.44:3000'),
+  API_BASE_URL: getEnvVar('API_BASE_URL', 'https://admin.servitelv.com'),
   
   /**
    * Timeout para peticiones HTTP en milisegundos

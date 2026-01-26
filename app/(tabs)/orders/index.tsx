@@ -12,6 +12,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import InstallerHeader from '@/components/orders/InstallerHeader';
 import OrderFilters from '@/components/orders/OrderFilters';
 import OrderCard from '@/components/orders/OrderCard';
+import OrderTypeSelectionModal from '@/components/orders/OrderTypeSelectionModal';
 import { useLocationPermission } from '@/hooks/useLocationPermission';
 import { useOrders } from '@/hooks/useOrders';
 import { useAuth } from '@/app/contexts/AuthContext';
@@ -28,6 +29,9 @@ export default function OrdersScreen() {
     const router = useRouter();
 
     const [viewMode, setViewMode] = useState<ViewMode>('list');
+
+    // Modal state
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
     // Filters
     const [searchValue, setSearchValue] = useState('');
@@ -61,7 +65,7 @@ export default function OrdersScreen() {
     // Enable smart polling for order updates
     useSmartPolling({
         callback: () => refetch({ silent: true }),
-        interval: 30000, // Poll every 30 seconds when app is active
+        interval: 120000, // Poll every 5 minutes when app is active
         enabled: !loading && !!crewId // Only poll when not loading and have crew ID
     });
 
@@ -159,6 +163,19 @@ export default function OrdersScreen() {
 
     const handleMapPress = () => {
         setViewMode('map');
+    };
+
+    const handleCreateOrder = () => {
+        setShowCreateModal(true);
+    };
+
+    const handleOrderTypeSelect = (type: 'recovery' | 'visit') => {
+        setShowCreateModal(false);
+        if (type === 'recovery') {
+            router.push('/orders/create-recovery');
+        } else if (type === 'visit') {
+            router.push('/(tabs)/orders/create-visit/select');
+        }
     };
 
     // Render Map View
@@ -311,7 +328,7 @@ export default function OrdersScreen() {
                 {/* Floating Create Recovery Order Button */}
                 <TouchableOpacity
                     style={[styles.floatingCreateBtn, { bottom: tabBarHeight + 90 }]}
-                    onPress={() => router.push('/orders/create-recovery')}
+                    onPress={handleCreateOrder}
                 >
                     <FontAwesome name="plus-square" size={20} color="white" />
                 </TouchableOpacity>
@@ -323,6 +340,12 @@ export default function OrdersScreen() {
                 >
                     <FontAwesome name="map" size={20} color="white" />
                 </TouchableOpacity>
+
+                <OrderTypeSelectionModal
+                    visible={showCreateModal}
+                    onClose={() => setShowCreateModal(false)}
+                    onSelect={handleOrderTypeSelect}
+                />
             </View>
         </View>
     );

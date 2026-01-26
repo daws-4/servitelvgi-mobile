@@ -59,6 +59,22 @@ export default function TabsLayout() {
                 }}
             />
 
+            {/* Visit Order Routes (Hidden) */}
+            <Tabs.Screen
+                name="orders/create-visit/select"
+                options={{
+                    href: null,
+                    tabBarStyle: { display: 'none' },
+                }}
+            />
+            <Tabs.Screen
+                name="orders/create-visit/confirm"
+                options={{
+                    href: null,
+                    tabBarStyle: { display: 'none' },
+                }}
+            />
+
 
             <Tabs.Screen
                 name="profile/index"

@@ -22,6 +22,7 @@ const STATUS_OPTIONS: { value: OrderStatus | 'all'; label: string }[] = [
     { value: 'completed', label: 'Completadas' },
     { value: 'cancelled', label: 'Canceladas' },
     { value: 'hard', label: 'HARD' },
+    { value: 'visita', label: 'Visita' },
 ];
 
 // Type filter options

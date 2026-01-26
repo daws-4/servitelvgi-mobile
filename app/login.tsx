@@ -81,8 +81,9 @@ export default function LoginScreen() {
             await login(username.trim(), password);
             // AuthContext maneja la navegación automáticamente
         } catch (err) {
-            // Error ya está en AuthContext.error
-            console.error('Error de login:', err);
+            // Error ya está en AuthContext.error, no necesitamos lanzar un error rojo
+            console.warn('Login fallido (manejado):', err);
+            // Opcional: setLocalError si queremos asegurar feedback inmediato
         }
     };
 

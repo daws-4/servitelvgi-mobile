@@ -9,7 +9,7 @@ export interface UseSmartPollingOptions {
   
   /**
    * Polling interval in milliseconds
-   * @default 60000 (1 minute)
+   * @default 60000 * 5 (5 minutes)
    */
   interval?: number;
   
@@ -40,7 +40,7 @@ export interface UseSmartPollingOptions {
 export function useSmartPolling(options: UseSmartPollingOptions) {
   const {
     callback,
-    interval = 15000, // Default 15 seconds
+    interval = 60000 * 5, // Default 5 minutes
     enabled = true
   } = options;
   

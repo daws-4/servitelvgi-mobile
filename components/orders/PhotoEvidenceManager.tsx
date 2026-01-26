@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
-    Image,
     TouchableOpacity,
     StyleSheet,
     ActivityIndicator,
     Alert,
     ScrollView,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { FontAwesome } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { BrandColors } from '@/constants/colors';
@@ -263,7 +263,13 @@ export default function PhotoEvidenceManager({
                 ) : (
                     photos.map((photo, index) => (
                         <View key={photo.recordId || index} style={styles.photoWrapper}>
-                            <Image source={{ uri: photo.url }} style={styles.photo} />
+                            <Image
+                                source={{ uri: photo.url }}
+                                style={styles.photo}
+                                contentFit="cover"
+                                transition={200}
+                                cachePolicy="disk"
+                            />
                             {photo.isNew && (
                                 <View style={styles.newBadge}>
                                     <Text style={styles.newBadgeText}>Nueva</Text>
