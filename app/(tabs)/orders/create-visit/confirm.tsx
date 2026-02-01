@@ -93,7 +93,7 @@ export default function ConfirmVisitOrderScreen() {
                 ticket_id: newTicketId,
                 type: originOrder.type, // Preserve original type (averia/instalacion)
                 status: 'visita' as OrderStatus, // FORCE status to visita
-                visitCount: (originOrder.visitCount || 0) + 1, // Increment visit count
+                visitCount: 1, // Start fresh for this new order document
 
                 // Assignment
                 assignedTo: installer?.crew?._id, // Assign to current crew
@@ -155,7 +155,7 @@ export default function ConfirmVisitOrderScreen() {
 
     return (
         <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
             style={[styles.container, { backgroundColor: '#f8fafc' }]}
         >
             <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
@@ -220,7 +220,7 @@ export default function ConfirmVisitOrderScreen() {
             </ScrollView>
 
             {/* Footer Action */}
-            <View style={[styles.footer]}>
+            <View style={[styles.footer, { paddingBottom: insets.bottom + 10 }]}>
                 <TouchableOpacity
                     style={[
                         styles.createButton,

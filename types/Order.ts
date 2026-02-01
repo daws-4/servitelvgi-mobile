@@ -155,6 +155,12 @@ export interface Order {
   // Timestamps
   createdAt: Date | string;
   updatedAt: Date | string;
+
+  // Etiqueta
+  etiqueta?: {
+    color?: 'verde' | 'rojo' | 'azul';
+    numero?: number;
+  };
 }
 
 /**

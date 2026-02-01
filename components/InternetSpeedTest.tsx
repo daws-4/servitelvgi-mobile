@@ -5,9 +5,10 @@ import { Colors } from '@/constants/colors';
 
 interface InternetSpeedTestProps {
     onResultsChange?: (results: ReturnType<typeof useSpeedTest>['results']) => void;
+    disabled?: boolean;
 }
 
-export const InternetSpeedTest = ({ onResultsChange }: InternetSpeedTestProps) => {
+export const InternetSpeedTest = ({ onResultsChange, disabled = false }: InternetSpeedTestProps) => {
     const { results, startTest, clearError } = useSpeedTest();
 
     // Notify parent of results changes
@@ -224,20 +225,22 @@ export const InternetSpeedTest = ({ onResultsChange }: InternetSpeedTestProps) =
             </View>
 
             {/* Start Test Button */}
-            <TouchableOpacity
-                style={[
-                    styles.button,
-                    isTestRunning && styles.buttonDisabled,
-                    isFinished && styles.buttonSuccess,
-                ]}
-                onPress={startTest}
-                disabled={isTestRunning}
-                activeOpacity={0.7}
-            >
-                <Text style={styles.buttonText}>
-                    {isTestRunning ? 'Prueba en Curso...' : isFinished ? 'Reiniciar Prueba' : 'Iniciar Prueba'}
-                </Text>
-            </TouchableOpacity>
+            {!disabled && (
+                <TouchableOpacity
+                    style={[
+                        styles.button,
+                        isTestRunning && styles.buttonDisabled,
+                        isFinished && styles.buttonSuccess,
+                    ]}
+                    onPress={startTest}
+                    disabled={isTestRunning}
+                    activeOpacity={0.7}
+                >
+                    <Text style={styles.buttonText}>
+                        {isTestRunning ? 'Prueba en Curso...' : isFinished ? 'Reiniciar Prueba' : 'Iniciar Prueba'}
+                    </Text>
+                </TouchableOpacity>
+            )}
         </View>
     );
 };

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Switch } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useRouter } from 'expo-router';
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useInstaller } from '@/hooks/useInstaller';
 import { BrandColors } from '@/constants/colors';
@@ -26,7 +26,15 @@ import type { Crew } from '@/types/Crew';
 export default function ProfileScreen() {
     const insets = useSafeAreaInsets();
     const tabBarHeight = useBottomTabBarHeight();
-    const { installer: authInstaller, logout } = useAuth();
+    const {
+        installer: authInstaller,
+        logout,
+        isBiometricAvailable,
+        isBiometricEnabled,
+        enableBiometrics,
+        disableBiometrics,
+        biometricType
+    } = useAuth();
     const router = useRouter();
 
     // Use useInstaller to fetch full profile data (including profilePicture) which might be missing in auth/me
@@ -202,6 +210,21 @@ export default function ProfileScreen() {
         }
     }, [installer]);
 
+    // Biometric Toggle Handler
+    const handleBiometricToggle = async (value: boolean) => {
+        if (value) {
+            const success = await enableBiometrics();
+            if (!success) {
+                Alert.alert(
+                    'No disponible',
+                    'No se pudo habilitar biometría. Asegúrate de haber iniciado sesión recientemente.'
+                );
+            }
+        } else {
+            await disableBiometrics();
+        }
+    };
+
     // console.log('🖼️ [ProfileScreen] Rendering with picture:', installer?.profilePicture);
 
     return (
@@ -274,6 +297,29 @@ export default function ProfileScreen() {
                             subtitle="Cambiar o eliminar foto"
                             onPress={() => setShowPhotoEditor(true)}
                         />
+
+                        {/* Biometric Toggle */}
+                        {isBiometricAvailable && (
+                            <View style={styles.switchRow}>
+                                <View style={styles.switchIconContainer}>
+                                    <MaterialCommunityIcons
+                                        name={biometricType?.includes('Face') ? 'face-recognition' : 'fingerprint'}
+                                        size={22}
+                                        color="#64748b"
+                                    />
+                                </View>
+                                <View style={styles.switchContent}>
+                                    <Text style={styles.switchTitle}>Habilitar {biometricType || 'Biometría'}</Text>
+                                    <Text style={styles.switchSubtitle}>Ingresar sin contraseña</Text>
+                                </View>
+                                <Switch
+                                    value={isBiometricEnabled}
+                                    onValueChange={handleBiometricToggle}
+                                    trackColor={{ false: '#e2e8f0', true: '#bae6fd' }}
+                                    thumbColor={isBiometricEnabled ? BrandColors.primary : '#f1f5f9'}
+                                />
+                            </View>
+                        )}
                     </SettingsSection>
                     {/* <BandwidthStats /> */}
                     {/* Application Section */}
@@ -382,5 +428,31 @@ const styles = StyleSheet.create({
         opacity: 0.5,
         paddingTop: 16,
         paddingBottom: 24,
+    },
+    switchRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        // Mimic SettingsMenuItem style roughly if needed, usually it's inside a container?
+        // Let's rely on standard flex layout
+    },
+    switchIconContainer: {
+        width: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    switchContent: {
+        flex: 1,
+    },
+    switchTitle: {
+        fontSize: 14, // Matches SettingsMenuItem title
+        fontWeight: '600',
+        color: '#1e293b',
+        marginBottom: 2,
+    },
+    switchSubtitle: {
+        fontSize: 12, // Matches SettingsMenuItem subtitle
+        color: '#94a3b8',
     },
 });

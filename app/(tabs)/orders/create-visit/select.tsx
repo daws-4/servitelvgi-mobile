@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView } from 'react-native-gesture-handler';
 
 import { BrandColors } from '@/constants/colors';
 import { useOrders } from '@/hooks/useOrders';
@@ -50,7 +51,7 @@ export default function SelectVisitOriginScreen() {
     );
 
     return (
-        <View style={styles.container}>
+        <ScrollView style={styles.container}>
             {/* Header */}
             <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -60,11 +61,6 @@ export default function SelectVisitOriginScreen() {
             </View>
 
             <View style={styles.content}>
-                <Text style={styles.helperText}>
-                    Selecciona la orden sobre la cual realizarás la visita tecnica.
-                    Se copiarán los datos del cliente y dirección.
-                </Text>
-
                 {loading ? (
                     <View style={styles.centerContainer}>
                         <ActivityIndicator size="large" color={BrandColors.primary} />
@@ -82,16 +78,25 @@ export default function SelectVisitOriginScreen() {
                         <Text style={styles.emptyText}>No hay órdenes disponibles para generar visita</Text>
                     </View>
                 ) : (
-                    <FlatList
-                        data={eligibleOrders}
-                        renderItem={renderItem}
-                        keyExtractor={item => item._id}
-                        contentContainerStyle={styles.listContent}
-                        showsVerticalScrollIndicator={false}
-                    />
+                    <View>
+                        <Text style={styles.helperText}>
+                            Selecciona la orden sobre la cual realizarás la visita tecnica.
+                            Se copiarán los datos del cliente y dirección.
+                        </Text>
+                        <View style={styles.listContent}>
+                            {eligibleOrders.map((item) => (
+                                <View key={item._id} style={styles.cardWrapper}>
+                                    <View style={styles.selectionOverlay} pointerEvents="none">
+                                        <FontAwesome name="chevron-right" size={16} color={BrandColors.primary} />
+                                    </View>
+                                    <OrderCard order={item} onPress={() => handleSelectOrder(item)} />
+                                </View>
+                            ))}
+                        </View>
+                    </View>
                 )}
             </View>
-        </View>
+        </ScrollView>
     );
 }
 
@@ -119,6 +124,7 @@ const styles = StyleSheet.create({
         color: '#1e293b',
     },
     content: {
+        marginBottom: 20,
         flex: 1,
         padding: 16,
     },

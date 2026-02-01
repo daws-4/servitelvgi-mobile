@@ -137,13 +137,19 @@ export const useBandwidthStore = create<BandwidthState>((set, get) => ({
 
             if (deltaRx > 0 || deltaTx > 0) {
                 if (state.type === NetInfoStateType.wifi) {
-                    newStats.wifi.bytesReceived += deltaRx;
-                    newStats.wifi.bytesSent += deltaTx;
-                    newStats.wifi.lastUpdated = now;
+                    newStats.wifi = {
+                        ...currentStats.wifi,
+                        bytesReceived: currentStats.wifi.bytesReceived + deltaRx,
+                        bytesSent: currentStats.wifi.bytesSent + deltaTx,
+                        lastUpdated: now
+                    };
                 } else if (state.type === NetInfoStateType.cellular) {
-                    newStats.mobile.bytesReceived += deltaRx;
-                    newStats.mobile.bytesSent += deltaTx;
-                    newStats.mobile.lastUpdated = now;
+                    newStats.mobile = {
+                        ...currentStats.mobile,
+                        bytesReceived: currentStats.mobile.bytesReceived + deltaRx,
+                        bytesSent: currentStats.mobile.bytesSent + deltaTx,
+                        lastUpdated: now
+                    };
                 }
                 // Save and update state
                 set({ stats: newStats });

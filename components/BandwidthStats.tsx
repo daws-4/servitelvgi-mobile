@@ -4,11 +4,15 @@ import { useBandwidthStats } from '@/hooks/useBandwidthStats';
 import { Wifi, Smartphone, RefreshCw, Trash2 } from 'lucide-react-native';
 
 export const BandwidthStats = () => {
-    const { stats, loadStats, resetStats, wifiUsage, mobileUsage, totalUsage } = useBandwidthStats();
+    const { stats, loadStats, resetStats, updateStats, wifiUsage, mobileUsage, totalUsage } = useBandwidthStats();
 
     useEffect(() => {
         loadStats();
     }, []);
+
+    const handleRefresh = async () => {
+        await updateStats();
+    };
 
     return (
         <View style={styles.container}>
@@ -48,10 +52,16 @@ export const BandwidthStats = () => {
 
             <View style={styles.footer}>
                 <Text style={styles.totalText}>Total: {totalUsage.formatted}</Text>
-                <TouchableOpacity onPress={resetStats} style={styles.resetButton}>
-                    <Trash2 size={16} color="#EF4444" />
-                    <Text style={styles.resetText}>Resetear</Text>
-                </TouchableOpacity>
+                <View style={styles.buttonsContainer}>
+                    <TouchableOpacity onPress={handleRefresh} style={styles.actionButton}>
+                        <RefreshCw size={16} color="#0EA5E9" />
+                        <Text style={[styles.actionText, { color: '#0EA5E9' }]}>Refrescar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={resetStats} style={styles.actionButton}>
+                        <Trash2 size={16} color="#EF4444" />
+                        <Text style={[styles.actionText, { color: '#EF4444' }]}>Resetear</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         </View>
     );
@@ -123,15 +133,18 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#374151',
     },
-    resetButton: {
+    buttonsContainer: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    actionButton: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
         padding: 6,
     },
-    resetText: {
+    actionText: {
         fontSize: 12,
-        color: '#EF4444',
         fontWeight: '500',
     },
 });

@@ -4,6 +4,7 @@ export function useBandwidthStats() {
     const stats = useBandwidthStore((state) => state.stats);
     const resetStats = useBandwidthStore((state) => state.resetStats);
     const loadStats = useBandwidthStore((state) => state.loadStats);
+    const updateStats = useBandwidthStore((state) => state.updateStats);
 
     const formatBytes = (bytes: number) => {
         if (bytes === 0) return '0 B';
@@ -21,6 +22,7 @@ export function useBandwidthStats() {
         stats,
         resetStats,
         loadStats,
+        updateStats,
         wifiUsage: {
             sent: stats.wifi.bytesSent,
             received: stats.wifi.bytesReceived,

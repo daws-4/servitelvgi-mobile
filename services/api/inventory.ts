@@ -63,13 +63,19 @@ class InventoryService {
     if (filters?.type) params.type = filters.type;
     if (filters?.startDate) params.startDate = filters.startDate;
     if (filters?.endDate) params.endDate = filters.endDate;
+    if (filters?.page) params.page = filters.page;
+    if (filters?.limit) params.limit = filters.limit;
 
-    const response = await httpClient.get<InventoryHistoryEntry[]>(
-      '/api/web/inventory/history',
+    const response = await httpClient.get<InventoryHistoryEntry[] | { data: InventoryHistoryEntry[], pagination: any }>(
+      '/api/web/inventory-histories',
       { params }
     );
 
-    return response.data;
+    // Si retorna paginación, devolver solo data (o adaptar según necesites)
+    if (!Array.isArray(response.data) && 'data' in response.data) {
+      return (response.data as any).data;
+    }
+    return response.data as InventoryHistoryEntry[];
   }
 
   /**

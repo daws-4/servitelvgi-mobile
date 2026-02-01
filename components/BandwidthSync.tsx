@@ -15,10 +15,12 @@ export function BandwidthSync() {
         const idToSync = isAuthenticated ? installer?._id : undefined;
 
         // Start polling (interval 60s)
-        // Disable sync for now as requested by user
-        const stopPolling = startBandwidthPolling(undefined /* idToSync */);
+        // DISABLED: Automatic polling disabled by request
+        // const stopPolling = startBandwidthPolling(idToSync);
 
-        return () => stopPolling();
+        return () => {
+            // stopPolling();
+        };
     }, [isAuthenticated, installer?._id]);
 
     return null;

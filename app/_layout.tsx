@@ -1,5 +1,6 @@
 import '../global.css';
 import React, { useEffect } from 'react';
+import { StatusBar } from 'expo-status-bar';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Toast from 'react-native-toast-message';
@@ -76,6 +77,7 @@ export default function RootLayout() {
                   <BandwidthSync />
                   <InactivityMonitor>
                     <OfflineBanner />
+                    <StatusBar style="dark" />
                     <Stack screenOptions={screenOptions}>
                       <Stack.Screen
                         name="login"

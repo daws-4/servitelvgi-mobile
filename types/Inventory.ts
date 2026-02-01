@@ -104,22 +104,22 @@ export interface AssignedInventoryItem {
  */
 export interface InventoryHistoryEntry {
   _id: string;
-  item: string;                    // ID del ítem
-  itemDetails?: InventoryItem;     // Detalles (populado)
+  item: string | { _id: string; code: string; description: string }; // ID or Populated Item
+  itemDetails?: InventoryItem;     // Deprecated/Unused if item is populated directly
   batch?: string;                  // ID del lote (opcional)
   type: InventoryMovementType;     // Tipo de movimiento
   quantityChange: number;          // Cambio de cantidad (+ o -)
   reason: string;                  // Razón del movimiento
-  crew?: string;                   // ID de cuadrilla
-  order?: string;                  // ID de orden
-  performedBy?: string;            // ID del usuario
+  crew?: string | { _id: string; name: string };
+  order?: string | { _id: string; subscriberNumber: string; ticket_id?: string };
+  performedBy?: string | { _id: string; name?: string; surname?: string; username?: string };
   createdAt: Date | string;
 }
 
 /**
  * Tipo de movimiento de inventario
  */
-export type InventoryMovementType = 
+export type InventoryMovementType =
   | 'entry'          // Ingreso a bodega
   | 'assignment'     // Asignación a cuadrilla
   | 'usage_order'    // Uso en orden
@@ -135,6 +135,8 @@ export interface InventoryHistoryFilters {
   type?: InventoryMovementType;
   startDate?: Date | string;
   endDate?: Date | string;
+  page?: number;
+  limit?: number;
 }
 
 // ============================================================================

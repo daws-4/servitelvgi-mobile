@@ -147,7 +147,7 @@ export default function OrderSpeedTest({ orderId, existingTest, onTestSaved, rea
 
     return (
         <View style={styles.container}>
-            <InternetSpeedTest onResultsChange={handleResultsChange} />
+            <InternetSpeedTest onResultsChange={handleResultsChange} disabled={readOnly} />
 
             {canSave && !readOnly && (
                 <View style={styles.saveContainer}>

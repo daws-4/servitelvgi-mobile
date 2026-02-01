@@ -5,7 +5,7 @@
     "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "scheme": "com.enlared.mobile",
     "notification": {
@@ -59,7 +59,7 @@
         "android.permission.VIBRATE",
         "android.permission.POST_NOTIFICATIONS"
       ],
-      "softInputMode": "adjustResize"
+      "softInputMode": "adjustPan"
     },
     "web": {
       "bundler": "metro",

@@ -30,6 +30,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   completed: 'Completada',
   cancelled: 'Cancelada',
   hard: 'Hard',
+  visita: 'Visita',
 };
 
 /**
@@ -42,6 +43,7 @@ export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
   completed: '#4caf50',     // Verde
   cancelled: '#757575',     // Gris
   hard: '#f44336',          // Rojo
+  visita: '#9C27B0',        // Violeta
 };
 
 /**
@@ -54,6 +56,7 @@ export const ORDER_STATUS_ICONS: Record<OrderStatus, string> = {
   completed: 'check-circle',
   cancelled: 'x-circle',
   hard: 'alert-triangle',
+  visita: 'map-pin',
 };
 
 // ============================================================================

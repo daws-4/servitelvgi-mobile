@@ -11,11 +11,13 @@ interface ThemeProviderProps {
 type ThemeContextType = {
     theme: "light" | "dark";
     toggleTheme: () => void;
+    isDark: boolean;
 };
 
 export const ThemeContext = createContext<ThemeContextType>({
     theme: "dark",
     toggleTheme: () => { },
+    isDark: true,
 });
 
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
@@ -27,8 +29,10 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
         colorScheme.set(newTheme);
     };
 
+    const isDark = currentTheme === "dark";
+
     return (
-        <ThemeContext.Provider value={{ theme: currentTheme, toggleTheme }}>
+        <ThemeContext.Provider value={{ theme: currentTheme, toggleTheme, isDark }}>
             <StatusBar backgroundColor="transparent" translucent={true} style={currentTheme === "dark" ? "light" : "dark"} />
             <View style={themes[currentTheme]} className="flex-1 bg-background">
                 {children}

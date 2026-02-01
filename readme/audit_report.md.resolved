@@ -1,0 +1,79 @@
+# Auditoría del Sistema de Inventario
+
+Fecha: 29 de Enero, 2026
+Objetivo: Revisión de integridad de datos, lógica de movimientos y posibles incoherencias.
+
+## Resumen Ejecutivo
+
+Se han analizado los flujos de ingreso, asignación, consumo y restauración de inventario en [inventoryService.ts](file:///c:/Users/USUARIO/Desktop/proyectos/servitelv/web/lib/inventoryService.ts) y los endpoints relacionados. El sistema presenta una arquitectura sólida en general, pero se han detectado **3 hallazgos**, uno de ellos de **Criticidad Alta** que afecta la integridad contable del inventario.
+
+---
+
+## Hallazgos Detallados
+
+### 1. 🔴 ERROR CRÍTICO: Duplicación de Stock en Restauración
+**Ubicación**: [lib/inventoryService.ts](file:///c:/Users/USUARIO/Desktop/proyectos/servitelv/web/lib/inventoryService.ts) -> [restoreInventoryFromOrder](file:///c:/Users/USUARIO/Desktop/proyectos/servitelv/web/lib/inventoryService.ts#682-902) (Líneas ~723)
+
+**Descripción del Problema**:
+Cuando se elimina un ítem de una orden o se revierte un consumo (ej. corrección de un error), el sistema realiza dos acciones:
+1. Devuelve la cantidad a la bobina (`batch.currentQuantity += ...`).
+2. Suma la cantidad al stock de Bodega Central (`InventoryModel.currentStock += ...`).
+
+**El Error**:
+Las bobinas utilizadas en órdenes se encuentran asignadas a la **Cuadrilla**, no a la Bodega. Al sumar el stock devuelto a la Bodega Central (`InventoryModel`), se está duplicando el inventario:
+- La cuadrilla tiene el material físico (y en su `assignedInventory`).
+- La bodega ahora cree erróneamente que también tiene ese material disponible.
+
+**Consecuencia**:
+Generación de "Stock Fantasma". El inventario total del sistema será mayor al real cada vez que se corrija una orden.
+
+**Solución Recomendada**:
+Condicionar la actualización del `InventoryModel` a la ubicación del lote. Si `batch.location === 'crew'`, **NO** se debe sumar al stock de bodega.
+
+---
+
+### 2. 🟠 INCOHERENCIA: Devolución de Materiales (Retorno)
+**Ubicación**: [lib/inventoryService.ts](file:///c:/Users/USUARIO/Desktop/proyectos/servitelv/web/lib/inventoryService.ts) -> [returnMaterialFromCrew](file:///c:/Users/USUARIO/Desktop/proyectos/servitelv/web/lib/inventoryService.ts#331-426)
+
+**Descripción del Problema**:
+Esta función está diseñada para devolver cantidades numéricas simples (ítems sueltos) de la cuadrilla a la bodega. No tiene lógica para manejar Bobinas (`InventoryBatch`).
+
+**Riesgo**:
+Si se utiliza esta función para devolver cables:
+- Se restará la cantidad numérica de la cuadrilla.
+- Se sumará al stock de bodega.
+- **Pero la Bobina (`InventoryBatch`) seguirá teniendo `location: 'crew'`**.
+
+**Consecuencia**:
+Bobinas "Zombie" que figuran en bodega contablemente pero cuyos registros detallados dicen que siguen en la calle.
+
+**Solución Recomendada**:
+Crear una función específica `returnBatchFromCrew` o adaptar esta para que, si recibe un Item de tipo "metros", exija el `batchCode` y actualice la propiedad `location` y `crew` del objeto Batch.
+
+---
+
+### 3. 🟡 VULNERABILIDAD: Reabastecimiento Directo de Metros
+**Ubicación**: [lib/inventoryService.ts](file:///c:/Users/USUARIO/Desktop/proyectos/servitelv/web/lib/inventoryService.ts) -> [restockInventory](file:///c:/Users/USUARIO/Desktop/proyectos/servitelv/web/lib/inventoryService.ts#14-88)
+
+**Descripción del Problema**:
+El endpoint permite sumar stock (`currentStock`) a cualquier ítem mediante su ID. No valida si la unidad de medida es "metros".
+
+**Riesgo**:
+Aunque el Frontend ([RestockModal](file:///c:/Users/USUARIO/Desktop/proyectos/servitelv/web/components/inventory/RestockModal.tsx#49-1228)) ya filtra estos ítems, la API sigue permitiendo ingresar "500 metros" de cable sin asociarlos a ninguna bobina. Esto crearía metros "sueltos" imposibles de asignar (ya que la asignación exige Batch).
+
+**Solución Recomendada**:
+Agregar validación en [restockInventory](file:///c:/Users/USUARIO/Desktop/proyectos/servitelv/web/lib/inventoryService.ts#14-88) para bloquear ingresos directos en ítems donde `type === 'material' && unit === 'metros'`, forzando el uso de [createBatch](file:///c:/Users/USUARIO/Desktop/proyectos/servitelv/web/lib/inventoryService.ts#1670-1754).
+
+---
+
+## Puntos Verificados (Funcionamiento Correcto) ✅
+
+1.  **Creación de Bobinas**: Suma correctamente al stock de Bodega Central.
+2.  **Asignación a Cuadrilla**: Descuenta correctamente del stock de Bodega Central y transfiere la propiedad del Lote.
+3.  **Consumo en Órdenes**: Descuenta correctamente de la Bobina y del inventario de la cuadrilla, sin afectar erróneamente a la Bodega (que ya descontó el material al asignarlo).
+4.  **Gestión de Equipos**: El flujo de estado `in-stock` -> `assigned` -> `installed` mantiene la integridad correctamente.
+
+## Próximos Pasos Sugeridos
+
+1.  **Prioridad Inmediata**: Corregir la lógica en [restoreInventoryFromOrder](file:///c:/Users/USUARIO/Desktop/proyectos/servitelv/web/lib/inventoryService.ts#682-902) para evitar la duplicación de stock.
+2.  **Mejora**: Implementar validación de unidad en [restockInventory](file:///c:/Users/USUARIO/Desktop/proyectos/servitelv/web/lib/inventoryService.ts#14-88).

@@ -5,12 +5,15 @@ import {
     StyleSheet,
     KeyboardAvoidingView,
     Platform,
+    TouchableOpacity,
+    Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useRouter } from 'expo-router';
 import { useAuth } from './contexts/AuthContext';
 import { BrandColors } from '@/constants/colors';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 // Importar componentes modulares
 import { LoginLogo } from '@/components/LoginLogo';
@@ -24,7 +27,18 @@ export default function LoginScreen() {
     const [password, setPassword] = useState('');
     const [localError, setLocalError] = useState('');
 
-    const { login, isAuthenticated, isLoading, error, clearError } = useAuth();
+    const {
+        login,
+        isAuthenticated,
+        isLoading,
+        error,
+        clearError,
+        isBiometricAvailable,
+        isBiometricEnabled,
+        loginWithBiometrics,
+        disableBiometrics, // Import disable function
+        biometricType
+    } = useAuth();
     const router = useRouter();
 
     // Redirigir si ya está autenticado
@@ -173,6 +187,64 @@ export default function LoginScreen() {
                         />
                     </LoginCard>
 
+                    {/* Biometric Login Button */}
+                    {isBiometricAvailable && (
+                        <View style={styles.biometricContainer}>
+                            <TouchableOpacity
+                                style={styles.biometricButton}
+                                onPress={() => {
+                                    if (isBiometricEnabled) {
+                                        loginWithBiometrics();
+                                    } else {
+                                        Alert.alert(
+                                            'Biometría no configurada',
+                                            'Por favor, inicia sesión con tu usuario y contraseña para habilitar el acceso biométrico.'
+                                        );
+                                    }
+                                }}
+                                disabled={isLoading}
+                            >
+                                <MaterialCommunityIcons
+                                    name={Platform.OS === 'ios' ? 'face-recognition' : 'fingerprint'}
+                                    size={24}
+                                    color={isBiometricEnabled ? BrandColors.primary : '#94a3b8'}
+                                />
+                                <Text style={[styles.biometricText, !isBiometricEnabled && { color: '#64748b' }]}>
+                                    {isBiometricEnabled
+                                        ? `Ingresar con ${biometricType || 'Biometría'}`
+                                        : `Habilitar ${biometricType || 'Biometría'}`
+                                    }
+                                </Text>
+                            </TouchableOpacity>
+
+                            {/* Delete Button (User Request: "botón con una X ... para borrar inicio de sesión") */}
+                            {isBiometricEnabled && (
+                                <TouchableOpacity
+                                    style={styles.deleteButton}
+                                    onPress={() => {
+                                        Alert.alert(
+                                            'Borrar datos biométricos',
+                                            '¿Deseas borrar el inicio de sesión con biometría?',
+                                            [
+                                                { text: 'Cancelar', style: 'cancel' },
+                                                {
+                                                    text: 'Borrar',
+                                                    style: 'destructive',
+                                                    onPress: async () => {
+                                                        await disableBiometrics();
+                                                        // Optional: feedback
+                                                    }
+                                                }
+                                            ]
+                                        );
+                                    }}
+                                >
+                                    <MaterialCommunityIcons name="close-circle" size={24} color={BrandColors.primary} />
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    )}
+
                     {/* Footer */}
                     <View style={styles.footer}>
                         <Text style={styles.footerText}>¿Problemas con tu acceso?</Text>
@@ -183,7 +255,6 @@ export default function LoginScreen() {
         </SafeAreaView>
     );
 }
-
 
 const styles = StyleSheet.create({
     container: {
@@ -214,5 +285,34 @@ const styles = StyleSheet.create({
         marginTop: 8,
         textAlign: 'center',
     },
+    biometricContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 24,
+        marginHorizontal: 24,
+        gap: 12, // Space between main button and delete button
+    },
+    biometricButton: {
+        flex: 1, // Take available space
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 12,
+        backgroundColor: '#e0f2fe', // sky-100
+        borderRadius: 12,
+        gap: 8,
+    },
+    deleteButton: {
+        padding: 12,
+        backgroundColor: '#f1f5f9', // slate-100 (Neutral)
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    biometricText: {
+        color: BrandColors.primary,
+        fontSize: 16,
+        fontWeight: '600',
+    },
 });
-

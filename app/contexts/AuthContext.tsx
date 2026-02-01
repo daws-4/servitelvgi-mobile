@@ -3,6 +3,10 @@ import authService from '@/services/api/auth';
 import apiClient from '@/services/api/client';
 import installerService from '@/services/api/installers';
 import type { InstallerProfile, AuthError } from '@/types/auth';
+import * as SecureStore from 'expo-secure-store';
+import { biometricService } from '@/services/biometricService';
+
+const BIOMETRIC_CREDENTIALS_KEY = 'biometric_credentials';
 
 // ============================================================================
 // TYPES
@@ -20,6 +24,15 @@ interface AuthContextType {
     logout: () => Promise<void>;
     refreshProfile: () => Promise<void>;
     clearError: () => void;
+
+    // Biometría
+    isBiometricAvailable: boolean;
+    biometricType?: string;
+    isBiometricEnabled: boolean;
+    enableBiometrics: () => Promise<boolean>;
+    disableBiometrics: () => Promise<void>;
+    loginWithBiometrics: () => Promise<boolean>;
+    enrollBiometrics: (u: string, p: string) => Promise<void>;
 }
 
 interface AuthProviderProps {
@@ -42,8 +55,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [installer, setInstaller] = useState<InstallerProfile | null>(null);
     const [error, setError] = useState<AuthError | null>(null);
 
+    // Biometric State
+    const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
+    const [biometricType, setBiometricType] = useState<string | undefined>();
+    const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
+
     // Usar ref en lugar de state para evitar re-renders y problemas con useEffect
     const isLoggingOutRef = useRef(false);
+    // Cache password for current session to allow biometric enrollment
+    const currentPasswordRef = useRef<string | null>(null);
 
     /**
      * Configurar callback para errores 401 del HTTP client
@@ -61,11 +81,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, []); // Solo configurar una vez al montar
 
     /**
-     * Verificar si hay sesión guardada al iniciar la app
+     * Verificar sesión existente y biometría al montar
      */
     useEffect(() => {
-        checkExistingSession();
+        const init = async () => {
+            await checkExistingSession();
+            await checkBiometrics();
+        };
+        init();
     }, []);
+
+    /**
+     * Check permissions and previous enrollment
+     */
+    const checkBiometrics = async () => {
+        const status = await biometricService.checkAvailability();
+        setIsBiometricAvailable(status.available);
+        setBiometricType(biometricService.getBiometryLabel(status.biometryType));
+
+        if (status.available) {
+            // Check if user has enabled it previously (stored credentials)
+            const stored = await SecureStore.getItemAsync(BIOMETRIC_CREDENTIALS_KEY);
+            setIsBiometricEnabled(!!stored);
+        }
+    };
 
     /**
      * Verificar sesión existente
@@ -103,22 +142,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
             const response = await authService.login(username, password);
 
-            // Actualizar status a 'active' al iniciar sesión
-            // Esperar un momento para asegurar que el token esté guardado
-            try {
-                // Verificar que el token está disponible
-                const hasToken = await authService.isAuthenticated();
-                // console.log('🔐 [login] Token disponible:', hasToken);
+            // Cache password for session
+            currentPasswordRef.current = password;
 
+            // Auto-enroll biometrics if available (User Request: "pide las credenciales para guardarlas")
+            // effectively meaning: when they validly login, we save them for next time.
+            if (isBiometricAvailable) {
+                await enrollBiometrics(username, password);
+            }
+
+            // Actualizar status a 'active' al iniciar sesión
+            try {
+                const hasToken = await authService.isAuthenticated();
                 if (hasToken) {
                     await installerService.updateProfile(response.installer._id, {
                         onDuty: 'active'
                     });
-                    // Actualizar el perfil local con el nuevo status
                     response.installer.onDuty = 'active';
-                    // console.log('✅ [login] Status actualizado a active');
-                } else {
-                    // console.warn('⚠️ [login] Token no disponible, no se pudo actualizar status');
                 }
             } catch (statusErr) {
                 // console.warn('No se pudo actualizar status a activo:', statusErr);
@@ -134,8 +174,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setError(authError);
             setIsAuthenticated(false);
             setInstaller(null);
-            // Error handling is managed by state (error), no need to re-throw
-            // throw authError; 
         } finally {
             setIsLoading(false);
         }
@@ -155,7 +193,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 const app = getApp();
                 const messaging = getMessaging(app);
 
-                // Para Android 13+
                 if (Platform.OS === 'android' && Platform.Version >= 33) {
                     const granted = await PermissionsAndroid.request(
                         PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
@@ -165,10 +202,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     }
                 }
 
-                // Solicitar permiso FCM
                 await requestPermission(messaging);
-
-                // Obtener y registrar token
                 const fcmToken = await getToken(messaging);
                 if (fcmToken && installer?._id) {
                     await installerService.registerPushToken(fcmToken);
@@ -181,9 +215,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // 2. Solicitar permisos de ubicación
             try {
                 const Location = await import('expo-location');
-
                 const { status } = await Location.requestForegroundPermissionsAsync();
-
                 if (status === 'granted') {
                     console.log('✅ [PostLogin] Permiso de ubicación otorgado');
                 } else {
@@ -196,9 +228,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // 3. Solicitar permisos de cámara
             try {
                 const ImagePicker = await import('expo-image-picker');
-
                 const { status } = await ImagePicker.requestCameraPermissionsAsync();
-
                 if (status === 'granted') {
                     console.log('✅ [PostLogin] Permiso de cámara otorgado');
                 } else {
@@ -211,9 +241,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // 4. Solicitar permisos de galería/archivos multimedia
             try {
                 const ImagePicker = await import('expo-image-picker');
-
                 const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
                 if (status === 'granted') {
                     console.log('✅ [PostLogin] Permiso de galería otorgado');
                 } else {
@@ -231,7 +259,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
      * Logout: cerrar sesión
      */
     const logout = async () => {
-        // Evitar llamadas duplicadas de logout
         if (isLoggingOutRef.current) {
             console.log('⚠️ Logout ya en progreso, ignorando llamada duplicada');
             return;
@@ -241,22 +268,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             isLoggingOutRef.current = true;
             setIsLoading(true);
 
-            // Actualizar status a 'inactive' antes de cerrar sesión
             if (installer?._id) {
                 try {
                     await installerService.updateProfile(installer._id, {
                         onDuty: 'inactive'
                     });
                 } catch (statusErr) {
-                    // Ignorar error silenciosamente (probablemente 401 si token expiró)
-                    // console.warn('Error en logout del backend:', statusErr);
+                    // Ignorar error silenciosamente
                 }
+            }
+
+            try {
+                // User Request: "Cuando se cierra sesión no se borran los datos de ingreso por biometría"
+                // So we REMOVE the auto-disable Logic.
+                // await disableBiometrics(); 
+            } catch (e) {
+                console.error('Error clearing biometric creds', e);
             }
 
             await authService.logout();
         } catch (err) {
             console.error('Error en logout:', err);
         } finally {
+            currentPasswordRef.current = null; // Clear password cache
             setIsAuthenticated(false);
             setInstaller(null);
             setError(null);
@@ -274,7 +308,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setInstaller(profile);
         } catch (err) {
             console.error('Error refrescando perfil:', err);
-            // Si falla, probablemente el token expiró
             await logout();
         }
     };
@@ -286,6 +319,63 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setError(null);
     };
 
+    // ============================================================================
+    // BIOMETRIC METHODS
+    // ============================================================================
+
+    const enableBiometrics = async (): Promise<boolean> => {
+        if (!installer || !isBiometricAvailable) return false;
+
+        const success = await biometricService.authenticate('Confirma para habilitar biometría');
+        if (success) {
+            // Even if enabled via toggle, we need credentials.
+            // If called from settings and we have passwordRef, re-save.
+            if (currentPasswordRef.current && installer.username) {
+                await enrollBiometrics(installer.username, currentPasswordRef.current);
+            }
+            setIsBiometricEnabled(true);
+            return true;
+        }
+        return false;
+    };
+
+    const enrollBiometrics = async (username: string, pass: string) => {
+        try {
+            await SecureStore.setItemAsync(BIOMETRIC_CREDENTIALS_KEY, JSON.stringify({ username, pass }));
+            setIsBiometricEnabled(true);
+        } catch (e) {
+            console.error('Failed to secure store creds', e);
+        }
+    };
+
+    const disableBiometrics = async () => {
+        await SecureStore.deleteItemAsync(BIOMETRIC_CREDENTIALS_KEY);
+        setIsBiometricEnabled(false);
+    };
+
+    const loginWithBiometrics = async (): Promise<boolean> => {
+        if (!isBiometricAvailable) return false;
+
+        const stored = await SecureStore.getItemAsync(BIOMETRIC_CREDENTIALS_KEY);
+        if (!stored) {
+            setIsBiometricEnabled(false);
+            return false;
+        }
+
+        const success = await biometricService.authenticate();
+        if (success) {
+            try {
+                const { username, pass } = JSON.parse(stored);
+                await login(username, pass);
+                return true;
+            } catch (e) {
+                console.error('Biometric Login Error', e);
+                return false;
+            }
+        }
+        return false;
+    };
+
     const value: AuthContextType = {
         isAuthenticated,
         isLoading,
@@ -295,6 +385,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         logout,
         refreshProfile,
         clearError,
+
+        // Biometric exports
+        isBiometricAvailable,
+        biometricType,
+        isBiometricEnabled,
+        enableBiometrics,
+        disableBiometrics,
+        loginWithBiometrics,
+        enrollBiometrics
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -304,9 +403,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 // HOOK
 // ============================================================================
 
-/**
- * Hook para usar el contexto de autenticación
- */
 export const useAuth = (): AuthContextType => {
     const context = useContext(AuthContext);
 

@@ -14,8 +14,8 @@ import {
 import { FontAwesome } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { BrandColors } from '@/constants/colors';
-import orderHistoryService from '@/services/api/orderHistory';
-import type { OrderHistory } from '@/types/orderHistory';
+import inventoryService from '@/services/api/inventory';
+import type { InventoryHistoryEntry } from '@/types/Inventory';
 
 interface MovementHistoryModalProps {
     visible: boolean;
@@ -47,14 +47,16 @@ const formatDateTime = (dateStr: string): string => {
 
 const getChangeTypeLabel = (type: string): string => {
     switch (type) {
-        case 'materials_added':
-            return 'Materiales Usados';
-        case 'completed':
-            return 'Orden Completada';
-        case 'status_change':
-            return 'Cambio de Estado';
-        case 'crew_assignment':
+        case 'entry':
+            return 'Ingreso a Bodega';
+        case 'assignment':
             return 'Asignación';
+        case 'usage_order':
+            return 'Uso en Orden';
+        case 'return':
+            return 'Devolución';
+        case 'adjustment':
+            return 'Ajuste';
         default:
             return type;
     }
@@ -62,12 +64,16 @@ const getChangeTypeLabel = (type: string): string => {
 
 const getChangeTypeStyle = (type: string) => {
     switch (type) {
-        case 'materials_added':
-            return { bg: '#fef3c7', text: '#d97706', icon: 'wrench' };
-        case 'completed':
-            return { bg: '#dcfce7', text: '#16a34a', icon: 'check-circle' };
-        case 'status_change':
-            return { bg: '#dbeafe', text: '#2563eb', icon: 'exchange' };
+        case 'entry':
+            return { bg: '#dcfce7', text: '#16a34a', icon: 'plus-circle' };
+        case 'assignment':
+            return { bg: '#dbeafe', text: '#2563eb', icon: 'truck' };
+        case 'usage_order':
+            return { bg: '#fef3c7', text: '#d97706', icon: 'wrench' }; // Naranja para uso
+        case 'return':
+            return { bg: '#fce7f3', text: '#be185d', icon: 'rotate-left' };
+        case 'adjustment':
+            return { bg: '#f1f5f9', text: '#64748b', icon: 'sliders' };
         default:
             return { bg: '#f1f5f9', text: '#64748b', icon: 'info-circle' };
     }
@@ -88,8 +94,11 @@ export default function MovementHistoryModal({
     const [endDate, setEndDate] = useState(new Date());
     const [showStartPicker, setShowStartPicker] = useState(false);
     const [showEndPicker, setShowEndPicker] = useState(false);
-    const [history, setHistory] = useState<OrderHistory[]>([]);
+    const [history, setHistory] = useState<InventoryHistoryEntry[]>([]);
     const [loading, setLoading] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [isFetchingMore, setIsFetchingMore] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const translateY = useRef(new Animated.Value(0)).current;
 
@@ -125,35 +134,58 @@ export default function MovementHistoryModal({
         })
     ).current;
 
-    const fetchHistory = useCallback(async () => {
+    const fetchHistory = useCallback(async (pageNum = 1) => {
         if (!crewId) return;
 
         try {
-            setLoading(true);
+            if (pageNum === 1) {
+                setLoading(true);
+            } else {
+                setIsFetchingMore(true);
+            }
             setError(null);
 
-            const data = await orderHistoryService.getOrderHistories({
-                crewId,
+            const limit = 10;
+            const data = await inventoryService.getInventoryHistory(crewId, {
                 startDate: startDate.toISOString(),
                 endDate: endDate.toISOString(),
-                changeType: 'materials_added',
+                page: pageNum,
+                limit,
             });
 
-            setHistory(data);
+            if (pageNum === 1) {
+                setHistory(data);
+            } else {
+                setHistory(prev => [...prev, ...data]);
+            }
+
+            setHasMore(data.length === limit);
+            setPage(pageNum);
+
         } catch (err: any) {
             setError(err.message || 'Error al cargar historial');
-            console.error('Error fetching order history:', err);
+            console.error('Error fetching inventory history:', err);
         } finally {
             setLoading(false);
+            setIsFetchingMore(false);
         }
     }, [crewId, startDate, endDate]);
 
     useEffect(() => {
         if (visible && crewId) {
-            fetchHistory();
+            // Reset pagination when modal opens or crew/dates change
+            setPage(1);
+            setHasMore(true);
+            fetchHistory(1);
             translateY.setValue(0);
         }
     }, [visible, crewId, fetchHistory]);
+
+    const handleLoadMore = () => {
+        if (hasMore && !loading && !isFetchingMore) {
+            fetchHistory(page + 1);
+        }
+    };
 
     const onStartDateChange = (_event: any, selectedDate?: Date) => {
         setShowStartPicker(Platform.OS === 'ios');
@@ -169,8 +201,17 @@ export default function MovementHistoryModal({
         }
     };
 
-    const renderHistoryItem = ({ item }: { item: OrderHistory }) => {
-        const typeStyle = getChangeTypeStyle(item.changeType);
+    const renderHistoryItem = ({ item }: { item: InventoryHistoryEntry }) => {
+        const typeStyle = getChangeTypeStyle(item.type);
+
+        // Determinar el nombre del item
+        // Determine item name
+        // Backend populates 'item' field directly, handling both string ID (rare if populating) or object
+        const itemObj = typeof item.item === 'object' ? item.item : null;
+        const itemCode = itemObj?.code || item.itemDetails?.code || '';
+        const itemDescription = itemObj?.description || item.itemDetails?.description || 'Item desconocido';
+        const displayTitle = itemCode ? `[${itemCode}] ${itemDescription}` : itemDescription;
+
         return (
             <View style={styles.historyCard}>
                 <View style={styles.historyHeader}>
@@ -181,64 +222,48 @@ export default function MovementHistoryModal({
                             color={typeStyle.text}
                         />
                         <Text style={[styles.typeText, { color: typeStyle.text }]}>
-                            {getChangeTypeLabel(item.changeType)}
+                            {getChangeTypeLabel(item.type)}
                         </Text>
                     </View>
-                    <Text style={styles.historyDate}>{formatDateTime(item.createdAt)}</Text>
+                    <Text style={styles.historyDate}>{formatDateTime(item.createdAt as string)}</Text>
                 </View>
 
-                <Text style={styles.historyDescription}>{item.description}</Text>
+                {/* Mostrar item y cantidad */}
+                <View style={styles.materialRow}>
+                    <FontAwesome name="cube" size={14} color="#64748b" />
+                    <Text style={[styles.materialName, { fontSize: 14, fontWeight: '600', color: '#334155' }]}>
+                        {displayTitle}
+                    </Text>
+                    <Text style={[
+                        styles.materialQty,
+                        { fontSize: 14, color: item.quantityChange > 0 ? '#16a34a' : '#ef4444' }
+                    ]}>
+                        {item.quantityChange > 0 ? '+' : ''}{item.quantityChange}
+                    </Text>
+                </View>
 
-                {item.newValue && typeof item.newValue === 'object' && (
-                    <View style={styles.materialsContainer}>
-                        {Array.isArray(item.newValue) ? (
-                            item.newValue.map((mat: any, index: number) => {
-                                // console.log('[MovementHistory] Material structure:', JSON.stringify(mat, null, 2));
+                {/* Motivo */}
+                {item.reason && (
+                    <Text style={styles.historyDescription}>{item.reason}</Text>
+                )}
 
-                                // Look up item details from inventory by ID
-                                const itemId = typeof mat.item === 'string' ? mat.item : mat.item?._id;
-                                const inventoryMatch = inventory.find(inv => {
-                                    const invItemId = typeof inv.item === 'string'
-                                        ? inv.item
-                                        : (inv.item as any)?._id;
-                                    return invItemId === itemId || (inv.itemDetails as any)?._id === itemId;
-                                });
+                {/* Orden Relacionada */}
+                {item.order && typeof item.order === 'object' && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 6 }}>
+                        <FontAwesome name="file-text-o" size={12} color="#64748b" />
+                        <Text style={{ fontSize: 12, color: '#64748b' }}>
+                            Orden: {(item.order as any).ticket_id || (item.order as any).subscriberNumber}
+                        </Text>
+                    </View>
+                )}
 
-                                // Get item details from inventory match
-                                const itemDetails = inventoryMatch?.itemDetails ||
-                                    (typeof inventoryMatch?.item === 'object' ? inventoryMatch?.item : null);
-
-                                // Extract code and description
-                                const materialCode = itemDetails?.code || mat.item?.code || mat.code || '';
-                                const materialDescription = itemDetails?.description || mat.item?.description || mat.description || mat.name || 'Material';
-
-                                // Format: [CODE] Description or just Description if no code
-                                const materialName = materialCode
-                                    ? `[${materialCode}] ${materialDescription}`
-                                    : materialDescription;
-
-                                // console.log('[MovementHistory] Extracted:', { code: materialCode, desc: materialDescription, final: materialName });
-
-                                const qty = mat.quantity || mat.amount || mat.used || 1;
-
-                                return (
-                                    <View key={index} style={styles.materialRow}>
-                                        <FontAwesome name="cube" size={10} color="#94a3b8" />
-                                        <Text style={styles.materialName}>
-                                            {materialName}
-                                        </Text>
-                                        <Text style={styles.materialQty}>
-                                            x{qty}
-                                        </Text>
-                                    </View>
-                                );
-                            })
-                        ) : (
-                            // Si newValue es un objeto pero no array
-                            <Text style={styles.materialName}>
-                                {item.newValue.description || item.newValue.name || JSON.stringify(item.newValue)}
-                            </Text>
-                        )}
+                {/* Realizado por */}
+                {item.performedBy && typeof item.performedBy === 'object' && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2, gap: 6 }}>
+                        <FontAwesome name="user" size={12} color="#64748b" />
+                        <Text style={{ fontSize: 12, color: '#64748b' }}>
+                            Por: {item.performedBy.name || item.performedBy.username || 'Usuario'}
+                        </Text>
                     </View>
                 )}
             </View>
@@ -298,7 +323,7 @@ export default function MovementHistoryModal({
 
                         <TouchableOpacity
                             style={styles.searchButton}
-                            onPress={fetchHistory}
+                            onPress={() => fetchHistory(1)}
                         >
                             <FontAwesome name="search" size={14} color="white" />
                         </TouchableOpacity>
@@ -335,7 +360,7 @@ export default function MovementHistoryModal({
                         <View style={styles.centerContent}>
                             <FontAwesome name="exclamation-circle" size={48} color="#ef4444" />
                             <Text style={styles.errorText}>{error}</Text>
-                            <TouchableOpacity style={styles.retryButton} onPress={fetchHistory}>
+                            <TouchableOpacity style={styles.retryButton} onPress={() => fetchHistory(1)}>
                                 <Text style={styles.retryText}>Reintentar</Text>
                             </TouchableOpacity>
                         </View>
@@ -353,6 +378,15 @@ export default function MovementHistoryModal({
                             renderItem={renderHistoryItem}
                             contentContainerStyle={styles.listContent}
                             showsVerticalScrollIndicator={false}
+                            onEndReached={handleLoadMore}
+                            onEndReachedThreshold={0.2}
+                            ListFooterComponent={
+                                isFetchingMore ? (
+                                    <View style={{ paddingVertical: 20 }}>
+                                        <ActivityIndicator size="small" color={BrandColors.primary} />
+                                    </View>
+                                ) : null
+                            }
                         />
                     )}
 

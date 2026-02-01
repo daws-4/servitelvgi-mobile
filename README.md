@@ -1195,15 +1195,18 @@ Para soporte técnico o consultas sobre el sistema, contactar al equipo de desar
 - Apartado de visita técnica y que genere igual una orden pero se cuente como visita. ✅
 - scrollView horizontal de filtros en la vista de inventario arreglado ✅
 - Error de que se cargaban todas las ONT existentes en vez de las asignadas a la cuadrilla ✅
+- datos nuevos etiqueta{color, numero} ✅
+- Verificar que no se pueda hacer speedTest en ordenes de status VISITA ✅
+- arreglar botón de confirmación de creación de orden de status VISITA ✅
+- opción de passkey para iniciar sesión ✅
+
+
 -----------
 ## por hacer
--Conteo de gasto de datos de la APP - A MEDIAS 
--Verificar que no se pueda hacer speedTest en ordenes de status VISITA
--arreglar botón de confirmación de creación de orden de status VISITA
 -en inventario arreglar la carga del historial
+-Conteo de gasto de datos de la APP - A MEDIAS 
 -opción de mensaje directo con soporte técnico
 -opción de autogestión de contraseña
--opción de passkey para iniciar sesión
 -logo para notificaciones push
 -logo para la app
 
@@ -1219,7 +1222,14 @@ Para soporte técnico o consultas sobre el sistema, contactar al equipo de desar
 # WEB
 - Impresión y descarga de imagen de finalización de orden ✅
 - contador de visitas ✅
+- poder ingresar código de ont a través de la cámara ✅
+- verificación exhaustiva del inventario ✅
+- arreglar tabla de materiales en inventario ✅
+- Reportes ✅
+- reporte de visitas ✅
+- reporte de ordenes por cuadrilla ✅
  -----------
 ## por hacer
--Reportes
--poder ingresar código de ont a través de la cámara
+
+-reporte de materiales gastados filtrado por tipo de orden
+-opción de imprimir las imagenes de finalización de orden adjuntas por mes 3 en cada hoja formato pdf

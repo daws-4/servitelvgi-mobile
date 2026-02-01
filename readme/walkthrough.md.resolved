@@ -1,0 +1,28 @@
+# Inventory Logic Fixes Walkthrough
+
+We have successfully audited and patched critical vulnerabilities in the inventory management system.
+
+## Key Changes
+
+### 1. Stock Duplication Fix ([lib/inventoryService.ts](file:///c:/Users/USUARIO/Desktop/proyectos/servitelv/web/lib/inventoryService.ts))
+**Problem**: When a user corrected an order (deleted a used item), the system returned the material to the Crew's bobbin BUT also credited the Main Warehouse, effectively creating duplicate stock out of thin air.
+**Fix**: Added logic to [restoreInventoryFromOrder](file:///c:/Users/USUARIO/Desktop/proyectos/servitelv/web/lib/inventoryService.ts#690-913) to check where the bobbin is located.
+```typescript
+// ONLY credit warehouse if the batch is physically there
+if (batch.location === 'warehouse') {
+    await InventoryModel.findByIdAndUpdate(..., { $inc: { currentStock: ... } });
+}
+```
+
+### 2. Strict Meter Validation
+**Problem**: It was possible to add "meters" of cable directly to the inventory without creating a Bobbin, leading to untrackable cable stock.
+**Fix**: Updated [restockInventory](file:///c:/Users/USUARIO/Desktop/proyectos/servitelv/web/lib/inventoryService.ts#14-96) to block any attempt to add stock to items measured in "metros".
+```typescript
+if (inventoryItem.unit === "metros") {
+    throw new Error("El ítem... se mide en metros y debe ingresarse como Bobina");
+}
+```
+
+## Verification
+- **Restoration**: Restoring an item now correctly updates the local batch/crew inventory without inflating the global warehouse assets.
+- **Data Integrity**: New constraints ensure all cable inventory exists within a verifiable Batch/Bobbin.
