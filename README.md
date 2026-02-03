@@ -1195,15 +1195,16 @@ Para soporte técnico o consultas sobre el sistema, contactar al equipo de desar
 - Apartado de visita técnica y que genere igual una orden pero se cuente como visita. ✅
 - scrollView horizontal de filtros en la vista de inventario arreglado ✅
 - Error de que se cargaban todas las ONT existentes en vez de las asignadas a la cuadrilla ✅
+01/02/2026
 - datos nuevos etiqueta{color, numero} ✅
 - Verificar que no se pueda hacer speedTest en ordenes de status VISITA ✅
 - arreglar botón de confirmación de creación de orden de status VISITA ✅
 - opción de passkey para iniciar sesión ✅
+- en inventario arreglar la carga del historial ✅
 
 
 -----------
 ## por hacer
--en inventario arreglar la carga del historial
 -Conteo de gasto de datos de la APP - A MEDIAS 
 -opción de mensaje directo con soporte técnico
 -opción de autogestión de contraseña

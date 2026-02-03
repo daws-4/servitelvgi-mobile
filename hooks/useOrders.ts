@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import orderService from '@/services/api/orders';
 import type {
@@ -33,11 +33,27 @@ interface UseOrdersReturn {
  * @param crewId - ID of the crew
  * @param filters - Optional filters for orders
  */
-export const useOrders = (crewId: string, filters?: OrderFilters): UseOrdersReturn => {
+export const useOrders = (crewId: string, filters?: OrderFilters, limit: number = 10): UseOrdersReturn => {
   const queryClient = useQueryClient();
-  const LIMIT = 10;
+  const LIMIT = limit;
+  // Calculate 30 days ago for optimization - MEMOIZED to prevent infinite loop
+  const effectiveFilters = useMemo(() => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 40);
+
+    // If searching, we want global history, so we skip the date filter
+    if (filters?.search) {
+      return { ...filters };
+    }
+
+    return {
+      updatedAfter: thirtyDaysAgo.toISOString(),
+      ...filters
+    };
+  }, [JSON.stringify(filters)]);
+
   // Key includes filters to separate lists
-  const queryKey = ['orders', crewId, JSON.stringify(filters)];
+  const queryKey = ['orders', crewId, JSON.stringify(effectiveFilters), limit];
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
@@ -56,7 +72,7 @@ export const useOrders = (crewId: string, filters?: OrderFilters): UseOrdersRetu
       // If no crewId, return empty result strictly
       if (!crewId) return { items: [], total: 0 };
 
-      const res = await orderService.getCrewOrders(crewId, filters, pageParam as number, LIMIT);
+      const res = await orderService.getCrewOrders(crewId, effectiveFilters, pageParam as number, LIMIT);
       return res;
     },
     initialPageParam: 1,

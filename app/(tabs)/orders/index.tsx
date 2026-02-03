@@ -38,13 +38,31 @@ export default function OrdersScreen() {
     const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
     const [typeFilter, setTypeFilter] = useState<OrderType | 'all'>('all');
     const [refreshing, setRefreshing] = useState(false);
+    const [pageSize, setPageSize] = useState(10);
+
+    // Debounce search value
+    const [debouncedSearchValue, setDebouncedSearchValue] = useState(searchValue);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearchValue(searchValue);
+        }, 500);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [searchValue]);
 
     // Auth context for crew ID
     const { installer } = useAuth();
     const crewId = installer?.crew?._id || '';
 
-    // Orders data from API
-    const { orders, loading, loadingMore, loadMore, error, refetch } = useOrders(crewId);
+    // Orders data from API - now using server side filtering/search
+    const { orders, loading, loadingMore, loadMore, error, refetch } = useOrders(crewId, {
+        status: statusFilter === 'all' ? undefined : statusFilter,
+        type: typeFilter === 'all' ? undefined : typeFilter,
+        search: debouncedSearchValue
+    }, pageSize);
 
     // Notifications hook
     const { setupNotificationHandlers } = useNotifications();
@@ -130,32 +148,15 @@ export default function OrdersScreen() {
         }
     };
 
-    // Filtered orders based on search and filters
+    // Filtered orders - mostly pass-through now as filtering is server-side
+    // We only keep this if we want to do optimistic UI updates or specific client-side sorts, 
+    // but the requirement is server-side.
     const filteredOrders = useMemo(() => {
-        let filtered = [...orders];
-
-        // Apply search filter
-        if (searchValue.trim()) {
-            const search = searchValue.toLowerCase().trim();
-            filtered = filtered.filter(order =>
-                order.subscriberNumber.toLowerCase().includes(search) ||
-                order.subscriberName.toLowerCase().includes(search) ||
-                (order.ticket_id && order.ticket_id.toLowerCase().includes(search))
-            );
-        }
-
-        // Apply status filter
-        if (statusFilter !== 'all') {
-            filtered = filtered.filter(order => order.status === statusFilter);
-        }
-
-        // Apply type filter
-        if (typeFilter !== 'all') {
-            filtered = filtered.filter(order => order.type === typeFilter);
-        }
-
-        return filtered;
-    }, [orders, searchValue, statusFilter, typeFilter]);
+        // Since we are filtering on server, 'orders' already contains the filtered list.
+        // However, useOrders 'orders' is an aggregate of pages.
+        // If we change filters, the hook resets and reloads.
+        return orders;
+    }, [orders]);
 
     const handleOrderPress = (order: Order) => {
         router.push(`/orders/${order._id}`);
@@ -244,6 +245,32 @@ export default function OrdersScreen() {
                 typeFilter={typeFilter}
                 onTypeChange={setTypeFilter}
             />
+
+            {/* Pagination & Count Control */}
+            <View style={styles.paginationControl}>
+                <Text style={styles.countText}>
+                    Mostrando <Text style={{ fontWeight: 'bold', color: BrandColors.primary }}>{filteredOrders.length}</Text> órdenes
+                </Text>
+
+                <View style={styles.pageSizeContainer}>
+                    <Text style={styles.pageSizeLabel}>Ver:</Text>
+                    {[10, 20, 50, 100].map((size) => (
+                        <TouchableOpacity
+                            key={size}
+                            style={[
+                                styles.pageSizeButton,
+                                pageSize === size && styles.pageSizeButtonActive
+                            ]}
+                            onPress={() => setPageSize(size)}
+                        >
+                            <Text style={[
+                                styles.pageSizeText,
+                                pageSize === size && styles.pageSizeTextActive
+                            ]}>{size}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            </View>
 
             <View style={{ flex: 1 }}>
                 <ScrollView
@@ -456,5 +483,46 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 6,
+    },
+    paginationControl: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        marginBottom: 8,
+        paddingVertical: 4,
+    },
+    countText: {
+        fontSize: 13,
+        color: '#64748b',
+    },
+    pageSizeContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    pageSizeLabel: {
+        fontSize: 12,
+        color: '#64748b',
+    },
+    pageSizeButton: {
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        borderRadius: 6,
+        backgroundColor: '#f1f5f9',
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+    },
+    pageSizeButtonActive: {
+        backgroundColor: BrandColors.primary,
+        borderColor: BrandColors.primary,
+    },
+    pageSizeText: {
+        fontSize: 12,
+        color: '#64748b',
+        fontWeight: '500',
+    },
+    pageSizeTextActive: {
+        color: '#fff',
     },
 });

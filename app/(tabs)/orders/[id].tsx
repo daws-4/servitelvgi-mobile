@@ -758,6 +758,20 @@ export default function OrderDetailScreen() {
                                                 icon="sort-numeric-asc"
                                                 keyboardType="numeric"
                                             />
+                                            <EditableField
+                                                label="Serial NAP"
+                                                value={order.serialNap}
+                                                onChangeText={(text) => handleOrderFieldUpdate('serialNap', text)}
+                                                icon="barcode"
+                                                placeholder="S/N de la NAP"
+                                            />
+                                            <EditableField
+                                                label="Puerto Usado"
+                                                value={order.usedPort}
+                                                onChangeText={(text) => handleOrderFieldUpdate('usedPort', text)}
+                                                icon="usb"
+                                                placeholder="Ej: 5"
+                                            />
                                             <PickerField
                                                 label="Etiqueta Color"
                                                 value={order.etiqueta?.color}
@@ -789,7 +803,18 @@ export default function OrderDetailScreen() {
                                             />
                                             <ReadOnlyField
                                                 label="Puertos Restantes"
+                                                value={order.remainingPorts?.toString() || '0'}
                                                 icon="sort-numeric-asc"
+                                            />
+                                            <ReadOnlyField
+                                                label="Serial NAP"
+                                                value={order.serialNap || 'No registra'}
+                                                icon="barcode"
+                                            />
+                                            <ReadOnlyField
+                                                label="Puerto Usado"
+                                                value={order.usedPort || 'No registra'}
+                                                icon="usb"
                                             />
                                             <ReadOnlyField
                                                 label="Etiqueta Color"

@@ -22,7 +22,7 @@ class OrderService {
    * Note: Handles both old (array) and new (paginated) response formats
    */
   async getCrewOrders(crewId: string, filters?: OrderFilters, page: number = 1, limit: number = 50): Promise<{ items: Order[], total: number }> {
-    const params: any = { assignedTo: crewId, page, limit };
+    const params: any = { assignedTo: crewId, page, limit, sort: '-createdAt' };
 
     if (filters?.status) {
       params.status = Array.isArray(filters.status)
@@ -30,6 +30,8 @@ class OrderService {
         : filters.status;
     }
     if (filters?.type) params.type = filters.type;
+    if (filters?.updatedAfter) params.updatedAfter = filters.updatedAfter;
+    if (filters?.search) params.search = filters.search;
     if (filters?.startDate) params.startDate = filters.startDate;
     if (filters?.endDate) params.endDate = filters.endDate;
 

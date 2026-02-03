@@ -18,6 +18,7 @@ import EditProfileModal from '@/components/profile/EditProfileModal';
 import ChangePasswordModal from '@/components/profile/ChangePasswordModal';
 import crewService from '@/services/api/crews';
 import type { Crew } from '@/types/Crew';
+import { Config } from '@/constants/config';
 // import { BandwidthStats } from '@/components/BandwidthStats';
 
 /**
@@ -343,7 +344,7 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
 
                     {/* Version Info */}
-                    <Text style={styles.version}>SGO VERSION 1.0.4</Text>
+                    <Text style={styles.version}>SGO VERSION {Config.APP_VERSION}</Text>
                 </View>
             </ScrollView>
 

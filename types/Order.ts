@@ -146,6 +146,8 @@ export interface Order {
   powerNap?: string;             // Potencia en NAP
   powerRoseta?: string;          // Potencia en Roseta
   remainingPorts?: number;       // Puertos restantes
+  serialNap?: string;            // Serial de la NAP
+  usedPort?: string;             // Puerto usado
   visitCount?: number;           // Contador de visitas
 
   // Información adicional
@@ -195,6 +197,7 @@ export interface OrderFilters {
   endDate?: Date | string;
   priority?: OrderPriority;
   search?: string;                // Buscar por subscriber name/number
+  updatedAfter?: Date | string;   // Filtrar por fecha de actualización
 }
 
 /**
