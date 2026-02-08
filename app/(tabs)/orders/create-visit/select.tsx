@@ -4,9 +4,9 @@ import { useRouter } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native-gesture-handler';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { BrandColors } from '@/constants/colors';
-import { useOrders } from '@/hooks/useOrders';
 import { useAuth } from '@/app/contexts/AuthContext';
 import OrderCard from '@/components/orders/OrderCard';
 import type { Order } from '@/types/Order';
@@ -17,7 +17,30 @@ export default function SelectVisitOriginScreen() {
     const { installer } = useAuth();
     const crewId = installer?.crew?._id || '';
 
-    const { orders, loading, error, refetch } = useOrders(crewId);
+    // Access React Query cache to get orders already loaded in index.tsx
+    const queryClient = useQueryClient();
+
+    // Get all cached orders data from any useOrders calls
+    const cachedOrders = useMemo(() => {
+        const queries = queryClient.getQueriesData({ queryKey: ['orders', crewId] });
+        const orderMap = new Map<string, Order>();
+
+        // Flatten all pages from all matching queries and deduplicate by _id
+        queries.forEach(([_key, data]: [any, any]) => {
+            if (data?.pages) {
+                data.pages.forEach((page: any) => {
+                    if (page?.items) {
+                        page.items.forEach((order: Order) => {
+                            // Use Map to automatically deduplicate by _id
+                            orderMap.set(order._id, order);
+                        });
+                    }
+                });
+            }
+        });
+
+        return Array.from(orderMap.values());
+    }, [queryClient, crewId]);
 
     // Filter logic:
     // - Not completed
@@ -25,13 +48,16 @@ export default function SelectVisitOriginScreen() {
     // - Not Visita (don't create a visit from a visit)
     // - Not Recuperacion (Type)
     const eligibleOrders = useMemo(() => {
-        return orders.filter(order =>
+        return cachedOrders.filter(order =>
             order.status !== 'completed' &&
             order.status !== 'hard' &&
             order.status !== 'visita' &&
             order.type !== 'recuperacion'
         );
-    }, [orders]);
+    }, [cachedOrders]);
+
+    const loading = cachedOrders.length === 0;
+    const error = null;
 
     const handleSelectOrder = (order: Order) => {
         // Navigate to confirmation screen with the selected order ID
@@ -40,15 +66,6 @@ export default function SelectVisitOriginScreen() {
             params: { originId: order._id }
         });
     };
-
-    const renderItem = ({ item }: { item: Order }) => (
-        <View style={styles.cardWrapper}>
-            <View style={styles.selectionOverlay} pointerEvents="none">
-                <FontAwesome name="chevron-right" size={16} color={BrandColors.primary} />
-            </View>
-            <OrderCard order={item} onPress={() => handleSelectOrder(item)} />
-        </View>
-    );
 
     return (
         <ScrollView style={styles.container}>
@@ -64,13 +81,7 @@ export default function SelectVisitOriginScreen() {
                 {loading ? (
                     <View style={styles.centerContainer}>
                         <ActivityIndicator size="large" color={BrandColors.primary} />
-                    </View>
-                ) : error ? (
-                    <View style={styles.centerContainer}>
-                        <Text style={styles.errorText}>{error}</Text>
-                        <TouchableOpacity onPress={() => refetch()} style={styles.retryButton}>
-                            <Text style={styles.retryText}>Reintentar</Text>
-                        </TouchableOpacity>
+                        <Text style={styles.emptyText}>Cargando órdenes...</Text>
                     </View>
                 ) : eligibleOrders.length === 0 ? (
                     <View style={styles.centerContainer}>

@@ -117,21 +117,23 @@ export default function OrderDetailScreen() {
         const isAveriaOrder = order.type === 'averia';
 
         if (isRecoveryOrder) {
-            // For recovery: require at least ONT ID to complete
+            // Recovery order - require ONT ID for completion
             return !!order.equipmentRecovered?.ontId?.trim();
         }
 
         if (isAveriaOrder) {
-            // For AVERIA orders: no mandatory requirements (inventory, signature, internet test are optional)
-            return true;
+            // For AVERIA orders: only require installer logs
+            const hasLogs = (order.installerLog?.length || 0) > 0;
+            return hasLogs;
         }
 
-        // For installation: need inventory, signature, and internet test
+        // For installation: need inventory, signature, internet test, AND logs
         const hasInventory = (materialsUsed?.length || 0) > 0;
         const hasSignature = !!order.customerSignature;
         const hasInternetTest = !!(order.internetTest?.downloadSpeed && order.internetTest?.uploadSpeed);
+        const hasLogs = (order.installerLog?.length || 0) > 0;
 
-        return hasInventory && hasSignature && hasInternetTest;
+        return hasInventory && hasSignature && hasInternetTest && hasLogs;
     }, [order, materialsUsed]);
 
     // Get completion requirements message
@@ -148,10 +150,12 @@ export default function OrderDetailScreen() {
                 missing.push('ID de la ONT');
             }
         } else if (isAveriaOrder) {
-            // AVERIA orders have no mandatory requirements
-            // All fields are optional
+            // AVERIA orders - only require logs
+            if (!order.installerLog?.length) {
+                missing.push('bitácora del instalador');
+            }
         } else {
-            // Installation requirements
+            // Installation requirements - inventory, signature, internet test, AND logs
             if (!materialsUsed?.length) {
                 missing.push('inventario asignado');
             }
@@ -160,6 +164,9 @@ export default function OrderDetailScreen() {
             }
             if (!order.internetTest?.downloadSpeed) {
                 missing.push('prueba de internet');
+            }
+            if (!order.installerLog?.length) {
+                missing.push('bitácora del instalador');
             }
         }
 
@@ -343,11 +350,28 @@ export default function OrderDetailScreen() {
         setOrder(prev => prev ? { ...prev, photoEvidence: photos } : null);
     };
 
-    // Handle materials change locally
-    const handleMaterialsChange = (materials: MaterialUsed[]) => {
-        setMaterialsUsed(materials);
-        // We update the order object locally as well so it reflects in the state if needed by other components
-        setOrder(prev => prev ? { ...prev, materialsUsed: materials } : null);
+    // Handle materials change locally and save to backend
+    const handleMaterialsChange = async (materials: MaterialUsed[]) => {
+        if (!order) return;
+
+        // Sanitize materialsUsed to ensure item is always a string ID (not an object)
+        const sanitizedMaterials = materials.map(m => ({
+            ...m,
+            item: typeof m.item === 'string' ? m.item : (m.item as any)?._id?.toString() || m.item
+        }));
+
+        // Update local state
+        setMaterialsUsed(sanitizedMaterials);
+        setOrder(prev => prev ? { ...prev, materialsUsed: sanitizedMaterials } : null);
+
+        // Save to backend immediately
+        try {
+            await orderService.updateOrder(order._id, {
+                materialsUsed: sanitizedMaterials
+            });
+        } catch (error) {
+            console.error('Error saving materials to backend:', error);
+        }
     };
 
     // Handle signature change
@@ -517,20 +541,6 @@ export default function OrderDetailScreen() {
                         <Text style={styles.headerTitle}>Detalle de Orden</Text>
                         <Text style={styles.headerSubtitle}>#{order.ticket_id}</Text>
                     </View>
-                    {/* Save Button */}
-                    {currentStatus !== 'completed' && currentStatus !== 'cancelled' && currentStatus !== 'visita' && (
-                        <TouchableOpacity
-                            onPress={saveProgress}
-                            style={styles.saveBtn}
-                            disabled={saving || updating}
-                        >
-                            {saving ? (
-                                <ActivityIndicator size="small" color={BrandColors.primary} />
-                            ) : (
-                                <FontAwesome name="save" size={20} color={BrandColors.primary} />
-                            )}
-                        </TouchableOpacity>
-                    )}
                 </View>
 
                 <ScrollView
@@ -890,14 +900,14 @@ export default function OrderDetailScreen() {
                                             <Text style={styles.requirementText}>ID de la ONT recuperada</Text>
                                         </View>
                                     ) : order.type === 'averia' ? (
-                                        // AVERIA orders - all optional
+                                        // AVERIA orders - only require logs
                                         <View style={styles.requirementRow}>
                                             <FontAwesome
-                                                name={'check-circle'}
+                                                name={order.installerLog?.length ? 'check-circle' : 'circle-o'}
                                                 size={16}
-                                                color={'#22c55e'}
+                                                color={order.installerLog?.length ? '#22c55e' : '#94a3b8'}
                                             />
-                                            <Text style={styles.requirementText}>Sin requisitos obligatorios</Text>
+                                            <Text style={styles.requirementText}>Bitácora del instalador</Text>
                                         </View>
                                     ) : (
                                         // Installation requirements
@@ -925,6 +935,14 @@ export default function OrderDetailScreen() {
                                                     color={order.internetTest?.downloadSpeed ? '#22c55e' : '#94a3b8'}
                                                 />
                                                 <Text style={styles.requirementText}>Prueba de internet</Text>
+                                            </View>
+                                            <View style={styles.requirementRow}>
+                                                <FontAwesome
+                                                    name={order.installerLog?.length ? 'check-circle' : 'circle-o'}
+                                                    size={16}
+                                                    color={order.installerLog?.length ? '#22c55e' : '#94a3b8'}
+                                                />
+                                                <Text style={styles.requirementText}>Bitácora del instalador</Text>
                                             </View>
                                         </>
                                     )}
