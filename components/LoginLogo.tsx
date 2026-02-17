@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BrandColors } from '@/constants/colors';
+import EnlaredLogo from '@/public/logo_bgless.png';
 
 /**
  * Logo y encabezado para la pantalla de login
@@ -11,11 +12,11 @@ export function LoginLogo() {
         <View style={styles.container}>
             {/* Icono con rotación sutil */}
             <View style={styles.iconContainer}>
-                <Ionicons
-                    name="construct"
-                    size={48}
-                    color="#FFFFFF"
-                    style={styles.icon}
+                {/* <EnlaredLogo width={142} height={142} fill="#FFFFFF" /> */}
+                <Image
+                    source={EnlaredLogo}
+                    style={{ width: 142, height: 142 }}
+                    resizeMode="contain"
                 />
             </View>
 
@@ -31,22 +32,22 @@ export function LoginLogo() {
 const styles = StyleSheet.create({
     container: {
         alignItems: 'center',
-        marginBottom: 40,
+        marginBottom: 20, // Reduced from 40
     },
     iconContainer: {
-        width: 80,
-        height: 80,
-        backgroundColor: BrandColors.primary,
-        borderRadius: 20,
+        width: 142,
+        height: 142,
+        // backgroundColor: BrandColors.primary,
+        // borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 0, // Reduced from 16/1
         // transform: [{ rotate: '3deg' }],
-        shadowColor: BrandColors.primary,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.2,
-        shadowRadius: 16,
-        elevation: 8,
+        // shadowColor: BrandColors.primary,
+        // shadowOffset: { width: 0, height: 8 },
+        // shadowOpacity: 0.2,
+        // shadowRadius: 16,
+        // elevation: 8,
     },
     icon: {
         // transform: [{ rotate: '-3deg' }],
@@ -56,6 +57,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: BrandColors.dark,
         letterSpacing: 1,
+        marginBottom: -5, // Negative margin to pull subtitle closer
     },
     subtitle: {
         fontSize: 16,

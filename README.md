@@ -1234,3 +1234,20 @@ Para soporte técnico o consultas sobre el sistema, contactar al equipo de desar
 
 -reporte de materiales gastados filtrado por tipo de orden
 -opción de imprimir las imagenes de finalización de orden adjuntas por mes 3 en cada hoja formato pdf
+
+
+## speedtest api
+allprojects {
+  repositories {
+    google()
+    mavenCentral()
+    maven { url 'https://www.jitpack.io' }
+    maven {
+      url 'https://maven.speedcheckerapi.com/artifactory/libs-release'
+      credentials {
+        username = "demo"
+        password = "AP85qiz6wYEsCttWU2ZckEWSwJKuA6mSYcizEY"
+      }
+    }
+  }
+}

@@ -2,20 +2,20 @@
   "expo": {
     "name": "ENLARED TÉCNICOS",
     "slug": "enlared-mobile",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logo_bgless_resized.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "scheme": "com.enlared.mobile",
     "notification": {
-      "icon": "./assets/notification-icon.png",
-      "color": "#000000",
+      "icon": "./assets/notification_icon_white.png",
+      "color": "#3e78b2",
       "androidMode": "default",
       "androidCollapsedTitle": "ENLARED"
     },
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/splash_optimized.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -36,7 +36,7 @@
       "minSdkVersion": 26,
       "targetSdkVersion": 34,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/logo_bgless_resized.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.enlared.mobile",
@@ -84,7 +84,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/notification-icon.png",
+          "icon": "./assets/notification_icon_white.png",
           "color": "#3e78b2"
         }
       ],
