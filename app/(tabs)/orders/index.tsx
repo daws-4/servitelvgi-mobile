@@ -83,7 +83,7 @@ export default function OrdersScreen() {
     // Enable smart polling for order updates
     useSmartPolling({
         callback: () => refetch({ silent: true }),
-        interval: 120000, // Poll every 5 minutes when app is active
+        interval: 1000 * 60 * 6, // Poll every 6 minutes (aligned with staleTime) when app is active
         enabled: !loading && !!crewId // Only poll when not loading and have crew ID
     });
 

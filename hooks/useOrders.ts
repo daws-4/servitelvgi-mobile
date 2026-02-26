@@ -83,8 +83,8 @@ export const useOrders = (crewId: string, filters?: OrderFilters, limit: number 
       return allPages.length + 1; // Next page index
     },
     enabled: !!crewId,
-    staleTime: 1000 * 60 * 1, // 1 minute
-    gcTime: 1000 * 60 * 5,    // 5 minutes
+    staleTime: 1000 * 60 * 6, // 6 minutes - reduces Vercel API invocations
+    gcTime: 1000 * 60 * 12,   // 12 minutes - keep cache warm between navigations
   });
 
   // Flatten items

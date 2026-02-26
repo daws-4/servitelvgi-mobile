@@ -43,8 +43,14 @@ class OrderService {
       const start = (page - 1) * limit;
       const items = response.data.slice(start, start + limit);
       return { items, total: response.data.length };
+    } else if (response.data && response.data.data && response.data.pagination) {
+      // New format - universal backend pagination
+      return {
+        items: response.data.data,
+        total: response.data.pagination.total
+      };
     } else if (response.data?.items && Array.isArray(response.data.items)) {
-      // New format - paginated response
+      // Alternate new format 
       return response.data;
     } else {
       // Unexpected format

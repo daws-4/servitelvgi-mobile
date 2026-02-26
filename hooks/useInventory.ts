@@ -26,7 +26,7 @@ export const useInventory = (crewId: string): UseInventoryReturn => {
     queryKey: ['inventory', crewId],
     queryFn: () => inventoryService.getCrewInventory(crewId),
     enabled: !!crewId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 6, // 6 minutes - reduces Vercel API invocations
   });
 
   // Wrapper for refetch to match Promise<void> signature

@@ -68,7 +68,7 @@ export const Config = {
   /**
    * Versión de la aplicación
    */
-  APP_VERSION: '1.0.8', // CAMBIAR AQUÍ LA VERSIÓN DE LA APP
+  APP_VERSION: '1.1.0', // CAMBIAR AQUÍ LA VERSIÓN DE LA APP
 
   /**
    * Nombre de la aplicación

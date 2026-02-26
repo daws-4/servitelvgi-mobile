@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BrandColors } from '@/constants/colors';
-import EnlaredLogo from '@/public/logo_bgless.png';
+import EnlaredLogo from '@/assets/logo_bgless.png';
 
 /**
  * Logo y encabezado para la pantalla de login
