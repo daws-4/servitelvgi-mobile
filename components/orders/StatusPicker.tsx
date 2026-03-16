@@ -16,6 +16,7 @@ const STATUS_OPTIONS: StatusOption[] = [
     { value: 'assigned', label: 'Asignada', color: '#2563eb', bgColor: '#dbeafe' },
     { value: 'in_progress', label: 'En Progreso', color: '#7c3aed', bgColor: '#ede9fe' },
     { value: 'completed', label: 'Completada', color: '#16a34a', bgColor: '#dcfce7' },
+    { value: 'completed_special', label: 'Completada Especial', color: '#00897b', bgColor: '#e0f2f1' },
     { value: 'cancelled', label: 'Cancelada', color: '#dc2626', bgColor: '#fee2e2' },
     { value: 'hard', label: 'Hard', color: '#ef4444', bgColor: '#fef2f2' },
 ];
@@ -43,7 +44,7 @@ export default function StatusPicker({
     const currentOption = STATUS_OPTIONS.find(opt => opt.value === value) || STATUS_OPTIONS[0];
 
     const handleSelect = (status: OrderStatus) => {
-        if (status === 'completed' && !canComplete) {
+        if ((status === 'completed' || status === 'completed_special') && !canComplete) {
             return; // Don't allow selection
         }
         onChange(status);
@@ -88,7 +89,7 @@ export default function StatusPicker({
                             keyExtractor={(item) => item.value}
                             renderItem={({ item }) => {
                                 const isSelected = item.value === value;
-                                const isDisabled = item.value === 'completed' && !canComplete;
+                                const isDisabled = (item.value === 'completed' || item.value === 'completed_special') && !canComplete;
 
                                 return (
                                     <TouchableOpacity

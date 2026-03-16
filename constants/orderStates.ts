@@ -16,6 +16,7 @@ export const ORDER_STATUSES = {
   ASSIGNED: 'assigned',
   IN_PROGRESS: 'in_progress',
   COMPLETED: 'completed',
+  COMPLETED_SPECIAL: 'completed_special',
   CANCELLED: 'cancelled',
   HARD: 'hard',
 } as const;
@@ -28,6 +29,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   assigned: 'Asignada',
   in_progress: 'En Progreso',
   completed: 'Completada',
+  completed_special: 'Completada Especial',
   cancelled: 'Cancelada',
   hard: 'Hard',
   visita: 'Visita',
@@ -37,13 +39,14 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
  * Colores para cada estado de orden
  */
 export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
-  pending: '#ff9800',       // Naranja
-  assigned: '#2196f3',      // Azul
-  in_progress: '#9c27b0',   // Púrpura
-  completed: '#4caf50',     // Verde
-  cancelled: '#757575',     // Gris
-  hard: '#f44336',          // Rojo
-  visita: '#9C27B0',        // Violeta
+  pending: '#ff9800',              // Naranja
+  assigned: '#2196f3',             // Azul
+  in_progress: '#9c27b0',          // Púrpura
+  completed: '#4caf50',            // Verde
+  completed_special: '#00897b',    // Teal
+  cancelled: '#757575',            // Gris
+  hard: '#f44336',                 // Rojo
+  visita: '#9C27B0',               // Violeta
 };
 
 /**
@@ -54,6 +57,7 @@ export const ORDER_STATUS_ICONS: Record<OrderStatus, string> = {
   assigned: 'user-check',
   in_progress: 'truck',
   completed: 'check-circle',
+  completed_special: 'star',
   cancelled: 'x-circle',
   hard: 'alert-triangle',
   visita: 'map-pin',

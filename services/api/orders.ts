@@ -135,9 +135,9 @@ class OrderService {
    * PUT /api/web/orders/:id
    * Completar una orden con materiales, fotos, firma y prueba de internet
    */
-  async completeOrder(orderId: string, data: OrderCompletionData): Promise<Order> {
+  async completeOrder(orderId: string, data: OrderCompletionData, statusOverride?: 'completed' | 'completed_special'): Promise<Order> {
     const payload: Partial<Order> = {
-      status: 'completed' as OrderStatus,
+      status: (statusOverride || 'completed') as OrderStatus,
       materialsUsed: data.materialsUsed,
       photoEvidence: data.photoEvidence,
       customerSignature: data.customerSignature,

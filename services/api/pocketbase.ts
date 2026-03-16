@@ -45,7 +45,7 @@ class PocketBaseService {
   private async getAdminToken(): Promise<string | null> {
     if (this.adminToken) return this.adminToken;
 
-    const baseUrl = this.baseUrl || Config.POCKETBASE_URL || 'https://pb.servitelv.com';
+    const baseUrl = this.baseUrl || Config.POCKETBASE_URL || 'https://images.endlaredve.com';
 
     // 1. Try Admin Auth
     try {
@@ -99,7 +99,7 @@ class PocketBaseService {
   }
 
   constructor() {
-    this.baseUrl = Config.POCKETBASE_URL || 'https://pb.servitelv.com';
+    this.baseUrl = Config.POCKETBASE_URL || 'https://images.enlaredve.com';
     console.log('📝 [PocketBase] Service initialized with URL:', this.baseUrl);
   }
 

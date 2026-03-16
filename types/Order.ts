@@ -11,13 +11,14 @@
  * Estados posibles de una orden
  */
 export type OrderStatus =
-  | 'pending'       // Pendiente
-  | 'assigned'      // Asignada a cuadrilla
-  | 'in_progress'   // En progreso
-  | 'completed'     // Completada
-  | 'cancelled'     // Cancelada
-  | 'hard'          // Hard
-  | 'visita';       // Visita técnica
+  | 'pending'              // Pendiente
+  | 'assigned'             // Asignada a cuadrilla
+  | 'in_progress'          // En progreso
+  | 'completed'            // Completada
+  | 'completed_special'    // Completada Especial
+  | 'cancelled'            // Cancelada
+  | 'hard'                 // Hard
+  | 'visita';              // Visita técnica
 
 /**
  * Tipos de orden
@@ -224,5 +225,6 @@ export interface OrderStats {
   assigned: number;
   inProgress: number;
   completed: number;
+  completedSpecial: number;
   cancelled: number;
 }

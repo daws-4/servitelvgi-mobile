@@ -28,6 +28,7 @@ const STATUS_OPTIONS: { value: OrderStatus; label: string; color: string }[] = [
     { value: 'assigned', label: 'Asignada', color: '#3b82f6' },
     { value: 'in_progress', label: 'En Progreso', color: '#f59e0b' },
     { value: 'completed', label: 'Completada', color: '#22c55e' },
+    { value: 'completed_special', label: 'Completada Especial', color: '#00897b' },
     { value: 'cancelled', label: 'Cancelada', color: '#ef4444' },
     { value: 'hard', label: 'Hard', color: '#f44336' },
 ];

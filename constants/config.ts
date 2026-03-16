@@ -20,7 +20,7 @@ export const Config = {
    * Debe configurarse en .env como API_BASE_URL
    * https://admin.servitelv.com
    */
-  API_BASE_URL: getEnvVar('API_BASE_URL', 'https://admin.servitelv.com'),
+  API_BASE_URL: getEnvVar('API_BASE_URL', 'https://admin.enlaredve.com'),
 
   /**
    * Timeout para peticiones HTTP en milisegundos
@@ -30,7 +30,7 @@ export const Config = {
   /**
    * URL de PocketBase para almacenamiento de archivos
    */
-  POCKETBASE_URL: getEnvVar('POCKETBASE_URL', 'https://pb.servitelv.com'),
+  POCKETBASE_URL: getEnvVar('POCKETBASE_URL', 'https://images.enlaredve.com'),
 
   // ============================================================================
   // GOOGLE MAPS
@@ -68,7 +68,7 @@ export const Config = {
   /**
    * Versión de la aplicación
    */
-  APP_VERSION: '1.1.0', // CAMBIAR AQUÍ LA VERSIÓN DE LA APP
+  APP_VERSION: '1.1.1', // CAMBIAR AQUÍ LA VERSIÓN DE LA APP
 
   /**
    * Nombre de la aplicación

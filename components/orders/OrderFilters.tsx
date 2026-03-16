@@ -20,6 +20,7 @@ const STATUS_OPTIONS: { value: OrderStatus | 'all'; label: string }[] = [
     { value: 'assigned', label: 'Asignadas' },
     { value: 'in_progress', label: 'En Progreso' },
     { value: 'completed', label: 'Completadas' },
+    { value: 'completed_special', label: 'Completada Especial' },
     { value: 'cancelled', label: 'Canceladas' },
     { value: 'hard', label: 'HARD' },
     { value: 'visita', label: 'Visita' },
