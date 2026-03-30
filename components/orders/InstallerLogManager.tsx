@@ -13,25 +13,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
 import { BrandColors } from '@/constants/colors';
 import type { InstallerLog, OrderStatus } from '@/types/Order';
+import { useOrderConfig } from '@/context/OrderConfigContext';
 
-interface InstallerLogManagerProps {
+export interface InstallerLogManagerProps {
     orderId: string;
     installerLogs: InstallerLog[];
     onLogsChange: (logs: InstallerLog[]) => void;
     currentStatus: OrderStatus;
     readOnly?: boolean;
 }
-
-// Status options for installer logs
-const STATUS_OPTIONS: { value: OrderStatus; label: string; color: string }[] = [
-    { value: 'pending', label: 'Pendiente', color: '#94a3b8' },
-    { value: 'assigned', label: 'Asignada', color: '#3b82f6' },
-    { value: 'in_progress', label: 'En Progreso', color: '#f59e0b' },
-    { value: 'completed', label: 'Completada', color: '#22c55e' },
-    { value: 'completed_special', label: 'Completada Especial', color: '#00897b' },
-    { value: 'cancelled', label: 'Cancelada', color: '#ef4444' },
-    { value: 'hard', label: 'Hard', color: '#f44336' },
-];
 
 export default function InstallerLogManager({
     orderId,
@@ -40,6 +30,7 @@ export default function InstallerLogManager({
     currentStatus,
     readOnly = false,
 }: InstallerLogManagerProps) {
+    const { getStatusConfig } = useOrderConfig();
     const insets = useSafeAreaInsets();
     const [modalVisible, setModalVisible] = useState(false);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -75,7 +66,7 @@ export default function InstallerLogManager({
                     text: 'Eliminar',
                     style: 'destructive',
                     onPress: () => {
-                        const newLogs = installerLogs.filter((_, i) => i !== index);
+                        const newLogs = installerLogs.filter((_: InstallerLog, i: number) => i !== index);
                         onLogsChange(newLogs);
                     },
                 },
@@ -98,7 +89,7 @@ export default function InstallerLogManager({
         let newLogs: InstallerLog[];
         if (editingIndex !== null) {
             // Edit existing log
-            newLogs = installerLogs.map((log, i) => (i === editingIndex ? newLog : log));
+            newLogs = installerLogs.map((log: InstallerLog, i: number) => (i === editingIndex ? newLog : log));
         } else {
             // Add new log
             newLogs = [...installerLogs, newLog];
@@ -109,9 +100,7 @@ export default function InstallerLogManager({
         setLogMessage('');
     };
 
-    const getStatusConfig = (status: OrderStatus) => {
-        return STATUS_OPTIONS.find(s => s.value === status) || STATUS_OPTIONS[0];
-    };
+
 
     const formatTimestamp = (timestamp: Date | string) => {
         const date = new Date(timestamp);
@@ -138,14 +127,14 @@ export default function InstallerLogManager({
             ) : (
                 <View style={styles.logsList}>
                     {sortedLogs.map((log, index) => {
-                        const actualIndex = installerLogs.findIndex(l => l === log);
+                        const actualIndex = installerLogs.findIndex((l: InstallerLog) => l === log);
                         const statusConfig = getStatusConfig(log.status);
 
                         return (
                             <View key={actualIndex} style={styles.logCard}>
                                 <View style={styles.logHeader}>
-                                    <View style={[styles.statusBadge, { backgroundColor: statusConfig.color }]}>
-                                        <Text style={styles.statusText}>{statusConfig.label}</Text>
+                                    <View style={[styles.statusBadge, { backgroundColor: statusConfig.hexBgColor }]}>
+                                        <Text style={[styles.statusText, { color: statusConfig.hexColor }]}>{statusConfig.label}</Text>
                                     </View>
                                     <Text style={styles.timestamp}>{formatTimestamp(log.timestamp)}</Text>
                                 </View>

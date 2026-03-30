@@ -1251,3 +1251,19 @@ allprojects {
     }
   }
 }
+
+## comandos para construir 
+Generar la carpeta Android:
+npx expo prebuild 
+
+Limpiar construcciones previas (si es necesario):
+npx expo prebuild --clean 
+
+Ubicarte en la carpeta Android:
+cd android 
+
+Generar el archivo AAB (para Play Store):
+./gradlew bundleRelease 
+
+Generar el archivo APK (para pruebas):
+./gradlew assembleRelease 

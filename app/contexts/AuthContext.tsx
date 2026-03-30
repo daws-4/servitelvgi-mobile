@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import authService from '@/services/api/auth';
 import apiClient from '@/services/api/client';
 import installerService from '@/services/api/installers';
@@ -278,15 +279,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 }
             }
 
+            await authService.logout();
+
+            // Clear the order config cache on logout to ensure fresh configuration
+            // upon next login (either manual or via biometrics)
             try {
-                // User Request: "Cuando se cierra sesión no se borran los datos de ingreso por biometría"
-                // So we REMOVE the auto-disable Logic.
-                // await disableBiometrics(); 
-            } catch (e) {
-                console.error('Error clearing biometric creds', e);
+                await AsyncStorage.removeItem('@order_config_v1');
+            } catch (cacheErr) {
+                console.warn('Could not clear order config cache:', cacheErr);
             }
 
-            await authService.logout();
         } catch (err) {
             console.error('Error en logout:', err);
         } finally {

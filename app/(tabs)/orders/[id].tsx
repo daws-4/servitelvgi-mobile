@@ -31,6 +31,7 @@ import { useAuth } from '@/app/contexts/AuthContext';
 import { BrandColors } from '@/constants/colors';
 import { ORDER_TYPE_LABELS } from '@/constants/orderStates';
 import type { Order, OrderStatus, OrderType, MaterialUsed, InternetTestResult, InstallerLog, EquipmentRecovered } from '@/types/Order';
+import { useOrderConfig } from '@/context/OrderConfigContext';
 
 const ETIQUETA_COLORS = [
     { label: 'Verde', value: 'verde', color: '#22c55e' },
@@ -43,6 +44,7 @@ export default function OrderDetailScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { installer } = useAuth();
+    const { getStatusConfig, config } = useOrderConfig();
 
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
@@ -211,8 +213,11 @@ export default function OrderDetailScreen() {
     const handleStatusChange = async (newStatus: OrderStatus) => {
         if (!order || newStatus === currentStatus) return;
 
+        const newStatusConfig = getStatusConfig(newStatus);
+        const currentStatusConfig = getStatusConfig(currentStatus);
+
         // LOCKING: If current status is HARD, only allow transition to completed
-        if (currentStatus === 'hard' && newStatus !== 'completed') {
+        if (currentStatus === 'hard' && !newStatusConfig.countsAsCompleted) {
             Alert.alert(
                 'Orden Bloqueada',
                 'Una orden en estado HARD solo puede cambiar a COMPLETADA cuando se haya resuelto.',
@@ -222,7 +227,7 @@ export default function OrderDetailScreen() {
         }
 
         // Validate completion requirements
-        if (newStatus === 'completed') {
+        if (newStatusConfig.countsAsCompleted) {
             if (!canComplete) {
                 Alert.alert(
                     'No se puede completar',
@@ -252,8 +257,8 @@ export default function OrderDetailScreen() {
                                     internetTest: isRecoveryOrder ? undefined : order.internetTest,
                                     equipmentRecovered: isRecoveryOrder ? order.equipmentRecovered : undefined,
                                 });
-                                setCurrentStatus('completed');
-                                setOrder(prev => prev ? { ...prev, status: 'completed' } : null);
+                                setCurrentStatus(newStatus);
+                                setOrder(prev => prev ? { ...prev, status: newStatus } : null);
                                 Alert.alert('Éxito', 'Orden completada correctamente');
                                 router.back();
                             } catch (err: any) {
@@ -599,7 +604,7 @@ export default function OrderDetailScreen() {
                             </View>
 
                             {/* Conditional rendering: Editable for recovery orders, ReadOnly for others */}
-                            {order.type === 'recuperacion' && order.status !== 'completed' && order.status !== 'cancelled' && order.status !== 'visita' ? (
+                            {order.type === 'recuperacion' && !getStatusConfig(order.status).countsAsCompleted && order.status !== 'cancelled' && order.status !== 'visita' ? (
                                 <>
                                     <EditableField
                                         label="Número de Abonado"
@@ -703,7 +708,7 @@ export default function OrderDetailScreen() {
                             />
 
                             {/* Ticket ID: Editable for recovery orders */}
-                            {order.type === 'recuperacion' && order.status !== 'completed' && order.status !== 'cancelled' && order.status !== 'visita' ? (
+                            {order.type === 'recuperacion' && !getStatusConfig(order.status).countsAsCompleted && order.status !== 'cancelled' && order.status !== 'visita' ? (
                                 <EditableField
                                     label="Número de Ticket"
                                     value={order.ticket_id}
@@ -723,7 +728,7 @@ export default function OrderDetailScreen() {
                             )}
 
                             {/* Node field: Editable for recovery orders */}
-                            {order.type === 'recuperacion' && order.status !== 'completed' && order.status !== 'cancelled' && order.status !== 'visita' ? (
+                            {order.type === 'recuperacion' && !getStatusConfig(order.status).countsAsCompleted && order.status !== 'cancelled' && order.status !== 'visita' ? (
                                 <EditableField
                                     label="Nodo"
                                     value={order.node}
@@ -743,7 +748,7 @@ export default function OrderDetailScreen() {
                             {/* Power and Ports Fields (Only for Instalacion/Averia) */}
                             {(order.type === 'instalacion' || order.type === 'averia') && (
                                 <>
-                                    {order.status !== 'completed' && order.status !== 'cancelled' && order.status !== 'visita' ? (
+                                    {!getStatusConfig(order.status).countsAsCompleted && order.status !== 'cancelled' && order.status !== 'visita' ? (
                                         <>
                                             <EditableField
                                                 label="Potencia NAP (dBm)"
@@ -878,14 +883,14 @@ export default function OrderDetailScreen() {
                                 <StatusPicker
                                     value={currentStatus}
                                     onChange={handleStatusChange}
-                                    disabled={updating || currentStatus === 'completed'}
+                                    disabled={updating || getStatusConfig(currentStatus).countsAsCompleted}
                                     canComplete={canComplete}
                                     completionMessage={getCompletionMessage}
                                 />
                             )}
 
                             {/* Completion requirements info */}
-                            {currentStatus !== 'completed' && currentStatus !== 'visita' && (
+                            {!getStatusConfig(currentStatus).countsAsCompleted && currentStatus !== 'visita' && (
                                 <View style={styles.requirementsCard}>
                                     <Text style={styles.requirementsTitle}>Requisitos para Finalizar:</Text>
 

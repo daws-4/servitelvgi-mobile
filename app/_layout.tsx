@@ -8,6 +8,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SecurityProvider } from './contexts/SecurityContext';
 import { OfflineProvider } from './contexts/OfflineContext';
+import { OrderConfigProvider, useOrderConfig } from '../context/OrderConfigContext';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { InactivityMonitor } from '@/components/InactivityMonitor';
@@ -15,16 +16,21 @@ import useThemedNavigation from './hooks/useThemedNavigation';
 import { BandwidthSync } from '@/components/BandwidthSync';
 
 /**
- * Componente que protege las rutas y maneja redirecciones
+ * Componente que protege las rutas y maneja refdirecciones
  */
 function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
+  const { refreshConfig } = useOrderConfig();
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
     // Esperar a que termine la verificación inicial
     if (isLoading) return;
+
+    if (isAuthenticated) {
+      refreshConfig().catch((e: any) => console.log('Failed to background refresh config', e));
+    }
 
     // Verificar en qué grupo de rutas estamos
     const inAuthGroup = segments[0] === 'login';
@@ -71,9 +77,10 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <SecurityProvider>
-            <ThemeProvider>
-              <OfflineProvider>
-                <ProtectedLayout>
+            <OrderConfigProvider>
+              <ThemeProvider>
+                <OfflineProvider>
+                  <ProtectedLayout>
                   <BandwidthSync />
                   <InactivityMonitor>
                     <OfflineBanner />
@@ -101,9 +108,10 @@ export default function RootLayout() {
                     </Stack>
                     <Toast />
                   </InactivityMonitor>
-                </ProtectedLayout>
-              </OfflineProvider>
-            </ThemeProvider>
+                  </ProtectedLayout>
+                </OfflineProvider>
+              </ThemeProvider>
+            </OrderConfigProvider>
           </SecurityProvider>
         </AuthProvider>
       </QueryClientProvider>

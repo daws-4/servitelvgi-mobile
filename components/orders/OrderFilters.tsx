@@ -13,18 +13,7 @@ interface OrderFiltersProps {
     onTypeChange: (type: OrderType | 'all') => void;
 }
 
-// Status filter options
-const STATUS_OPTIONS: { value: OrderStatus | 'all'; label: string }[] = [
-    { value: 'all', label: 'Todos' },
-    { value: 'pending', label: 'Pendientes' },
-    { value: 'assigned', label: 'Asignadas' },
-    { value: 'in_progress', label: 'En Progreso' },
-    { value: 'completed', label: 'Completadas' },
-    { value: 'completed_special', label: 'Completada Especial' },
-    { value: 'cancelled', label: 'Canceladas' },
-    { value: 'hard', label: 'HARD' },
-    { value: 'visita', label: 'Visita' },
-];
+import { useOrderConfig } from '@/context/OrderConfigContext';
 
 // Type filter options
 const TYPE_OPTIONS: { value: OrderType | 'all'; label: string }[] = [
@@ -47,10 +36,14 @@ export default function OrderFilters({
     typeFilter,
     onTypeChange,
 }: OrderFiltersProps) {
+    const { config } = useOrderConfig();
     const [statusModalVisible, setStatusModalVisible] = useState(false);
     const [typeModalVisible, setTypeModalVisible] = useState(false);
 
-    const selectedStatus = STATUS_OPTIONS.find(s => s.value === statusFilter) || STATUS_OPTIONS[0];
+    // Build status options
+    const statusOptions = [{ value: 'all', label: 'Todos' }, ...Object.values(config?.statuses || {}).map(s => ({ value: s.key, label: s.label })).sort((a,b) => (config?.statuses[a.value]?.order || 0) - (config?.statuses[b.value]?.order || 0))];
+
+    const selectedStatus = statusOptions.find(s => s.value === statusFilter) || statusOptions[0];
     const selectedType = TYPE_OPTIONS.find(t => t.value === typeFilter) || TYPE_OPTIONS[0];
 
     return (
@@ -120,7 +113,7 @@ export default function OrderFilters({
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Filtrar por Estado</Text>
                         <FlatList
-                            data={STATUS_OPTIONS}
+                            data={statusOptions}
                             keyExtractor={(item) => item.value}
                             renderItem={({ item }) => (
                                 <TouchableOpacity

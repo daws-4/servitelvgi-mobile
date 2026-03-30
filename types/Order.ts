@@ -10,15 +10,7 @@
 /**
  * Estados posibles de una orden
  */
-export type OrderStatus =
-  | 'pending'              // Pendiente
-  | 'assigned'             // Asignada a cuadrilla
-  | 'in_progress'          // En progreso
-  | 'completed'            // Completada
-  | 'completed_special'    // Completada Especial
-  | 'cancelled'            // Cancelada
-  | 'hard'                 // Hard
-  | 'visita';              // Visita técnica
+export type OrderStatus = string;
 
 /**
  * Tipos de orden

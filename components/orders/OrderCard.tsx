@@ -2,19 +2,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { BrandColors } from '@/constants/colors';
-import type { Order, OrderStatus, OrderType } from '@/types/Order';
-
-// Status badge configuration
-const STATUS_CONFIG: Record<OrderStatus, { label: string; bg: string; text: string }> = {
-    pending: { label: 'Pendiente', bg: '#fef9c3', text: '#ca8a04' },
-    assigned: { label: 'Asignada', bg: '#dbeafe', text: '#2563eb' },
-    in_progress: { label: 'En Progreso', bg: '#ede9fe', text: '#7c3aed' },
-    completed: { label: 'Completada', bg: '#dcfce7', text: '#16a34a' },
-    completed_special: { label: 'Completada Especial', bg: '#e0f2f1', text: '#00897b' },
-    cancelled: { label: 'Cancelada', bg: '#fee2e2', text: '#dc2626' },
-    hard: { label: 'Hard', bg: '#fee2e2', text: '#ef4444' },
-    visita: { label: 'Visita', bg: '#dcfce7', text: '#16a34a' },
-};
+import type { Order, OrderType } from '@/types/Order';
+import { useOrderConfig } from '@/context/OrderConfigContext';
 
 // Type label mapping
 const TYPE_LABELS: Record<OrderType, string> = {
@@ -42,7 +31,8 @@ interface OrderCardProps {
  * Now accepts real Order type from API
  */
 export default function OrderCard({ order, onPress }: OrderCardProps) {
-    const statusConfig = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
+    const { getStatusConfig } = useOrderConfig();
+    const statusConfig = getStatusConfig(order.status);
     const accentColor = TYPE_COLORS[order.type] || TYPE_COLORS.otro;
     const typeLabel = TYPE_LABELS[order.type] || 'Orden';
 
@@ -78,8 +68,8 @@ export default function OrderCard({ order, onPress }: OrderCardProps) {
             <View style={styles.content}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <View style={[styles.badge, { backgroundColor: statusConfig.bg }]}>
-                        <Text style={[styles.badgeText, { color: statusConfig.text }]}>
+                    <View style={[styles.badge, { backgroundColor: statusConfig.hexBgColor }]}>
+                        <Text style={[styles.badgeText, { color: statusConfig.hexColor }]}>
                             {statusConfig.label}
                         </Text>
                     </View>

@@ -3,23 +3,7 @@ import { View, Text, TouchableOpacity, Modal, StyleSheet, FlatList } from 'react
 import { FontAwesome } from '@expo/vector-icons';
 import { BrandColors } from '@/constants/colors';
 import type { OrderStatus } from '@/types/Order';
-
-interface StatusOption {
-    value: OrderStatus;
-    label: string;
-    color: string;
-    bgColor: string;
-}
-
-const STATUS_OPTIONS: StatusOption[] = [
-    { value: 'pending', label: 'Pendiente', color: '#ca8a04', bgColor: '#fef9c3' },
-    { value: 'assigned', label: 'Asignada', color: '#2563eb', bgColor: '#dbeafe' },
-    { value: 'in_progress', label: 'En Progreso', color: '#7c3aed', bgColor: '#ede9fe' },
-    { value: 'completed', label: 'Completada', color: '#16a34a', bgColor: '#dcfce7' },
-    { value: 'completed_special', label: 'Completada Especial', color: '#00897b', bgColor: '#e0f2f1' },
-    { value: 'cancelled', label: 'Cancelada', color: '#dc2626', bgColor: '#fee2e2' },
-    { value: 'hard', label: 'Hard', color: '#ef4444', bgColor: '#fef2f2' },
-];
+import { useOrderConfig } from '@/context/OrderConfigContext';
 
 interface StatusPickerProps {
     value: OrderStatus;
@@ -39,12 +23,16 @@ export default function StatusPicker({
     canComplete = true,
     completionMessage = 'Faltan requisitos para completar',
 }: StatusPickerProps) {
+    const { config, getStatusConfig } = useOrderConfig();
     const [modalVisible, setModalVisible] = useState(false);
 
-    const currentOption = STATUS_OPTIONS.find(opt => opt.value === value) || STATUS_OPTIONS[0];
+    // Build options from config
+    const statusOptions = Object.values(config?.statuses || {}).sort((a, b) => a.order - b.order);
+    const currentOption = getStatusConfig(value as string);
 
     const handleSelect = (status: OrderStatus) => {
-        if ((status === 'completed' || status === 'completed_special') && !canComplete) {
+        const optionConfig = getStatusConfig(status as string);
+        if (optionConfig.countsAsCompleted && !canComplete) {
             return; // Don't allow selection
         }
         onChange(status);
@@ -60,8 +48,8 @@ export default function StatusPicker({
                 onPress={() => !disabled && setModalVisible(true)}
                 disabled={disabled}
             >
-                <View style={[styles.badge, { backgroundColor: currentOption.bgColor }]}>
-                    <Text style={[styles.badgeText, { color: currentOption.color }]}>
+                <View style={[styles.badge, { backgroundColor: currentOption.hexBgColor }]}>
+                    <Text style={[styles.badgeText, { color: currentOption.hexColor }]}>
                         {currentOption.label}
                     </Text>
                 </View>
@@ -85,11 +73,11 @@ export default function StatusPicker({
                         <Text style={styles.modalTitle}>Seleccionar Estado</Text>
 
                         <FlatList
-                            data={STATUS_OPTIONS}
-                            keyExtractor={(item) => item.value}
+                            data={statusOptions}
+                            keyExtractor={(item) => item.key}
                             renderItem={({ item }) => {
-                                const isSelected = item.value === value;
-                                const isDisabled = (item.value === 'completed' || item.value === 'completed_special') && !canComplete;
+                                const isSelected = item.key === value;
+                                const isDisabled = item.countsAsCompleted && !canComplete;
 
                                 return (
                                     <TouchableOpacity
@@ -98,11 +86,11 @@ export default function StatusPicker({
                                             isSelected && styles.optionSelected,
                                             isDisabled && styles.optionDisabled,
                                         ]}
-                                        onPress={() => handleSelect(item.value)}
+                                        onPress={() => handleSelect(item.key)}
                                         disabled={isDisabled}
                                     >
-                                        <View style={[styles.optionBadge, { backgroundColor: item.bgColor }]}>
-                                            <Text style={[styles.optionBadgeText, { color: item.color }]}>
+                                        <View style={[styles.optionBadge, { backgroundColor: item.hexBgColor }]}>
+                                            <Text style={[styles.optionBadgeText, { color: item.hexColor }]}>
                                                 {item.label}
                                             </Text>
                                         </View>
