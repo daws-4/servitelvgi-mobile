@@ -138,6 +138,13 @@ export default function OrderDetailScreen() {
         return hasInventory && hasSignature && hasInternetTest && hasLogs;
     }, [order, materialsUsed]);
 
+    // Determine if the order is in a read-only (terminal) state — dynamic from server config
+    const isReadOnly = useMemo(() => {
+        if (!order) return false;
+        const statusCfg = getStatusConfig(order.status);
+        return statusCfg.isTerminal;
+    }, [order, getStatusConfig]);
+
     // Get completion requirements message
     const getCompletionMessage = useMemo(() => {
         if (!order) return '';
@@ -175,6 +182,33 @@ export default function OrderDetailScreen() {
         if (missing.length === 0) return '';
         return `Falta: ${missing.join(', ')}`;
     }, [order, materialsUsed]);
+
+    // Calculate time since assignment
+    const { getAssignmentTimeAgo, isAssignmentDelayed } = useMemo(() => {
+        if (!order?.assignmentDate) return { getAssignmentTimeAgo: 'No registrada', isAssignmentDelayed: false };
+        
+        const date = new Date(order.assignmentDate);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        if (diffMs < 0) return { getAssignmentTimeAgo: 'Recién asignada', isAssignmentDelayed: false };
+        
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
+        const delayed = diffHours > 24;
+
+        let timeAgo: string;
+        if (diffDays > 0) {
+            timeAgo = `${diffDays} día${diffDays > 1 ? 's' : ''}`;
+        } else if (diffHours > 0) {
+            const mins = diffMins % 60;
+            timeAgo = `${diffHours}h ${mins}m`;
+        } else {
+            timeAgo = `${diffMins} min`;
+        }
+
+        return { getAssignmentTimeAgo: timeAgo, isAssignmentDelayed: delayed };
+    }, [order?.assignmentDate]);
 
     // Callback when test is saved successfully
     const handleTestSaved = (result: InternetTestResult) => {
@@ -256,7 +290,7 @@ export default function OrderDetailScreen() {
                                     customerSignature: isRecoveryOrder ? undefined : order.customerSignature,
                                     internetTest: isRecoveryOrder ? undefined : order.internetTest,
                                     equipmentRecovered: isRecoveryOrder ? order.equipmentRecovered : undefined,
-                                });
+                                }, newStatus);
                                 setCurrentStatus(newStatus);
                                 setOrder(prev => prev ? { ...prev, status: newStatus } : null);
                                 Alert.alert('Éxito', 'Orden completada correctamente');
@@ -604,7 +638,7 @@ export default function OrderDetailScreen() {
                             </View>
 
                             {/* Conditional rendering: Editable for recovery orders, ReadOnly for others */}
-                            {order.type === 'recuperacion' && !getStatusConfig(order.status).countsAsCompleted && order.status !== 'cancelled' && order.status !== 'visita' ? (
+                            {order.type === 'recuperacion' && !isReadOnly ? (
                                 <>
                                     <EditableField
                                         label="Número de Abonado"
@@ -708,7 +742,7 @@ export default function OrderDetailScreen() {
                             />
 
                             {/* Ticket ID: Editable for recovery orders */}
-                            {order.type === 'recuperacion' && !getStatusConfig(order.status).countsAsCompleted && order.status !== 'cancelled' && order.status !== 'visita' ? (
+                            {order.type === 'recuperacion' && !isReadOnly ? (
                                 <EditableField
                                     label="Número de Ticket"
                                     value={order.ticket_id}
@@ -728,7 +762,7 @@ export default function OrderDetailScreen() {
                             )}
 
                             {/* Node field: Editable for recovery orders */}
-                            {order.type === 'recuperacion' && !getStatusConfig(order.status).countsAsCompleted && order.status !== 'cancelled' && order.status !== 'visita' ? (
+                            {order.type === 'recuperacion' && !isReadOnly ? (
                                 <EditableField
                                     label="Nodo"
                                     value={order.node}
@@ -748,7 +782,7 @@ export default function OrderDetailScreen() {
                             {/* Power and Ports Fields (Only for Instalacion/Averia) */}
                             {(order.type === 'instalacion' || order.type === 'averia') && (
                                 <>
-                                    {!getStatusConfig(order.status).countsAsCompleted && order.status !== 'cancelled' && order.status !== 'visita' ? (
+                                    {!isReadOnly ? (
                                         <>
                                             <EditableField
                                                 label="Potencia NAP (dBm)"
@@ -856,6 +890,15 @@ export default function OrderDetailScreen() {
                                 value={order.assignedToName || String(installer?.crew?.number)}
                                 icon="users"
                             />
+                            {order.assignmentDate && !getStatusConfig(currentStatus).isTerminal && (
+                                <ReadOnlyField
+                                    label="Tiempo Transcurrido"
+                                    value={getAssignmentTimeAgo}
+                                    icon="clock-o"
+                                    valueStyle={isAssignmentDelayed ? { color: '#ef4444', fontWeight: '700' } : undefined}
+                                    iconColor={isAssignmentDelayed ? '#ef4444' : undefined}
+                                />
+                            )}
                         </View>
 
                         {/* Status Section (Editable) */}
@@ -961,7 +1004,7 @@ export default function OrderDetailScreen() {
                                 orderId={order._id}
                                 initialData={order.equipmentRecovered}
                                 onDataChange={handleEquipmentChange}
-                                readOnly={order.status === 'completed' || order.status === 'cancelled' || order.status === 'visita'}
+                                readOnly={isReadOnly}
                             />
                         )}
 
@@ -978,7 +1021,7 @@ export default function OrderDetailScreen() {
                                     materialsUsed={materialsUsed}
                                     onMaterialsChange={handleMaterialsChange}
                                     onImmediateSave={handleImmediateSave}
-                                    readOnly={order.status === 'completed' || order.status === 'cancelled' || order.status === 'visita'}
+                                    readOnly={isReadOnly}
                                 />
                             </View>
                         )}
@@ -996,7 +1039,7 @@ export default function OrderDetailScreen() {
                                 crewId={installer?.crew?._id || ''}
                                 existingPhotos={order.photoEvidence}
                                 onPhotosChange={handlePhotosChange}
-                                readOnly={order.status === 'completed' || order.status === 'cancelled' || order.status === 'visita'}
+                                readOnly={isReadOnly}
                             />
                         </View>
 
@@ -1008,7 +1051,7 @@ export default function OrderDetailScreen() {
                                     signature={order.customerSignature}
                                     onSignatureChange={handleSignatureChange}
                                     onUploadSignature={orderService.saveSignatureUrl.bind(orderService)}
-                                    readOnly={order.status === 'completed' || order.status === 'cancelled' || order.status === 'visita'}
+                                    readOnly={isReadOnly}
                                 />
                             </View>
                         )}
@@ -1025,7 +1068,7 @@ export default function OrderDetailScreen() {
                                     orderId={order._id}
                                     existingTest={order.internetTest}
                                     onTestSaved={handleTestSaved}
-                                    readOnly={order.status === 'completed' || order.status === 'cancelled' || order.status === 'visita'}
+                                    readOnly={isReadOnly}
                                 />
                             </View>
                         )}
@@ -1042,7 +1085,7 @@ export default function OrderDetailScreen() {
                                 installerLogs={order.installerLog || []}
                                 onLogsChange={handleLogsChange}
                                 currentStatus={currentStatus}
-                                readOnly={order.status === 'completed' || order.status === 'cancelled' || order.status === 'visita'}
+                                readOnly={isReadOnly}
                             />
                         </View>
 

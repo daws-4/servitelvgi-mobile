@@ -36,6 +36,38 @@ export default function OrderCard({ order, onPress }: OrderCardProps) {
     const accentColor = TYPE_COLORS[order.type] || TYPE_COLORS.otro;
     const typeLabel = TYPE_LABELS[order.type] || 'Orden';
 
+    // Calculate time ago from assignmentDate
+    const getAssignmentTimeAgo = (): string => {
+        if (!order.assignmentDate) return 'Sin asignar';
+        
+        const date = new Date(order.assignmentDate);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        if (diffMs < 0) return 'Recién asignada';
+        
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
+
+        if (diffDays > 0) {
+            return `${diffDays} día${diffDays > 1 ? 's' : ''}`;
+        } else if (diffHours > 0) {
+            const mins = diffMins % 60;
+            return `${diffHours}h ${mins}m`;
+        } else {
+            return `${diffMins} min`;
+        }
+    };
+
+    // Calculate if assignment is older than 24h
+    const isAssignmentDelayed = (): boolean => {
+        if (!order.assignmentDate) return false;
+        const date = new Date(order.assignmentDate);
+        const now = new Date();
+        const diffHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+        return diffHours > 24;
+    };
+
     // Calculate time ago from receptionDate or createdAt
     const getTimeAgo = (): string => {
         const dateStr = order.receptionDate || order.createdAt;
@@ -94,6 +126,15 @@ export default function OrderCard({ order, onPress }: OrderCardProps) {
                         {order.address}
                     </Text>
                 </View>
+
+                {!statusConfig.isTerminal && order.assignmentDate && (
+                    <View style={styles.addressContainer}>
+                        <FontAwesome name="clock-o" size={12} color={isAssignmentDelayed() ? '#ef4444' : BrandColors.primary} style={styles.icon} />
+                        <Text style={[styles.addressText, isAssignmentDelayed() && { color: '#ef4444', fontWeight: '600' }]} numberOfLines={1}>
+                            Asignada hace: {getAssignmentTimeAgo()}
+                        </Text>
+                    </View>
+                )}
 
                 {/* Footer */}
                 <View style={styles.footer}>

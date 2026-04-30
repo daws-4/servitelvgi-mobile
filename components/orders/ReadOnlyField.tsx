@@ -12,6 +12,8 @@ interface ReadOnlyFieldProps {
     onAction?: () => void;
     actionIcon?: string;
     selectionKey?: number | string;
+    valueStyle?: any;
+    iconColor?: string;
 }
 
 /**
@@ -25,7 +27,9 @@ export default function ReadOnlyField({
     selectable = true,
     onAction,
     actionIcon,
-    selectionKey
+    selectionKey,
+    valueStyle,
+    iconColor
 }: ReadOnlyFieldProps) {
     return (
         <View style={styles.container}>
@@ -35,7 +39,7 @@ export default function ReadOnlyField({
                     <FontAwesome
                         name={icon as any}
                         size={14}
-                        color={BrandColors.primary}
+                        color={iconColor || BrandColors.primary}
                         style={styles.icon}
                     />
                 )}
@@ -45,7 +49,7 @@ export default function ReadOnlyField({
                 */}
                 <Text
                     key={selectionKey}
-                    style={[styles.value, !value && styles.placeholder]}
+                    style={[styles.value, !value && styles.placeholder, valueStyle]}
                     selectable={selectable}
                 >
                     {value || placeholder}

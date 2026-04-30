@@ -144,8 +144,8 @@ export function useOrderConfig(): UseOrderConfigReturn {
   };
 
   const validStatuses = data?.validStatuses || Object.keys(statuses);
-  const completedStatuses = data?.completedStatuses || ['completed', 'completed_special'];
-  const terminalStatuses = data?.terminalStatuses || ['completed', 'completed_special', 'cancelled', 'visita'];
+  const completedStatuses = data?.completedStatuses || Object.entries(statuses).filter(([_, v]) => v.countsAsCompleted).map(([k]) => k);
+  const terminalStatuses = data?.terminalStatuses || Object.entries(statuses).filter(([_, v]) => v.isTerminal).map(([k]) => k);
 
   const getStatusConfig = (status: string): MobileStatusConfig => {
     return statuses[status] || UNKNOWN_STATUS;

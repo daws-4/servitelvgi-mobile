@@ -376,44 +376,91 @@ export default function InventoryAssignmentManager({
 
         // Handle Batch Item
         if (isBatchItem && selectedBatch) {
-            // Add as new line item (batches usually don't merge unless same batch)
-            const newMaterials = [...materialsUsed];
-
             // Check if same batch is already added
-            const existingBatchIndex = newMaterials.findIndex(m => m.batchCode === selectedBatch.batchCode);
+            const existingBatchIndex = materialsUsed.findIndex(m => m.batchCode === selectedBatch.batchCode);
 
             if (existingBatchIndex >= 0) {
-                const currentQty = newMaterials[existingBatchIndex].quantity;
-                if (currentQty + qty > selectedBatch.currentQuantity) {
-                    Alert.alert('Error', `La cantidad total excede el disponible en la bobina (${selectedBatch.currentQuantity})`);
-                    return;
-                }
-                newMaterials[existingBatchIndex] = {
-                    ...newMaterials[existingBatchIndex],
-                    quantity: currentQty + qty
-                };
+                const currentQty = materialsUsed[existingBatchIndex].quantity;
+                
+                Alert.alert(
+                    'Material ya agregado',
+                    `Esta bobina ya tiene ${currentQty} agregados. ¿Deseas sumar los nuevos ${qty} o reemplazar la cantidad?`,
+                    [
+                        { text: 'Cancelar', style: 'cancel' },
+                        {
+                            text: 'Sumar',
+                            onPress: () => {
+                                if (qty > selectedBatch.currentQuantity) {
+                                    Alert.alert('Error', `La cantidad a sumar (${qty}) excede el disponible (${selectedBatch.currentQuantity})`);
+                                    return;
+                                }
+                                const newMaterials = [...materialsUsed];
+                                newMaterials[existingBatchIndex] = {
+                                    ...newMaterials[existingBatchIndex],
+                                    quantity: currentQty + qty
+                                };
+                                onMaterialsChange(newMaterials);
+                                
+                                setBatches(prev => prev.map(b => {
+                                    if (b.batchCode === selectedBatch.batchCode) {
+                                        return { ...b, currentQuantity: b.currentQuantity - qty };
+                                    }
+                                    return b;
+                                }));
+                                closeModal();
+                            }
+                        },
+                        {
+                            text: 'Reemplazar',
+                            onPress: () => {
+                                // If replacing, we calculate the difference
+                                const diff = qty - currentQty;
+                                if (diff > selectedBatch.currentQuantity) {
+                                    Alert.alert('Error', `La cantidad a aumentar (${diff}) excede el disponible (${selectedBatch.currentQuantity})`);
+                                    return;
+                                }
+                                const newMaterials = [...materialsUsed];
+                                newMaterials[existingBatchIndex] = {
+                                    ...newMaterials[existingBatchIndex],
+                                    quantity: qty
+                                };
+                                onMaterialsChange(newMaterials);
+                                
+                                setBatches(prev => prev.map(b => {
+                                    if (b.batchCode === selectedBatch.batchCode) {
+                                        return { ...b, currentQuantity: b.currentQuantity - diff };
+                                    }
+                                    return b;
+                                }));
+                                closeModal();
+                            }
+                        }
+                    ]
+                );
+                return;
             } else {
+                const newMaterials = [...materialsUsed];
                 newMaterials.push({
                     item: itemId,
                     quantity: qty,
                     description: itemDetails?.description,
                     batchCode: selectedBatch.batchCode
                 });
+                onMaterialsChange(newMaterials);
+
+                // Decrement local batch inventory
+                setBatches(prev => prev.map(b => {
+                    if (b.batchCode === selectedBatch.batchCode) {
+                        return {
+                            ...b,
+                            currentQuantity: b.currentQuantity - qty
+                        };
+                    }
+                    return b;
+                }));
+
+                closeModal();
             }
-            onMaterialsChange(newMaterials);
-
-            // Decrement local batch inventory
-            setBatches(prev => prev.map(b => {
-                if (b.batchCode === selectedBatch.batchCode) {
-                    return {
-                        ...b,
-                        currentQuantity: b.currentQuantity - qty
-                    };
-                }
-                return b;
-            }));
-
-            closeModal();
             return;
         }
 
@@ -421,44 +468,89 @@ export default function InventoryAssignmentManager({
         // Check if item already exists in materialsUsed
         const existingIndex = materialsUsed.findIndex(m => m.item === itemId && !m.instanceIds && !m.batchCode);
 
-        let newMaterials = [...materialsUsed];
-
         if (existingIndex >= 0) {
-            // Update quantity if already exists
-            const currentQty = newMaterials[existingIndex].quantity;
-            if (currentQty + qty > selectedItem.quantity) {
-                Alert.alert('Error', `La cantidad total excede el disponible (${selectedItem.quantity})`);
-                return;
-            }
-
-            newMaterials[existingIndex] = {
-                ...newMaterials[existingIndex],
-                quantity: currentQty + qty
-            };
+            const currentQty = materialsUsed[existingIndex].quantity;
+            
+            Alert.alert(
+                'Material ya agregado',
+                `Este material ya tiene ${currentQty} agregados. ¿Deseas sumar los nuevos ${qty} o reemplazar la cantidad?`,
+                [
+                    { text: 'Cancelar', style: 'cancel' },
+                    {
+                        text: 'Sumar',
+                        onPress: () => {
+                            if (qty > selectedItem.quantity) {
+                                Alert.alert('Error', `La cantidad a sumar (${qty}) excede el disponible (${selectedItem.quantity})`);
+                                return;
+                            }
+                            const newMaterials = [...materialsUsed];
+                            newMaterials[existingIndex] = {
+                                ...newMaterials[existingIndex],
+                                quantity: currentQty + qty
+                            };
+                            onMaterialsChange(newMaterials);
+                            
+                            setInventory(prev => prev.map(inv => {
+                                const invItemId = typeof inv.item === 'string' ? inv.item : (inv.item as any)._id;
+                                if (invItemId === itemId) {
+                                    return { ...inv, quantity: Math.max(0, inv.quantity - qty) };
+                                }
+                                return inv;
+                            }));
+                            closeModal();
+                        }
+                    },
+                    {
+                        text: 'Reemplazar',
+                        onPress: () => {
+                            const diff = qty - currentQty;
+                            if (diff > selectedItem.quantity) {
+                                Alert.alert('Error', `La cantidad a aumentar (${diff}) excede el disponible (${selectedItem.quantity})`);
+                                return;
+                            }
+                            const newMaterials = [...materialsUsed];
+                            newMaterials[existingIndex] = {
+                                ...newMaterials[existingIndex],
+                                quantity: qty
+                            };
+                            onMaterialsChange(newMaterials);
+                            
+                            setInventory(prev => prev.map(inv => {
+                                const invItemId = typeof inv.item === 'string' ? inv.item : (inv.item as any)._id;
+                                if (invItemId === itemId) {
+                                    return { ...inv, quantity: Math.max(0, inv.quantity - diff) };
+                                }
+                                return inv;
+                            }));
+                            closeModal();
+                        }
+                    }
+                ]
+            );
         } else {
             // Add new material
+            const newMaterials = [...materialsUsed];
             newMaterials.push({
                 item: itemId,
                 quantity: qty,
                 description: itemDetails?.description || 'Ítem sin descripción'
             });
+            onMaterialsChange(newMaterials);
+
+            // Decrement local inventory
+            setInventory(prev => prev.map(inv => {
+                const invItemId = typeof inv.item === 'string' ? inv.item : (inv.item as any)._id;
+                if (invItemId === itemId) {
+                    return {
+                        ...inv,
+                        quantity: Math.max(0, inv.quantity - qty)
+                    };
+                }
+                return inv;
+            }));
+
+            closeModal();
         }
-
-        onMaterialsChange(newMaterials);
-
-        // Decrement local inventory
-        setInventory(prev => prev.map(inv => {
-            const invItemId = typeof inv.item === 'string' ? inv.item : (inv.item as any)._id;
-            if (invItemId === itemId) {
-                return {
-                    ...inv,
-                    quantity: Math.max(0, inv.quantity - qty)
-                };
-            }
-            return inv;
-        }));
-
-        closeModal();
     };
 
     // Handle item selection to check for equipment type

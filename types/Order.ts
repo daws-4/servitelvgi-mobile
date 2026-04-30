@@ -208,15 +208,3 @@ export interface OrderSummary {
   assignedToName?: string;
 }
 
-/**
- * Estadísticas de órdenes
- */
-export interface OrderStats {
-  total: number;
-  pending: number;
-  assigned: number;
-  inProgress: number;
-  completed: number;
-  completedSpecial: number;
-  cancelled: number;
-}

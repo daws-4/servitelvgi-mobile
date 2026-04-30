@@ -33,7 +33,7 @@ class PocketBaseService {
   private baseUrl: string;
   // Hardcoded credentials as requested
   private adminEmail = 'casaos@admin.local';
-  private adminPass = 'adminpocketbase';
+  private adminPass = 'Enlared2026';
   private adminToken: string | null = null;
 
   /**

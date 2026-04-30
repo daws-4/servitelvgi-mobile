@@ -64,11 +64,12 @@ export default function StatusPicker({
                 animationType="fade"
                 onRequestClose={() => setModalVisible(false)}
             >
-                <TouchableOpacity
-                    style={styles.overlay}
-                    activeOpacity={1}
-                    onPress={() => setModalVisible(false)}
-                >
+                <View style={styles.overlay}>
+                    <TouchableOpacity
+                        style={StyleSheet.absoluteFill}
+                        activeOpacity={1}
+                        onPress={() => setModalVisible(false)}
+                    />
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Seleccionar Estado</Text>
 
@@ -119,7 +120,7 @@ export default function StatusPicker({
                             <Text style={styles.cancelText}>Cancelar</Text>
                         </TouchableOpacity>
                     </View>
-                </TouchableOpacity>
+                </View>
             </Modal>
         </View>
     );

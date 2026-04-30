@@ -19,6 +19,7 @@ import ChangePasswordModal from '@/components/profile/ChangePasswordModal';
 import crewService from '@/services/api/crews';
 import type { Crew } from '@/types/Crew';
 import { Config } from '@/constants/config';
+import { useOrderConfig } from '@/context/OrderConfigContext';
 // import { BandwidthStats } from '@/components/BandwidthStats';
 
 /**
@@ -37,6 +38,7 @@ export default function ProfileScreen() {
         biometricType
     } = useAuth();
     const router = useRouter();
+    const { getStatusConfig } = useOrderConfig();
 
     // Use useInstaller to fetch full profile data (including profilePicture) which might be missing in auth/me
     const {
@@ -180,13 +182,14 @@ export default function ProfileScreen() {
                         newToday++;
                     }
 
-                    // 2. Total Pending (pending, assigned, in_progress)
-                    if (['pending', 'assigned', 'in_progress'].includes(order.status)) {
+                    // 2. Total Pending (any non-terminal status)
+                    const statusCfg = getStatusConfig(order.status);
+                    if (!statusCfg.isTerminal) {
                         totalPending++;
                     }
 
-                    // 3. Completed Orders Today
-                    if (order.status === 'completed' && order.completionDate) {
+                    // 3. Completed Orders Today (any status that countsAsCompleted)
+                    if (statusCfg.countsAsCompleted && order.completionDate) {
                         const completionDate = new Date(order.completionDate);
                         completionDate.setHours(0, 0, 0, 0);
                         if (completionDate.getTime() === today.getTime()) {

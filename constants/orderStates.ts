@@ -1,5 +1,9 @@
 /**
- * Constantes y configuración de estados de órdenes
+ * ⚠️ FALLBACK ONLY — La fuente de verdad es el endpoint /api/web/order-config
+ * Estos mapas solo se usan si el servidor no responde (modo offline / primera carga).
+ * NO agregar nuevos statuses aquí — agregarlos en el backend (orderConstants.ts).
+ *
+ * La app carga dinámicamente la configuración al iniciar sesión via OrderConfigContext.
  */
 
 import type { OrderStatus, OrderType, OrderPriority } from '@/types/Order';

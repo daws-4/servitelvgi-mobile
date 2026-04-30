@@ -24,7 +24,7 @@ interface UseOrdersReturn {
   updateCoordinates: (orderId: string, coordinates: Coordinates) => Promise<void>;
   updateInternetTest: (orderId: string, data: UpdateInternetTestData) => Promise<void>;
   startOrder: (orderId: string, coordinates?: Coordinates) => Promise<void>;
-  completeOrder: (orderId: string, data: OrderCompletionData) => Promise<void>;
+  completeOrder: (orderId: string, data: OrderCompletionData, statusOverride?: string) => Promise<void>;
 }
 
 /**
@@ -191,9 +191,9 @@ export const useOrders = (crewId: string, filters?: OrderFilters, limit: number 
   }, [updateOrderInCache, selectedOrder]);
 
   // Complete Order
-  const completeOrder = useCallback(async (orderId: string, data: OrderCompletionData) => {
+  const completeOrder = useCallback(async (orderId: string, data: OrderCompletionData, statusOverride?: string) => {
     try {
-      const updatedOrder = await orderService.completeOrder(orderId, data);
+      const updatedOrder = await orderService.completeOrder(orderId, data, statusOverride);
       updateOrderInCache(updatedOrder);
       if (selectedOrder?._id === orderId) setSelectedOrder(updatedOrder);
     } catch (err) {
