@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
 import * as Camera from 'expo-camera';
+import { useState, useEffect, useCallback } from 'react';
 import { Linking, Platform } from 'react-native';
 
 export interface CameraPermissionState {
@@ -7,22 +7,22 @@ export interface CameraPermissionState {
    * Si el permiso ha sido concedido
    */
   hasPermission: boolean;
-  
+
   /**
    * Si está en proceso de solicitar el permiso
    */
   requesting: boolean;
-  
+
   /**
    * Si el permiso fue denegado
    */
   permissionDenied: boolean;
-  
+
   /**
    * Solicitar permiso de cámara
    */
   requestPermission: () => Promise<boolean>;
-  
+
   /**
    * Abrir configuraciones de la app
    */
@@ -31,14 +31,14 @@ export interface CameraPermissionState {
 
 /**
  * Hook para gestionar permisos de cámara
- * 
+ *
  * @example
  * ```tsx
  * import { useCameraPermission } from '@/hooks/useCameraPermission';
- * 
+ *
  * function PhotoCapture() {
  *   const { requestPermission, hasPermission, permissionDenied } = useCameraPermission();
- * 
+ *
  *   const handleTakePhoto = async () => {
  *     const granted = await requestPermission();
  *     if (granted) {
@@ -46,11 +46,11 @@ export interface CameraPermissionState {
  *       const result = await ImagePicker.launchCameraAsync();
  *     }
  *   };
- * 
+ *
  *   if (permissionDenied) {
  *     return <PermissionDeniedDialog type="camera" />;
  *   }
- * 
+ *
  *   return <Button onPress={handleTakePhoto}>Tomar Foto</Button>;
  * }
  * ```
@@ -78,13 +78,13 @@ export function useCameraPermission(): CameraPermissionState {
   const requestPermission = useCallback(async (): Promise<boolean> => {
     try {
       setRequesting(true);
-      
+
       const { status } = await Camera.Camera.requestCameraPermissionsAsync();
-      
+
       const granted = status === 'granted';
       setHasPermission(granted);
       setPermissionDenied(status === 'denied');
-      
+
       return granted;
     } catch (error) {
       console.error('Error requesting camera permission:', error);

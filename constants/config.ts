@@ -68,7 +68,7 @@ export const Config = {
   /**
    * Versión de la aplicación
    */
-  APP_VERSION: '1.1.5', // CAMBIAR AQUÍ LA VERSIÓN DE LA APP
+  APP_VERSION: '1.1.6', // CAMBIAR AQUÍ LA VERSIÓN DE LA APP
 
   /**
    * Nombre de la aplicación
@@ -78,7 +78,8 @@ export const Config = {
   /**
    * Bundle ID
    */
-  BUNDLE_ID: Constants.expoConfig?.ios?.bundleIdentifier ||
+  BUNDLE_ID:
+    Constants.expoConfig?.ios?.bundleIdentifier ||
     Constants.expoConfig?.android?.package ||
     'com.servitelv.mobile',
 

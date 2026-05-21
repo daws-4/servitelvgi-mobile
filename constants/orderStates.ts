@@ -43,14 +43,14 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
  * Colores para cada estado de orden
  */
 export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
-  pending: '#ff9800',              // Naranja
-  assigned: '#2196f3',             // Azul
-  in_progress: '#9c27b0',          // Púrpura
-  completed: '#4caf50',            // Verde
-  completed_special: '#00897b',    // Teal
-  cancelled: '#757575',            // Gris
-  hard: '#f44336',                 // Rojo
-  visita: '#9C27B0',               // Violeta
+  pending: '#ff9800', // Naranja
+  assigned: '#2196f3', // Azul
+  in_progress: '#9c27b0', // Púrpura
+  completed: '#4caf50', // Verde
+  completed_special: '#00897b', // Teal
+  cancelled: '#757575', // Gris
+  hard: '#f44336', // Rojo
+  visita: '#9C27B0', // Violeta
 };
 
 /**
@@ -95,10 +95,10 @@ export const ORDER_TYPE_LABELS: Record<string, string> = {
  * Colores para cada tipo
  */
 export const ORDER_TYPE_COLORS: Record<OrderType, string> = {
-  instalacion: '#4caf50',    // Verde
-  averia: '#ff9800',         // Naranja
-  recuperacion: '#3B82F6',   // Azul
-  otro: '#9e9e9e',           // Gris
+  instalacion: '#4caf50', // Verde
+  averia: '#ff9800', // Naranja
+  recuperacion: '#3B82F6', // Azul
+  otro: '#9e9e9e', // Gris
 };
 
 /**
@@ -137,9 +137,9 @@ export const ORDER_PRIORITY_LABELS: Record<OrderPriority, string> = {
  * Colores para cada prioridad
  */
 export const ORDER_PRIORITY_COLORS: Record<OrderPriority, string> = {
-  low: '#4caf50',      // Verde
-  medium: '#ff9800',   // Naranja
-  high: '#f44336',     // Rojo
+  low: '#4caf50', // Verde
+  medium: '#ff9800', // Naranja
+  high: '#f44336', // Rojo
 };
 
 // ============================================================================

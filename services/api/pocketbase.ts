@@ -65,16 +65,18 @@ class PocketBaseService {
         console.log('✅ [PocketBase] Admin authenticated.');
         return this.adminToken;
       } else {
-         console.warn(`⚠️ [PocketBase] Admin auth failed with status ${response.status}. Trying user auth...`);
+        console.warn(
+          `⚠️ [PocketBase] Admin auth failed with status ${response.status}. Trying user auth...`
+        );
       }
     } catch (error) {
-       console.error('❌ [PocketBase] Admin auth network error:', error);
+      console.error('❌ [PocketBase] Admin auth network error:', error);
     }
 
     // 2. Fallback: Try User Auth (users collection)
     try {
-       console.log('🔑 [PocketBase] Attempting auth as user (fallback)...');
-       const response = await fetch(`${baseUrl}/api/collections/users/auth-with-password`, {
+      console.log('🔑 [PocketBase] Attempting auth as user (fallback)...');
+      const response = await fetch(`${baseUrl}/api/collections/users/auth-with-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -84,17 +86,17 @@ class PocketBaseService {
       });
 
       if (response.ok) {
-         const data = await response.json();
-         this.adminToken = data.token;
-         console.log('✅ [PocketBase] User/Admin authenticated via users collection.');
-         return this.adminToken;
+        const data = await response.json();
+        this.adminToken = data.token;
+        console.log('✅ [PocketBase] User/Admin authenticated via users collection.');
+        return this.adminToken;
       } else {
-         console.error(`❌ [PocketBase] User auth failed with status ${response.status}`);
-         return null;
+        console.error(`❌ [PocketBase] User auth failed with status ${response.status}`);
+        return null;
       }
     } catch (error) {
-       console.error('❌ [PocketBase] User auth network error:', error);
-       return null;
+      console.error('❌ [PocketBase] User auth network error:', error);
+      return null;
     }
   }
 
@@ -129,7 +131,7 @@ class PocketBaseService {
       const formData = new FormData();
       formData.append('user_id', userId);
       formData.append('mobile', 'true'); // Always true for mobile uploads
-      
+
       // Create file object for React Native
       const file = {
         uri: imageUri,
@@ -152,13 +154,10 @@ class PocketBaseService {
         );
       } else {
         // Create new record
-        response = await fetch(
-          `${this.baseUrl}/api/collections/${COLLECTION_NAME}/records`,
-          {
-            method: 'POST',
-            body: formData,
-          }
-        );
+        response = await fetch(`${this.baseUrl}/api/collections/${COLLECTION_NAME}/records`, {
+          method: 'POST',
+          body: formData,
+        });
       }
 
       if (!response.ok) {
@@ -207,7 +206,7 @@ class PocketBaseService {
       }
 
       const data = await response.json();
-      
+
       if (data.items && data.items.length > 0) {
         console.log(`✅ [PocketBase] Found record: ${data.items[0].id}`);
         return data.items[0] as PocketBaseRecord;
@@ -265,7 +264,7 @@ class PocketBaseService {
   async getProfilePhotoUrl(userId: string): Promise<string | null> {
     try {
       const record = await this.findRecordByUserId(userId);
-      
+
       if (record && record.image) {
         return this.getImageUrl(record);
       }
@@ -288,12 +287,12 @@ class PocketBaseService {
     try {
       // Get admin token first
       const token = await this.getAdminToken();
-      
+
       // Prepare FormData
       const formData = new FormData();
       formData.append('order_id', orderId);
       formData.append('mobile', 'true');
-      
+
       // Create file object
       const file = {
         uri: imageUri,
@@ -308,19 +307,16 @@ class PocketBaseService {
       const headers: HeadersInit = {};
       if (token) {
         // PocketBase standard: Authorization: <token>
-        headers['Authorization'] = token; 
+        headers['Authorization'] = token;
       }
 
       console.log('📝 [PocketBase] Uploading Signature with Admin Token...');
-      
-      const response = await fetch(
-        `${baseUrl}/api/collections/customers_signatures/records`,
-        {
-          method: 'POST',
-          headers: headers, // Add headers with auth
-          body: formData,
-        }
-      );
+
+      const response = await fetch(`${baseUrl}/api/collections/customers_signatures/records`, {
+        method: 'POST',
+        headers, // Add headers with auth
+        body: formData,
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -346,7 +342,7 @@ class PocketBaseService {
         error: error.message || 'Error al subir la firma',
       };
     }
-  }
+  };
 }
 
 // Singleton instance

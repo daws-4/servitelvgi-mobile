@@ -1,10 +1,11 @@
 import apiClient, { httpClient, ApiError } from './client';
-import type { 
-  LoginRequest, 
-  LoginResponse, 
+
+import type {
+  LoginRequest,
+  LoginResponse,
   InstallerProfile,
   AuthError,
-  AuthErrorCode 
+  AuthErrorCode,
 } from '@/types/auth';
 
 /**
@@ -19,11 +20,8 @@ class AuthService {
   login = async (username: string, password: string): Promise<LoginResponse> => {
     try {
       const payload: LoginRequest = { username, password };
-      
-      const response = await httpClient.post<LoginResponse>(
-        '/api/mobile/auth/login',
-        payload
-      );
+
+      const response = await httpClient.post<LoginResponse>('/api/mobile/auth/login', payload);
 
       // Guardar token en secure storage
       if (response.data.token) {
@@ -58,9 +56,7 @@ class AuthService {
    */
   getMe = async (): Promise<InstallerProfile> => {
     try {
-      const response = await httpClient.get<{ installer: InstallerProfile }>(
-        '/api/mobile/auth/me'
-      );
+      const response = await httpClient.get<{ installer: InstallerProfile }>('/api/mobile/auth/me');
 
       return response.data.installer;
     } catch (error) {
@@ -82,7 +78,7 @@ class AuthService {
   getToken = async (): Promise<string | null> => {
     const hasToken = await apiClient.hasToken();
     if (!hasToken) return null;
-    
+
     // El token está en memoria después de hasToken()
     return apiClient.getClient().defaults.headers.common['Authorization'] as string | null;
   };
@@ -95,13 +91,10 @@ class AuthService {
   verifyPassword = async (username: string, password: string): Promise<boolean> => {
     try {
       const payload: LoginRequest = { username, password };
-      
+
       // Intentar login para verificar credenciales
-      await httpClient.post<LoginResponse>(
-        '/api/mobile/auth/login',
-        payload
-      );
-      
+      await httpClient.post<LoginResponse>('/api/mobile/auth/login', payload);
+
       // Si no lanza error, las credenciales son válidas
       return true;
     } catch (error) {
@@ -114,7 +107,6 @@ class AuthService {
    * Manejar errores de autenticación y convertirlos a formato consistente
    */
   private handleAuthError = (error: ApiError | any): AuthError => {
-
     let code: AuthErrorCode = 'SERVER_ERROR';
     let message: string = 'Error al iniciar sesión';
 
@@ -157,10 +149,4 @@ const authService = new AuthService();
 export default authService;
 
 // También exportar métodos individuales para facilitar uso
-export const {
-  login,
-  logout,
-  getMe,
-  isAuthenticated,
-  getToken,
-} = authService;
+export const { login, logout, getMe, isAuthenticated, getToken } = authService;

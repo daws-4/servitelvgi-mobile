@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+
 import crewService from '@/services/api/crews';
 import type { Crew } from '@/types/Crew';
 import type { Installer } from '@/types/Installer';
@@ -33,12 +34,12 @@ export const useCrew = (crewId: string): UseCrewReturn => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const [crewData, crewMembers] = await Promise.all([
         crewService.getCrewById(crewId),
         crewService.getCrewMembers(crewId),
       ]);
-      
+
       setCrew(crewData);
       setMembers(crewMembers);
       setInventory(crewData.assignedInventory || []);

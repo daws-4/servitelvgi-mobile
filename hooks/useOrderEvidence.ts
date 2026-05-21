@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+
 import uploadsService from '@/services/api/uploads';
 
 interface UseOrderEvidenceReturn {
@@ -31,88 +32,89 @@ export const useOrderEvidence = (): UseOrderEvidenceReturn => {
   /**
    * Upload photo evidence via backend
    */
-  const uploadEvidence = useCallback(async (
-    orderId: string,
-    installerId: string,
-    crewId: string,
-    imageUri: string
-  ): Promise<{ success: boolean; recordId?: string; url?: string; error?: string }> => {
-    try {
-      setUploading(true);
-      setError(null);
+  const uploadEvidence = useCallback(
+    async (
+      orderId: string,
+      installerId: string,
+      crewId: string,
+      imageUri: string
+    ): Promise<{ success: boolean; recordId?: string; url?: string; error?: string }> => {
+      try {
+        setUploading(true);
+        setError(null);
 
-      // Create file object for React Native
-      const timestamp = Date.now();
-      const fileName = `evidence_${orderId}_${timestamp}.jpg`;
+        // Create file object for React Native
+        const timestamp = Date.now();
+        const fileName = `evidence_${orderId}_${timestamp}.jpg`;
 
-      const file = {
-        uri: imageUri,
-        type: 'image/jpeg',
-        name: fileName,
-      };
+        const file = {
+          uri: imageUri,
+          type: 'image/jpeg',
+          name: fileName,
+        };
 
-      const result = await uploadsService.uploadOrderEvidence({
-        file,
-        orderId,
-        installerId,
-        crewId,
-      });
+        const result = await uploadsService.uploadOrderEvidence({
+          file,
+          orderId,
+          installerId,
+          crewId,
+        });
 
-      return {
-        success: true,
-        recordId: result.recordId,
-        url: result.url,
-      };
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.error || err.message || 'Error al subir la evidencia';
-      console.error('❌ [useOrderEvidence] Upload failed:', err);
-      setError(errorMsg);
-      return {
-        success: false,
-        error: errorMsg,
-      };
-    } finally {
-      setUploading(false);
-    }
-  }, []);
+        return {
+          success: true,
+          recordId: result.recordId,
+          url: result.url,
+        };
+      } catch (err: any) {
+        const errorMsg = err.response?.data?.error || err.message || 'Error al subir la evidencia';
+        console.error('❌ [useOrderEvidence] Upload failed:', err);
+        setError(errorMsg);
+        return {
+          success: false,
+          error: errorMsg,
+        };
+      } finally {
+        setUploading(false);
+      }
+    },
+    []
+  );
 
   /**
    * Delete photo evidence via backend
    */
-  const deleteEvidence = useCallback(async (
-    recordId: string,
-    orderId: string
-  ): Promise<{ success: boolean; error?: string }> => {
-    try {
-      setDeleting(true);
-      setError(null);
+  const deleteEvidence = useCallback(
+    async (recordId: string, orderId: string): Promise<{ success: boolean; error?: string }> => {
+      try {
+        setDeleting(true);
+        setError(null);
 
-      await uploadsService.deleteOrderEvidence({
-        recordId,
-        orderId,
-      });
+        await uploadsService.deleteOrderEvidence({
+          recordId,
+          orderId,
+        });
 
-      return { success: true };
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.error || err.message || 'Error al eliminar la evidencia';
-      console.error('❌ [useOrderEvidence] Delete failed:', err);
-      setError(errorMsg);
-      return {
-        success: false,
-        error: errorMsg,
-      };
-    } finally {
-      setDeleting(false);
-    }
-  }, []);
+        return { success: true };
+      } catch (err: any) {
+        const errorMsg =
+          err.response?.data?.error || err.message || 'Error al eliminar la evidencia';
+        console.error('❌ [useOrderEvidence] Delete failed:', err);
+        setError(errorMsg);
+        return {
+          success: false,
+          error: errorMsg,
+        };
+      } finally {
+        setDeleting(false);
+      }
+    },
+    []
+  );
 
   /**
    * Get image URL from recordId
    */
-  const getImageUrl = useCallback(async (
-    recordId: string,
-    thumb?: string
-  ): Promise<string> => {
+  const getImageUrl = useCallback(async (recordId: string, thumb?: string): Promise<string> => {
     try {
       return await uploadsService.getImageUrl({ recordId, thumb });
     } catch (err: any) {

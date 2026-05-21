@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+
 import inventoryService from '@/services/api/inventory';
 import type { AssignedInventoryItem } from '@/types/Inventory';
 
@@ -21,7 +22,7 @@ export const useInventory = (crewId: string): UseInventoryReturn => {
     data: inventory = [],
     isLoading: loading,
     error: queryError,
-    refetch: queryRefetch
+    refetch: queryRefetch,
   } = useQuery({
     queryKey: ['inventory', crewId],
     queryFn: () => inventoryService.getCrewInventory(crewId),

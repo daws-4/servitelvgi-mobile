@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+
 import orderHistoryService from '@/services/api/orderHistory';
 import type { OrderHistory, OrderHistoryFilters } from '@/types/orderHistory';
 
@@ -14,7 +15,10 @@ interface UseOrderHistoryReturn {
  * @param orderId - Optional order ID to filter by
  * @param filters - Optional additional filters
  */
-export const useOrderHistory = (orderId?: string, filters?: OrderHistoryFilters): UseOrderHistoryReturn => {
+export const useOrderHistory = (
+  orderId?: string,
+  filters?: OrderHistoryFilters
+): UseOrderHistoryReturn => {
   const [history, setHistory] = useState<OrderHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +27,7 @@ export const useOrderHistory = (orderId?: string, filters?: OrderHistoryFilters)
     try {
       setLoading(true);
       setError(null);
-      
+
       const combinedFilters = { ...filters, orderId };
       const data = await orderHistoryService.getOrderHistories(combinedFilters);
       setHistory(data);

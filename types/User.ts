@@ -21,11 +21,11 @@ export type UserRole = 'admin' | 'manager' | 'installer';
  */
 export interface User {
   _id: string;
-  email: string;                   // Email único
-  password?: string;               // Password (normalmente no se envía desde backend)
-  name: string;                    // Nombre completo
-  role: UserRole;                  // Rol
-  isActive: boolean;               // Usuario activo
+  email: string; // Email único
+  password?: string; // Password (normalmente no se envía desde backend)
+  name: string; // Nombre completo
+  role: UserRole; // Rol
+  isActive: boolean; // Usuario activo
   createdAt: Date | string;
   updatedAt: Date | string;
 }

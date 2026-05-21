@@ -1,4 +1,3 @@
-import { useState, useEffect, useCallback } from 'react';
 import { getApp } from '@react-native-firebase/app';
 import {
   getMessaging,
@@ -7,13 +6,15 @@ import {
   hasPermission,
   requestPermission,
   getToken,
-  AuthorizationStatus
+  AuthorizationStatus,
 } from '@react-native-firebase/messaging';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
+import { useState, useEffect, useCallback } from 'react';
 import { Platform, PermissionsAndroid } from 'react-native';
-import installerService from '@/services/api/installers';
+
 import { useAuth } from '@/app/contexts/AuthContext';
+import installerService from '@/services/api/installers';
 
 export interface UseNotificationsReturn {
   notificationsEnabled: boolean;
@@ -27,11 +28,11 @@ export interface UseNotificationsReturn {
 // Enable only essential properties - no manual scheduling to avoid duplicates
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,      // Show alert
-    shouldPlaySound: true,      // Play sound
-    shouldSetBadge: true,      // Don't update app badge
-    shouldShowBanner: true,    // Don't show banner to avoid duplicates
-    shouldShowList: true,      // Don't show in list to avoid duplicates
+    shouldShowAlert: true, // Show alert
+    shouldPlaySound: true, // Play sound
+    shouldSetBadge: true, // Don't update app badge
+    shouldShowBanner: true, // Don't show banner to avoid duplicates
+    shouldShowList: true, // Don't show in list to avoid duplicates
   }),
 });
 
@@ -60,14 +61,14 @@ export const useNotifications = (): UseNotificationsReturn => {
     const messaging = getMessaging(app);
 
     // Handle background messages
-    setBackgroundMessageHandler(messaging, async remoteMessage => {
+    setBackgroundMessageHandler(messaging, async (remoteMessage) => {
       // Trigger order refetch when notification arrives
       console.log('📨 [FCM Background] Refreshing orders after notification...');
       await refetchOrders();
     });
 
     // Handle foreground messages - Manual scheduling with content-based deduplication
-    const unsubscribe = onMessage(messaging, async remoteMessage => {
+    const unsubscribe = onMessage(messaging, async (remoteMessage) => {
       // Trigger order refetch when notification arrives
       console.log('📨 [FCM Foreground] Refreshing orders after notification...');
       await refetchOrders();
@@ -105,19 +106,21 @@ export const useNotifications = (): UseNotificationsReturn => {
     });
 
     // Handle notification tap/response - Navigate to order when user taps notification
-    const notificationResponseListener = Notifications.addNotificationResponseReceivedListener(response => {
-      const data = response.notification.request.content.data;
+    const notificationResponseListener = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        const data = response.notification.request.content.data;
 
-      // Check if notification contains order information
-      if (data && data.orderId) {
-        // Import router dynamically to avoid circular dependencies
-        import('expo-router').then(({ router }) => {
-          // Navigate to order detail screen
-          router.push(`/orders/${data.orderId}`);
-          console.log('📱 [Notifications] Navigating to order:', data.orderId);
-        });
+        // Check if notification contains order information
+        if (data && data.orderId) {
+          // Import router dynamically to avoid circular dependencies
+          import('expo-router').then(({ router }) => {
+            // Navigate to order detail screen
+            router.push(`/orders/${data.orderId}`);
+            console.log('📱 [Notifications] Navigating to order:', data.orderId);
+          });
+        }
       }
-    });
+    );
 
     return () => {
       unsubscribe();
@@ -145,8 +148,10 @@ export const useNotifications = (): UseNotificationsReturn => {
       // Request permission (Android 13+ / iOS)
       let authStatus = await hasPermission(messaging);
 
-      if (authStatus !== AuthorizationStatus.AUTHORIZED &&
-        authStatus !== AuthorizationStatus.PROVISIONAL) {
+      if (
+        authStatus !== AuthorizationStatus.AUTHORIZED &&
+        authStatus !== AuthorizationStatus.PROVISIONAL
+      ) {
         // console.log('⚠️ [useNotifications] Solicitando permisos FCM...');
 
         if (Platform.OS === 'android') {
@@ -168,8 +173,10 @@ export const useNotifications = (): UseNotificationsReturn => {
 
       // console.log('🔐 [useNotifications] Estado de permisos FCM:', authStatus);
 
-      if (authStatus !== AuthorizationStatus.AUTHORIZED &&
-        authStatus !== AuthorizationStatus.PROVISIONAL) {
+      if (
+        authStatus !== AuthorizationStatus.AUTHORIZED &&
+        authStatus !== AuthorizationStatus.PROVISIONAL
+      ) {
         const errorMsg = 'Permiso para notificaciones denegado';
         console.error('❌ [useNotifications]', errorMsg);
         setError(errorMsg);

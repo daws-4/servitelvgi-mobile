@@ -1,17 +1,17 @@
-import { useEffect, useState } from 'react';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
+import { useEffect, useState } from 'react';
 
 export interface NetworkStatus {
   /**
    * Estado de conexión (true si está conectado, false si no, null si es desconocido)
    */
   isConnected: boolean | null;
-  
+
   /**
    * Si internet es alcanzable (puede estar conectado a WiFi pero sin internet)
    */
   isInternetReachable: boolean | null;
-  
+
   /**
    * Tipo de conexión (wifi, cellular, etc.)
    */
@@ -20,11 +20,11 @@ export interface NetworkStatus {
 
 /**
  * Hook personalizado para detectar el estado de la conexión de red
- * 
+ *
  * @example
  * ```tsx
  * const { isConnected, isInternetReachable, connectionType } = useNetworkStatus();
- * 
+ *
  * if (!isConnected) {
  *   return <OfflineBanner />;
  * }

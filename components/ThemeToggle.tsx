@@ -1,7 +1,8 @@
+import Feather from '@expo/vector-icons/Feather';
+import { useTheme } from 'app/contexts/ThemeContext';
 import React, { useState } from 'react';
 import { Pressable, Animated } from 'react-native';
-import { useTheme } from 'app/contexts/ThemeContext';
-import Feather from '@expo/vector-icons/Feather';
+
 import useThemeColors from '@/app/contexts/ThemeColors';
 
 interface ThemeToggleProps {
@@ -17,9 +18,9 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ value, onChange }) => {
   const [isAnimating, setIsAnimating] = useState(false);
 
   const animateIcon = () => {
-    if (isAnimating) return; 
+    if (isAnimating) return;
 
-    setIsAnimating(true); 
+    setIsAnimating(true);
     // Start the animation (scaling and rotating out)
     Animated.sequence([
       Animated.parallel([
@@ -68,8 +69,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ value, onChange }) => {
             { scale },
             { rotate: rotate.interpolate({ inputRange: [0, 45], outputRange: ['0deg', '45deg'] }) },
           ],
-        }}
-      >
+        }}>
         {isActive ? (
           <Feather name="sun" size={24} color={colors.icon} />
         ) : (

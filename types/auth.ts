@@ -35,7 +35,7 @@ export interface InstallerProfile {
   email?: string;
   phone?: string;
   status: InstallerStatus;
-  onDuty: OnDutyStatus;  // 'active' | 'inactive' | 'onDuty'
+  onDuty: OnDutyStatus; // 'active' | 'inactive' | 'onDuty'
   showInventory: boolean;
   crew: CrewInfo | null;
   profilePicture?: string | null;
@@ -88,7 +88,7 @@ export interface InstallerTokenPayload {
 /**
  * Códigos de error de autenticación
  */
-export type AuthErrorCode = 
+export type AuthErrorCode =
   | 'INVALID_CREDENTIALS'
   | 'INSTALLER_INACTIVE'
   | 'INSTALLER_SUSPENDED'

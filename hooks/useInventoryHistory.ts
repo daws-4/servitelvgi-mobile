@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+
 import inventoryHistoryService from '@/services/api/inventoryHistory';
 import type { InventoryHistory, InventoryHistoryFilters } from '@/types/inventoryHistory';
 
@@ -13,7 +14,9 @@ interface UseInventoryHistoryReturn {
  * Hook for fetching inventory history
  * @param filters - Filters for inventory history
  */
-export const useInventoryHistory = (filters?: InventoryHistoryFilters): UseInventoryHistoryReturn => {
+export const useInventoryHistory = (
+  filters?: InventoryHistoryFilters
+): UseInventoryHistoryReturn => {
   const [history, setHistory] = useState<InventoryHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

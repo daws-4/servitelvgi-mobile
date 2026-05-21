@@ -10,17 +10,17 @@ export interface OfflineAction {
    * ID único de la acción
    */
   id: string;
-  
+
   /**
    * Tipo de acción (ej: 'CREATE_ORDER', 'UPDATE_ORDER', etc.)
    */
   type: string;
-  
+
   /**
    * Datos de la acción
    */
   payload: any;
-  
+
   /**
    * Timestamp de cuando se creó la acción
    */
@@ -29,7 +29,7 @@ export interface OfflineAction {
 
 /**
  * Agrega una acción a la cola offline
- * 
+ *
  * @example
  * ```tsx
  * await addToQueue({
@@ -53,7 +53,7 @@ export async function addToQueue(action: OfflineAction): Promise<void> {
 
 /**
  * Obtiene todas las acciones pendientes en la cola
- * 
+ *
  * @returns Array de acciones pendientes
  */
 export async function getQueue(): Promise<OfflineAction[]> {
@@ -87,7 +87,7 @@ export async function clearQueue(): Promise<void> {
 export async function removeFromQueue(actionId: string): Promise<void> {
   try {
     const queue = await getQueue();
-    const filteredQueue = queue.filter(action => action.id !== actionId);
+    const filteredQueue = queue.filter((action) => action.id !== actionId);
     await AsyncStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(filteredQueue));
   } catch (error) {
     console.error('Error removing from offline queue:', error);
@@ -107,7 +107,7 @@ export async function getQueueCount(): Promise<number> {
  * Procesa la cola cuando se recupera la conexión
  * Esta es una función auxiliar, la lógica real de procesamiento
  * debe implementarse en el OfflineContext según las necesidades de la app
- * 
+ *
  * @param processAction Función que procesa cada acción
  * @returns Número de acciones procesadas exitosamente
  */
@@ -116,7 +116,7 @@ export async function processQueue(
 ): Promise<number> {
   const queue = await getQueue();
   let successCount = 0;
-  
+
   for (const action of queue) {
     try {
       const success = await processAction(action);
@@ -128,6 +128,6 @@ export async function processQueue(
       console.error(`Error processing action ${action.id}:`, error);
     }
   }
-  
+
   return successCount;
 }

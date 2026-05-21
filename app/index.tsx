@@ -6,5 +6,5 @@ import React from 'react';
  * Auth protection is handled in _layout.tsx
  */
 export default function Index() {
-    return <Redirect href="/(tabs)/orders" />;
+  return <Redirect href="/(tabs)/orders" />;
 }

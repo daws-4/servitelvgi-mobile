@@ -1,19 +1,22 @@
 import '../global.css';
-import React, { useEffect } from 'react';
-import { StatusBar } from 'expo-status-bar';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Toast from 'react-native-toast-message';
-import { ThemeProvider } from './contexts/ThemeContext';
+
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { SecurityProvider } from './contexts/SecurityContext';
 import { OfflineProvider } from './contexts/OfflineContext';
+import { SecurityProvider } from './contexts/SecurityContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { OrderConfigProvider, useOrderConfig } from '../context/OrderConfigContext';
+import useThemedNavigation from './hooks/useThemedNavigation';
+
+import { BandwidthSync } from '@/components/BandwidthSync';
+import { InactivityMonitor } from '@/components/InactivityMonitor';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { OfflineBanner } from '@/components/OfflineBanner';
-import { InactivityMonitor } from '@/components/InactivityMonitor';
-import useThemedNavigation from './hooks/useThemedNavigation';
-import { BandwidthSync } from '@/components/BandwidthSync';
 
 /**
  * Componente que protege las rutas y maneja refdirecciones
@@ -52,19 +55,16 @@ function ProtectedLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 10,  // 10 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes
       retry: 2,
     },
   },
 });
-
 
 /**
  * Layout raíz de la aplicación
@@ -81,33 +81,33 @@ export default function RootLayout() {
               <ThemeProvider>
                 <OfflineProvider>
                   <ProtectedLayout>
-                  <BandwidthSync />
-                  <InactivityMonitor>
-                    <OfflineBanner />
-                    <StatusBar style="dark" />
-                    <Stack screenOptions={screenOptions}>
-                      <Stack.Screen
-                        name="login"
-                        options={{
-                          headerShown: false,
-                          animation: 'fade'
-                        }}
-                      />
-                      <Stack.Screen
-                        name="(tabs)"
-                        options={{
-                          headerShown: false
-                        }}
-                      />
-                      <Stack.Screen
-                        name="index"
-                        options={{
-                          headerShown: false
-                        }}
-                      />
-                    </Stack>
-                    <Toast />
-                  </InactivityMonitor>
+                    <BandwidthSync />
+                    <InactivityMonitor>
+                      <OfflineBanner />
+                      <StatusBar style="dark" />
+                      <Stack screenOptions={screenOptions}>
+                        <Stack.Screen
+                          name="login"
+                          options={{
+                            headerShown: false,
+                            animation: 'fade',
+                          }}
+                        />
+                        <Stack.Screen
+                          name="(tabs)"
+                          options={{
+                            headerShown: false,
+                          }}
+                        />
+                        <Stack.Screen
+                          name="index"
+                          options={{
+                            headerShown: false,
+                          }}
+                        />
+                      </Stack>
+                      <Toast />
+                    </InactivityMonitor>
                   </ProtectedLayout>
                 </OfflineProvider>
               </ThemeProvider>

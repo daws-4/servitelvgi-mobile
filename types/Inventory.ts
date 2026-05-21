@@ -36,13 +36,13 @@ export type EquipmentStatus = 'in-stock' | 'assigned' | 'installed';
  */
 export interface InventoryItem {
   _id: string;
-  code: string;                    // Código único
-  description: string;             // Descripción del material
-  type: InventoryType;             // material o equipment
-  unit: string;                    // Unidad (metros, unidades, etc.)
-  currentStock: number;            // Stock actual en bodega
-  minimumStock: number;            // Stock mínimo
-  category?: string;               // Categoría
+  code: string; // Código único
+  description: string; // Descripción del material
+  type: InventoryType; // material o equipment
+  unit: string; // Unidad (metros, unidades, etc.)
+  currentStock: number; // Stock actual en bodega
+  minimumStock: number; // Stock mínimo
+  category?: string; // Categoría
   instances?: EquipmentInstance[]; // Solo para equipment
   createdAt?: Date | string;
   updatedAt?: Date | string;
@@ -53,16 +53,16 @@ export interface InventoryItem {
  */
 export interface InventoryBatch {
   _id: string;
-  batchCode: string;               // Código del lote (ej: "BOB-001")
-  item: string;                    // ID del ítem de inventario
-  initialQuantity: number;         // Cantidad inicial (metros)
-  currentQuantity: number;         // Cantidad actual disponible
-  unit: string;                    // Unidad (metros)
-  supplier?: string;               // Proveedor
-  acquisitionDate: Date | string;  // Fecha de adquisición
-  location: BatchLocation;         // warehouse o crew
-  crew?: string;                   // ID de cuadrilla (si location = 'crew')
-  status: BatchStatus;             // Estado del lote
+  batchCode: string; // Código del lote (ej: "BOB-001")
+  item: string; // ID del ítem de inventario
+  initialQuantity: number; // Cantidad inicial (metros)
+  currentQuantity: number; // Cantidad actual disponible
+  unit: string; // Unidad (metros)
+  supplier?: string; // Proveedor
+  acquisitionDate: Date | string; // Fecha de adquisición
+  location: BatchLocation; // warehouse o crew
+  crew?: string; // ID de cuadrilla (si location = 'crew')
+  status: BatchStatus; // Estado del lote
   notes?: string;
   createdAt?: Date | string;
   updatedAt?: Date | string;
@@ -72,10 +72,10 @@ export interface InventoryBatch {
  * Instancia individual de equipo (ONT, módem, etc.)
  */
 export interface EquipmentInstance {
-  uniqueId: string;                // ID único (ej: "ONT-001")
-  serialNumber?: string;           // Número de serie
-  macAddress?: string;             // Dirección MAC
-  status: EquipmentStatus;         // Estado
+  uniqueId: string; // ID único (ej: "ONT-001")
+  serialNumber?: string; // Número de serie
+  macAddress?: string; // Dirección MAC
+  status: EquipmentStatus; // Estado
   assignedTo?: {
     crewId: string;
     assignedAt: Date | string;
@@ -83,7 +83,7 @@ export interface EquipmentInstance {
   installedAt?: {
     orderId: string;
     installedDate: Date | string;
-    location: string;              // Dirección de instalación
+    location: string; // Dirección de instalación
   };
   notes?: string;
   createdAt?: Date | string;
@@ -93,10 +93,10 @@ export interface EquipmentInstance {
  * Ítem de inventario asignado a una cuadrilla
  */
 export interface AssignedInventoryItem {
-  item: string;                    // ID del ítem
-  itemDetails?: InventoryItem;     // Detalles (populado)
-  quantity: number;                // Cantidad asignada
-  lastUpdate: Date | string;       // Última actualización
+  item: string; // ID del ítem
+  itemDetails?: InventoryItem; // Detalles (populado)
+  quantity: number; // Cantidad asignada
+  lastUpdate: Date | string; // Última actualización
 }
 
 /**
@@ -105,11 +105,11 @@ export interface AssignedInventoryItem {
 export interface InventoryHistoryEntry {
   _id: string;
   item: string | { _id: string; code: string; description: string }; // ID or Populated Item
-  itemDetails?: InventoryItem;     // Deprecated/Unused if item is populated directly
-  batch?: string;                  // ID del lote (opcional)
-  type: InventoryMovementType;     // Tipo de movimiento
-  quantityChange: number;          // Cambio de cantidad (+ o -)
-  reason: string;                  // Razón del movimiento
+  itemDetails?: InventoryItem; // Deprecated/Unused if item is populated directly
+  batch?: string; // ID del lote (opcional)
+  type: InventoryMovementType; // Tipo de movimiento
+  quantityChange: number; // Cambio de cantidad (+ o -)
+  reason: string; // Razón del movimiento
   crew?: string | { _id: string; name: string };
   order?: string | { _id: string; subscriberNumber: string; ticket_id?: string };
   performedBy?: string | { _id: string; name?: string; surname?: string; username?: string };
@@ -120,11 +120,11 @@ export interface InventoryHistoryEntry {
  * Tipo de movimiento de inventario
  */
 export type InventoryMovementType =
-  | 'entry'          // Ingreso a bodega
-  | 'assignment'     // Asignación a cuadrilla
-  | 'usage_order'    // Uso en orden
-  | 'return'         // Devolución a bodega
-  | 'adjustment';    // Ajuste manual
+  | 'entry' // Ingreso a bodega
+  | 'assignment' // Asignación a cuadrilla
+  | 'usage_order' // Uso en orden
+  | 'return' // Devolución a bodega
+  | 'adjustment'; // Ajuste manual
 
 /**
  * Filtros para historial de inventario

@@ -6,13 +6,13 @@ export interface UseSmartPollingOptions {
    * Callback function to execute on each polling interval
    */
   callback: () => void | Promise<void>;
-  
+
   /**
    * Polling interval in milliseconds
    * @default 60000 * 5 (5 minutes)
    */
   interval?: number;
-  
+
   /**
    * Whether polling is enabled
    * Set to false to pause polling
@@ -23,12 +23,12 @@ export interface UseSmartPollingOptions {
 
 /**
  * Hook for smart polling that respects app state
- * 
+ *
  * - Polls at specified interval when app is ACTIVE
  * - Pauses automatically when app goes to BACKGROUND
  * - Resumes when app returns to FOREGROUND
  * - Auto-cleans up on unmount
- * 
+ *
  * @example
  * ```tsx
  * useSmartPolling({
@@ -41,9 +41,9 @@ export function useSmartPolling(options: UseSmartPollingOptions) {
   const {
     callback,
     interval = 60000 * 5, // Default 5 minutes
-    enabled = true
+    enabled = true,
   } = options;
-  
+
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const appState = useRef(AppState.currentState);
 
@@ -55,10 +55,10 @@ export function useSmartPolling(options: UseSmartPollingOptions) {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-    
+
     // Only start if enabled
     if (!enabled) return;
-    
+
     // Set up new interval
     intervalRef.current = setInterval(() => {
       callback();
@@ -80,18 +80,12 @@ export function useSmartPolling(options: UseSmartPollingOptions) {
    */
   const handleAppStateChange = (nextAppState: AppStateStatus) => {
     // App went to background
-    if (
-      appState.current.match(/active/) &&
-      nextAppState.match(/inactive|background/)
-    ) {
+    if (appState.current.match(/active/) && nextAppState.match(/inactive|background/)) {
       stopPolling();
     }
 
     // App came to foreground
-    if (
-      appState.current.match(/inactive|background/) &&
-      nextAppState === 'active'
-    ) {
+    if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
       startPolling();
     }
 

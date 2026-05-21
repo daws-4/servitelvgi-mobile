@@ -7,11 +7,11 @@ import { InventoryItem } from './Inventory';
 
 // History type enum
 export type InventoryHistoryType =
-  | 'entry'         // Entrada al inventario principal
-  | 'assignment'    // Asignación a cuadrilla
-  | 'return'        // Devolución de cuadrilla
-  | 'usage_order'   // Uso en orden
-  | 'adjustment';   // Ajuste manual
+  | 'entry' // Entrada al inventario principal
+  | 'assignment' // Asignación a cuadrilla
+  | 'return' // Devolución de cuadrilla
+  | 'usage_order' // Uso en orden
+  | 'adjustment'; // Ajuste manual
 
 // Inventory history entry
 export interface InventoryHistory {

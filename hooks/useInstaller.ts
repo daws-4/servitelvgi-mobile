@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+
 import installerService from '@/services/api/installers';
 import type { Installer, UpdateInstallerProfile } from '@/types/Installer';
 
@@ -39,33 +40,39 @@ export const useInstaller = (installerId: string): UseInstallerReturn => {
     }
   }, [installerId]);
 
-  const updateProfile = useCallback(async (data: UpdateInstallerProfile) => {
-    if (!installerId) return;
+  const updateProfile = useCallback(
+    async (data: UpdateInstallerProfile) => {
+      if (!installerId) return;
 
-    try {
-      setError(null);
-      const updated = await installerService.updateProfile(installerId, data);
-      setInstaller(updated);
-    } catch (err: any) {
-      setError(err.message || 'Error al actualizar perfil');
-      console.error('Error updating profile:', err);
-      throw err;
-    }
-  }, [installerId]);
+      try {
+        setError(null);
+        const updated = await installerService.updateProfile(installerId, data);
+        setInstaller(updated);
+      } catch (err: any) {
+        setError(err.message || 'Error al actualizar perfil');
+        console.error('Error updating profile:', err);
+        throw err;
+      }
+    },
+    [installerId]
+  );
 
-  const updateOnDutyStatus = useCallback(async (onDuty: import('@/types/Installer').OnDutyStatus) => {
-    if (!installerId) return;
+  const updateOnDutyStatus = useCallback(
+    async (onDuty: import('@/types/Installer').OnDutyStatus) => {
+      if (!installerId) return;
 
-    try {
-      setError(null);
-      const updated = await installerService.updateOnDutyStatus(installerId, onDuty);
-      setInstaller(updated);
-    } catch (err: any) {
-      setError(err.message || 'Error al actualizar estado');
-      console.error('Error updating onDuty:', err);
-      throw err;
-    }
-  }, [installerId]);
+      try {
+        setError(null);
+        const updated = await installerService.updateOnDutyStatus(installerId, onDuty);
+        setInstaller(updated);
+      } catch (err: any) {
+        setError(err.message || 'Error al actualizar estado');
+        console.error('Error updating onDuty:', err);
+        throw err;
+      }
+    },
+    [installerId]
+  );
 
   useEffect(() => {
     fetchInstaller();

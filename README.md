@@ -1267,3 +1267,11 @@ Generar el archivo AAB (para Play Store):
 
 Generar el archivo APK (para pruebas):
 ./gradlew assembleRelease 
+
+Ruta donde queda el archivo
+app/build/outputs/apk/release/app-release.apk
+
+
+compilar con eas expo 
+npx expo build:android --profile preview --platform android
+eas build --profile preview --platform android

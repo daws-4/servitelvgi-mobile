@@ -16,10 +16,10 @@ export type OrderStatus = string;
  * Tipos de orden
  */
 export type OrderType =
-  | 'instalacion'   // Instalación nueva
-  | 'averia'        // Reparación/avería
-  | 'recuperacion'  // Recuperación de equipos
-  | 'otro';         // Otro tipo
+  | 'instalacion' // Instalación nueva
+  | 'averia' // Reparación/avería
+  | 'recuperacion' // Recuperación de equipos
+  | 'otro'; // Otro tipo
 
 /**
  * Prioridad de la orden
@@ -42,15 +42,16 @@ export interface Coordinates {
  * Material usado en una orden
  */
 export interface MaterialUsed {
-  item: string;           // ID del ítem de inventario
-  quantity: number;       // Cantidad usada
-  batchCode?: string;     // Código de lote (para bobinas)
-  description?: string;   // Descripción (populada desde backend)
+  item: string; // ID del ítem de inventario
+  quantity: number; // Cantidad usada
+  batchCode?: string; // Código de lote (para bobinas)
+  description?: string; // Descripción (populada desde backend)
   instanceIds?: string[]; // IDs de instancias de equipos
-  instanceDetails?: Array<{ // Detalles de instancias para visualización
+  instanceDetails?: {
+    // Detalles de instancias para visualización
     uniqueId: string;
     serialNumber: string;
-  }>;
+  }[];
 }
 
 /**
@@ -66,25 +67,25 @@ export interface InstallerLog {
  * Resultado de prueba de internet (formato del backend)
  */
 export interface InternetTestResult {
-  downloadSpeed?: number;     // Mbps
-  uploadSpeed?: number;       // Mbps
-  ping?: number;              // ms
-  provider?: string;          // Proveedor de internet
-  wifiSSID?: string;          // Nombre de la red WiFi
-  frecuency?: string;         // Frecuencia WiFi (2.4GHz, 5GHz)
-  coordinates?: Coordinates;  // Coordenadas donde se realizó la prueba
+  downloadSpeed?: number; // Mbps
+  uploadSpeed?: number; // Mbps
+  ping?: number; // ms
+  provider?: string; // Proveedor de internet
+  wifiSSID?: string; // Nombre de la red WiFi
+  frecuency?: string; // Frecuencia WiFi (2.4GHz, 5GHz)
+  coordinates?: Coordinates; // Coordenadas donde se realizó la prueba
 }
 
 /**
  * Datos del equipo ONT recuperado (solo para registro, NO se añade al inventario)
  */
 export interface EquipmentRecovered {
-  ontId: string;              // ID de la ONT (obligatorio)
-  serialNumber?: string;      // Número de serie
-  macAddress?: string;        // Dirección MAC
-  model?: string;             // Modelo del equipo
+  ontId: string; // ID de la ONT (obligatorio)
+  serialNumber?: string; // Número de serie
+  macAddress?: string; // Dirección MAC
+  model?: string; // Modelo del equipo
   condition?: 'good' | 'damaged' | 'defective'; // Estado del equipo
-  notes?: string;             // Observaciones adicionales
+  notes?: string; // Observaciones adicionales
 }
 
 /**
@@ -94,58 +95,58 @@ export interface Order {
   _id: string;
 
   // Información del abonado
-  subscriberNumber: string;     // N° de abonado (único)
-  ticket_id?: string;           // ID del ticket asociado
-  subscriberName: string;       // Nombre del abonado
-  address: string;              // Dirección completa
-  phones?: string[];            // Teléfonos del abonado
-  email?: string;               // Correo electrónico
+  subscriberNumber: string; // N° de abonado (único)
+  ticket_id?: string; // ID del ticket asociado
+  subscriberName: string; // Nombre del abonado
+  address: string; // Dirección completa
+  phones?: string[]; // Teléfonos del abonado
+  email?: string; // Correo electrónico
 
   // Coordenadas de la orden
-  coordinates?: Coordinates;    // Coordenadas GPS de la ubicación
+  coordinates?: Coordinates; // Coordenadas GPS de la ubicación
 
   // Tipo y estado
-  type: OrderType;              // Tipo de orden
-  status: OrderStatus;          // Estado actual
-  priority?: OrderPriority;     // Prioridad
+  type: OrderType; // Tipo de orden
+  status: OrderStatus; // Estado actual
+  priority?: OrderPriority; // Prioridad
 
   // Datos técnicos
-  node?: string;                // Nodo de red
+  node?: string; // Nodo de red
   servicesToInstall?: string[]; // Servicios a instalar
 
   // Asignación y programación
-  assignedTo?: string;          // ID de la cuadrilla asignada
-  assignedToName?: string;      // Nombre de la cuadrilla (populado)
-  receptionDate?: Date | string;  // Fecha de recepción
+  assignedTo?: string; // ID de la cuadrilla asignada
+  assignedToName?: string; // Nombre de la cuadrilla (populado)
+  receptionDate?: Date | string; // Fecha de recepción
   assignmentDate?: Date | string; // Fecha de asignación
 
   // Completado
-  completionDate?: Date | string;  // Fecha de completado
-  completedBy?: string;            // ID del instalador que completó
+  completionDate?: Date | string; // Fecha de completado
+  completedBy?: string; // ID del instalador que completó
 
   // Datos de cierre
-  reportDetails?: string;          // Detalles del reporte
-  materialsUsed?: MaterialUsed[];  // Materiales usados
-  installerLog?: InstallerLog[];   // Bitácora del instalador
-  photoEvidence?: string[];        // URLs de fotos (formato backend)
-  customerSignature?: string;      // Firma del cliente (base64)
+  reportDetails?: string; // Detalles del reporte
+  materialsUsed?: MaterialUsed[]; // Materiales usados
+  installerLog?: InstallerLog[]; // Bitácora del instalador
+  photoEvidence?: string[]; // URLs de fotos (formato backend)
+  customerSignature?: string; // Firma del cliente (base64)
   internetTest?: InternetTestResult; // Resultado de prueba de internet
   equipmentRecovered?: EquipmentRecovered; // Equipo recuperado (solo para recuperación)
 
   // Control de reporte
-  googleFormReported?: boolean;    // Reportado a Google Form
+  googleFormReported?: boolean; // Reportado a Google Form
 
   // Datos Técnicos Adicionales
-  powerNap?: string;             // Potencia en NAP
-  powerRoseta?: string;          // Potencia en Roseta
-  remainingPorts?: number;       // Puertos restantes
-  serialNap?: string;            // Serial de la NAP
-  usedPort?: string;             // Puerto usado
-  visitCount?: number;           // Contador de visitas
+  powerNap?: string; // Potencia en NAP
+  powerRoseta?: string; // Potencia en Roseta
+  remainingPorts?: number; // Puertos restantes
+  serialNap?: string; // Serial de la NAP
+  usedPort?: string; // Puerto usado
+  visitCount?: number; // Contador de visitas
 
   // Información adicional
-  description?: string;         // Descripción/notas
-  notes?: string;               // Notas adicionales
+  description?: string; // Descripción/notas
+  notes?: string; // Notas adicionales
 
   // Timestamps
   createdAt: Date | string;
@@ -162,13 +163,13 @@ export interface Order {
  * Datos para completar una orden
  */
 export interface OrderCompletionData {
-  materialsUsed?: MaterialUsed[];  // Opcional para recuperación
-  photoEvidence: string[];         // IDs de PocketBase (recordId:filename)
-  customerSignature?: string;      // Base64 de la firma (no aplica para recuperación)
+  materialsUsed?: MaterialUsed[]; // Opcional para recuperación
+  photoEvidence: string[]; // IDs de PocketBase (recordId:filename)
+  customerSignature?: string; // Base64 de la firma (no aplica para recuperación)
   internetTest?: InternetTestResult; // Resultado de prueba de internet (no aplica para recuperación)
   equipmentRecovered?: EquipmentRecovered; // Equipo recuperado (solo para recuperación)
-  reportDetails?: string;          // Detalles del reporte
-  coordinates?: Coordinates;       // Coordenadas de cierre
+  reportDetails?: string; // Detalles del reporte
+  coordinates?: Coordinates; // Coordenadas de cierre
 }
 
 /**
@@ -176,7 +177,7 @@ export interface OrderCompletionData {
  */
 export interface UpdateInternetTestData {
   internetTest: InternetTestResult;
-  coordinates?: Coordinates;       // Coordenadas de la orden actualizadas
+  coordinates?: Coordinates; // Coordenadas de la orden actualizadas
 }
 
 /**
@@ -185,12 +186,13 @@ export interface UpdateInternetTestData {
 export interface OrderFilters {
   status?: OrderStatus | OrderStatus[];
   type?: OrderType;
-  assignedTo?: string;            // Crew ID
+  assignedTo?: string; // Crew ID
   startDate?: Date | string;
   endDate?: Date | string;
   priority?: OrderPriority;
-  search?: string;                // Buscar por subscriber name/number
-  updatedAfter?: Date | string;   // Filtrar por fecha de actualización
+  search?: string; // Buscar por subscriber name/number
+  updatedAfter?: Date | string; // Filtrar por fecha de actualización
+  sortDirection?: 'asc' | 'desc'; // Dirección de ordenamiento
 }
 
 /**
@@ -207,4 +209,3 @@ export interface OrderSummary {
   receptionDate?: Date | string;
   assignedToName?: string;
 }
-

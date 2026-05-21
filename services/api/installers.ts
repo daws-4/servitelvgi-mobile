@@ -1,4 +1,5 @@
 import { httpClient } from './client';
+
 import type { Installer, UpdateInstallerProfile } from '@/types/Installer';
 
 /**
@@ -15,9 +16,7 @@ class InstallerService {
    * Obtener perfil de un instalador
    */
   async getInstallerById(userId: string): Promise<Installer> {
-    const response = await httpClient.get<Installer>(
-      `/api/web/installers?id=${userId}`
-    );
+    const response = await httpClient.get<Installer>(`/api/web/installers?id=${userId}`);
     return response.data;
   }
 
@@ -26,13 +25,10 @@ class InstallerService {
    * Actualizar perfil del instalador actual
    * Nota: El backend espera el _id en el body, no en la URL
    */
-  async updateProfile(
-    userId: string,
-    data: UpdateInstallerProfile
-  ): Promise<Installer> {
+  async updateProfile(userId: string, data: UpdateInstallerProfile): Promise<Installer> {
     const requestBody = {
       _id: userId,
-      ...data
+      ...data,
     };
 
     // Debug logs (commented for future use)
@@ -43,10 +39,7 @@ class InstallerService {
     // console.log('📤 [updateProfile] Headers:', httpClient.defaults.headers.common);
 
     try {
-      const response = await httpClient.put<Installer>(
-        '/api/web/installers',
-        requestBody
-      );
+      const response = await httpClient.put<Installer>('/api/web/installers', requestBody);
 
       // Check if response is HTML (server error)
       const responseData = response.data as any;
@@ -91,12 +84,8 @@ const installerService = new InstallerService();
 // Exportar servicio y métodos
 export default installerService;
 
-export const {
-  getInstallerById,
-  updateProfile,
-  registerPushToken,
-  updateOnDutyStatus,
-} = installerService;
+export const { getInstallerById, updateProfile, registerPushToken, updateOnDutyStatus } =
+  installerService;
 
 /**
  * Cambiar contraseña del instalador

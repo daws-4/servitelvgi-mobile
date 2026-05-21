@@ -1,4 +1,5 @@
 import { httpClient } from './client';
+
 import type {
   Order,
   OrderSummary,
@@ -21,13 +22,22 @@ class OrderService {
    * Obtener órdenes asignadas a una cuadrilla con paginación
    * Note: Handles both old (array) and new (paginated) response formats
    */
-  async getCrewOrders(crewId: string, filters?: OrderFilters, page: number = 1, limit: number = 50): Promise<{ items: Order[], total: number }> {
-    const params: any = { assignedTo: crewId, page, limit, sort: '-createdAt' };
+  async getCrewOrders(
+    crewId: string,
+    filters?: OrderFilters,
+    page: number = 1,
+    limit: number = 50
+  ): Promise<{ items: Order[]; total: number }> {
+    const params: any = { assignedTo: crewId, page, limit };
+
+    if (filters?.sortDirection === 'asc') {
+      params.sort = 'createdAt';
+    } else {
+      params.sort = '-createdAt'; // Default to newest first
+    }
 
     if (filters?.status) {
-      params.status = Array.isArray(filters.status)
-        ? filters.status.join(',')
-        : filters.status;
+      params.status = Array.isArray(filters.status) ? filters.status.join(',') : filters.status;
     }
     if (filters?.type) params.type = filters.type;
     if (filters?.updatedAfter) params.updatedAfter = filters.updatedAfter;
@@ -47,10 +57,10 @@ class OrderService {
       // New format - universal backend pagination
       return {
         items: response.data.data,
-        total: response.data.pagination.total
+        total: response.data.pagination.total,
       };
     } else if (response.data?.items && Array.isArray(response.data.items)) {
-      // Alternate new format 
+      // Alternate new format
       return response.data;
     } else {
       // Unexpected format
@@ -76,7 +86,7 @@ class OrderService {
     // Backend expects ID in the body for PUT requests, similar to installers
     const payload = {
       _id: orderId,
-      ...data
+      ...data,
     };
     const response = await httpClient.put<Order>('/api/web/orders', payload);
     return response.data;
@@ -135,7 +145,11 @@ class OrderService {
    * PUT /api/web/orders/:id
    * Completar una orden con materiales, fotos, firma y prueba de internet
    */
-  async completeOrder(orderId: string, data: OrderCompletionData, statusOverride?: string): Promise<Order> {
+  async completeOrder(
+    orderId: string,
+    data: OrderCompletionData,
+    statusOverride?: string
+  ): Promise<Order> {
     const payload: Partial<Order> = {
       status: (statusOverride || 'completed') as OrderStatus,
       materialsUsed: data.materialsUsed,
@@ -162,10 +176,7 @@ class OrderService {
     // Include _id in the payload for the backend to identify the order
     (payload as any)._id = orderId;
 
-    const response = await httpClient.put<Order>(
-      '/api/web/orders',
-      payload
-    );
+    const response = await httpClient.put<Order>('/api/web/orders', payload);
 
     return response.data;
   }
@@ -185,7 +196,7 @@ class OrderService {
    */
   async getAvailableOrders(): Promise<Order[]> {
     const response = await httpClient.get<Order[]>('/api/web/orders', {
-      params: { status: 'pending' }
+      params: { status: 'pending' },
     });
     return response.data;
   }
@@ -196,7 +207,7 @@ class OrderService {
    */
   async deleteSignature(orderId: string): Promise<void> {
     await httpClient.delete('/api/web/upload/signature', {
-      params: { orderId }
+      params: { orderId },
     });
   }
 
@@ -220,11 +231,15 @@ class OrderService {
     console.log('📝 [OrderService] Uploading signature via Backend Proxy...');
     console.log('📝 [OrderService] URI:', imageUri);
 
-    const apiResponse = await httpClient.post<{ success: boolean; url: string }>('/api/web/upload/signature', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const apiResponse = await httpClient.post<{ success: boolean; url: string }>(
+      '/api/web/upload/signature',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
 
     return apiResponse.data.url;
   }
@@ -268,4 +283,3 @@ export const {
   uploadSignature,
   deleteSignature,
 } = orderService;
-

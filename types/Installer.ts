@@ -26,21 +26,22 @@ export type OnDutyStatus = 'active' | 'inactive' | 'onDuty';
  */
 export interface Installer {
   _id: string;
-  username: string;                // Usuario para login
-  name: string;                    // Nombre
-  surname: string;                 // Apellido
-  email?: string;                  // Email
-  phone?: string;                  // Teléfono
-  status: InstallerStatus;         // Estado
-  onDuty: OnDutyStatus;             // Estado de servicio ('active' | 'inactive' | 'onDuty')
-  showInventory: boolean;          // Mostrar tab de inventario
-  currentCrew?: string;            // ID de cuadrilla actual (ObjectId)
-  crewDetails?: {                  // Detalles de cuadrilla (populado)
+  username: string; // Usuario para login
+  name: string; // Nombre
+  surname: string; // Apellido
+  email?: string; // Email
+  phone?: string; // Teléfono
+  status: InstallerStatus; // Estado
+  onDuty: OnDutyStatus; // Estado de servicio ('active' | 'inactive' | 'onDuty')
+  showInventory: boolean; // Mostrar tab de inventario
+  currentCrew?: string; // ID de cuadrilla actual (ObjectId)
+  crewDetails?: {
+    // Detalles de cuadrilla (populado)
     _id: string;
     number: number;
   };
-  pushToken?: string;              // Token de notificaciones push
-  profilePicture?: string;         // URL de foto de perfil
+  pushToken?: string; // Token de notificaciones push
+  profilePicture?: string; // URL de foto de perfil
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -51,7 +52,7 @@ export interface Installer {
 export interface UpdateInstallerProfile {
   email?: string;
   phone?: string;
-  onDuty?: OnDutyStatus;  // 'active' | 'inactive' | 'onDuty'
+  onDuty?: OnDutyStatus; // 'active' | 'inactive' | 'onDuty'
   password?: string; // For password updates (hashed server-side)
   profilePicture?: string; // URL de foto de perfil
 }

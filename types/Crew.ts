@@ -13,9 +13,9 @@ import type { AssignedInventoryItem } from './Inventory';
  * Información del vehículo de la cuadrilla
  */
 export interface Vehicle {
-  plate: string;           // Placa
-  model: string;           // Modelo
-  year?: number;           // Año
+  plate: string; // Placa
+  model: string; // Modelo
+  year?: number; // Año
 }
 
 /**
@@ -23,14 +23,14 @@ export interface Vehicle {
  */
 export interface Crew {
   _id: string;
-  number: number;                            // Número de la cuadrilla
-  leader: string;                            // ID del líder
-  leaderDetails?: InstallerBasic;            // Detalles del líder (populado)
-  members: string[];                         // IDs de miembros
-  memberDetails?: InstallerBasic[];          // Detalles de miembros (populado)
-  isActive: boolean;                         // Cuad rilla activa
+  number: number; // Número de la cuadrilla
+  leader: string; // ID del líder
+  leaderDetails?: InstallerBasic; // Detalles del líder (populado)
+  members: string[]; // IDs de miembros
+  memberDetails?: InstallerBasic[]; // Detalles de miembros (populado)
+  isActive: boolean; // Cuad rilla activa
   assignedInventory: AssignedInventoryItem[]; // Inventario asignado
-  vehicle?: Vehicle;                         // Información del vehículo
+  vehicle?: Vehicle; // Información del vehículo
   createdAt: Date | string;
   updatedAt: Date | string;
 }

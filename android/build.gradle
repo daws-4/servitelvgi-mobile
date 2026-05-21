@@ -30,3 +30,29 @@ allprojects {
 
 apply plugin: "expo-root-project"
 apply plugin: "com.facebook.react.rootproject"
+
+// Force CMake version and redirect build directories to very short paths.
+// This resolves CMAKE_OBJECT_PATH_MAX warning, Ninja manifest loop, and long path compiler failures
+// on deeply nested pnpm paths for all builds (Debug and Release).
+subprojects { sub ->
+    // 1. Acortar el directorio de construcción (buildDir) para evitar el límite MAX_PATH de Windows
+    // Esto es vital porque Gradle/Java lanza 'CreateProcess error=2' al ejecutar scripts como prefab_command.bat
+    if (sub.projectDir.absolutePath.contains("node_modules")) {
+        sub.buildDir = new File("C:/.rn_build/${sub.name}")
+    }
+
+    // 2. Forzar la versión de CMake después de que el proyecto se haya evaluado
+    afterEvaluate { project ->
+        if (project.plugins.hasPlugin('com.android.library') ||
+            project.plugins.hasPlugin('com.android.application')) {
+            try {
+                def cmake = project.android.externalNativeBuild.cmake
+                cmake.version = "4.1.2"
+                cmake.buildStagingDirectory = "C:/.cxx/${project.name}"
+            } catch (Exception ignored) {
+                // Skip projects without cmake configuration
+            }
+        }
+    }
+}
+

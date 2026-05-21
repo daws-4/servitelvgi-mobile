@@ -1,12 +1,14 @@
-import { httpClient } from './client';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+
+import { httpClient } from './client';
+
 import type {
   UploadResult,
   UploadOrderEvidenceInput,
   UploadProfilePhotoInput,
   GetImageUrlInput,
   DeleteEvidenceInput,
-  DeleteProfilePhotoInput
+  DeleteProfilePhotoInput,
 } from '@/types/uploads';
 
 /**
@@ -21,11 +23,10 @@ class UploadsService {
   private async compressImage(uri: string): Promise<string> {
     try {
       console.log('🔄 [UploadsService] Compressing image...', uri);
-      const result = await manipulateAsync(
-        uri,
-        [{ resize: { width: 1024 } }],
-        { compress: 0.7, format: SaveFormat.JPEG }
-      );
+      const result = await manipulateAsync(uri, [{ resize: { width: 1024 } }], {
+        compress: 0.7,
+        format: SaveFormat.JPEG,
+      });
       console.log('✅ [UploadsService] Image compressed:', result.uri);
       return result.uri;
     } catch (error) {
@@ -51,7 +52,7 @@ class UploadsService {
       ...input.file,
       uri: compressedUri,
       name: 'evidence.jpg', // Ensure valid extension
-      type: 'image/jpeg'
+      type: 'image/jpeg',
     };
 
     formData.append('imagen', file as any);
@@ -59,15 +60,11 @@ class UploadsService {
     formData.append('installer_id', input.installerId);
     formData.append('crew_id', input.crewId);
 
-    const response = await httpClient.post<UploadResult>(
-      '/api/web/orders/uploads',
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
+    const response = await httpClient.post<UploadResult>('/api/web/orders/uploads', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
 
     return response.data;
   }
@@ -118,7 +115,7 @@ class UploadsService {
       ...input.file,
       uri: compressedUri,
       name: 'profile.jpg',
-      type: 'image/jpeg'
+      type: 'image/jpeg',
     };
 
     formData.append('imagen', file as any);

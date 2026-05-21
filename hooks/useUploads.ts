@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+
 import uploadsService from '@/services/api/uploads';
 import type {
   UploadResult,
@@ -10,7 +11,11 @@ interface UseUploadsReturn {
   uploading: boolean;
   uploadProgress: number;
   error: string | null;
-  uploadEvidence: (input: Omit<UploadOrderEvidenceInput, 'installerId' | 'crewId'>, installerId: string, crewId: string) => Promise<UploadResult>;
+  uploadEvidence: (
+    input: Omit<UploadOrderEvidenceInput, 'installerId' | 'crewId'>,
+    installerId: string,
+    crewId: string
+  ) => Promise<UploadResult>;
   uploadProfilePhoto: (file: File | Blob, installerId: string) => Promise<UploadResult>;
   deleteEvidence: (recordId: string, orderId: string) => Promise<void>;
   deleteProfilePhoto: (installerId: string) => Promise<void>;
@@ -26,56 +31,59 @@ export const useUploads = (): UseUploadsReturn => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const uploadEvidence = useCallback(async (
-    input: Omit<UploadOrderEvidenceInput, 'installerId' | 'crewId'>,
-    installerId: string,
-    crewId: string
-  ): Promise<UploadResult> => {
-    try {
-      setUploading(true);
-      setError(null);
-      setUploadProgress(0);
+  const uploadEvidence = useCallback(
+    async (
+      input: Omit<UploadOrderEvidenceInput, 'installerId' | 'crewId'>,
+      installerId: string,
+      crewId: string
+    ): Promise<UploadResult> => {
+      try {
+        setUploading(true);
+        setError(null);
+        setUploadProgress(0);
 
-      const result = await uploadsService.uploadOrderEvidence({
-        ...input,
-        installerId,
-        crewId,
-      });
+        const result = await uploadsService.uploadOrderEvidence({
+          ...input,
+          installerId,
+          crewId,
+        });
 
-      setUploadProgress(100);
-      return result;
-    } catch (err: any) {
-      const errorMsg = err.message || 'Error al subir evidencia';
-      setError(errorMsg);
-      console.error('Error uploading evidence:', err);
-      throw new Error(errorMsg);
-    } finally {
-      setUploading(false);
-    }
-  }, []);
+        setUploadProgress(100);
+        return result;
+      } catch (err: any) {
+        const errorMsg = err.message || 'Error al subir evidencia';
+        setError(errorMsg);
+        console.error('Error uploading evidence:', err);
+        throw new Error(errorMsg);
+      } finally {
+        setUploading(false);
+      }
+    },
+    []
+  );
 
-  const uploadProfilePhoto = useCallback(async (
-    file: File | Blob,
-    installerId: string
-  ): Promise<UploadResult> => {
-    try {
-      setUploading(true);
-      setError(null);
-      setUploadProgress(0);
+  const uploadProfilePhoto = useCallback(
+    async (file: File | Blob, installerId: string): Promise<UploadResult> => {
+      try {
+        setUploading(true);
+        setError(null);
+        setUploadProgress(0);
 
-      const result = await uploadsService.uploadProfilePhoto({ file, installerId });
+        const result = await uploadsService.uploadProfilePhoto({ file, installerId });
 
-      setUploadProgress(100);
-      return result;
-    } catch (err: any) {
-      const errorMsg = err.message || 'Error al subir foto de perfil';
-      setError(errorMsg);
-      console.error('Error uploading profile photo:', err);
-      throw new Error(errorMsg);
-    } finally {
-      setUploading(false);
-    }
-  }, []);
+        setUploadProgress(100);
+        return result;
+      } catch (err: any) {
+        const errorMsg = err.message || 'Error al subir foto de perfil';
+        setError(errorMsg);
+        console.error('Error uploading profile photo:', err);
+        throw new Error(errorMsg);
+      } finally {
+        setUploading(false);
+      }
+    },
+    []
+  );
 
   const deleteEvidence = useCallback(async (recordId: string, orderId: string): Promise<void> => {
     try {

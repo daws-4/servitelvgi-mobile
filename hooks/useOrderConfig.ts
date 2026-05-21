@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import orderConfigService from '@/services/api/orderConfig';
-import type { ServerStatusConfig, ServerTypeConfig } from '@/services/api/orderConfig';
+
 import {
   ORDER_STATUS_LABELS,
   ORDER_STATUS_COLORS,
   ORDER_STATUS_ICONS,
 } from '@/constants/orderStates';
+import orderConfigService from '@/services/api/orderConfig';
+import type { ServerStatusConfig, ServerTypeConfig } from '@/services/api/orderConfig';
 import type { OrderStatus } from '@/types/Order';
 
 /**
@@ -127,14 +128,12 @@ export function useOrderConfig(): UseOrderConfigReturn {
     queryKey: ['order-config'],
     queryFn: () => orderConfigService.getOrderConfig(),
     staleTime: 1000 * 60 * 30, // 30 minutos
-    gcTime: 1000 * 60 * 60,    // 1 hora
+    gcTime: 1000 * 60 * 60, // 1 hora
     retry: 2,
   });
 
   // Determinar statuses activos (server o fallback)
-  const statuses = data
-    ? transformServerConfig(data.statuses)
-    : fallbackStatuses;
+  const statuses = data ? transformServerConfig(data.statuses) : fallbackStatuses;
 
   const types = data?.types || {
     instalacion: { label: 'Instalación', icon: 'wrench', color: 'purple' },
@@ -144,8 +143,16 @@ export function useOrderConfig(): UseOrderConfigReturn {
   };
 
   const validStatuses = data?.validStatuses || Object.keys(statuses);
-  const completedStatuses = data?.completedStatuses || Object.entries(statuses).filter(([_, v]) => v.countsAsCompleted).map(([k]) => k);
-  const terminalStatuses = data?.terminalStatuses || Object.entries(statuses).filter(([_, v]) => v.isTerminal).map(([k]) => k);
+  const completedStatuses =
+    data?.completedStatuses ||
+    Object.entries(statuses)
+      .filter(([_, v]) => v.countsAsCompleted)
+      .map(([k]) => k);
+  const terminalStatuses =
+    data?.terminalStatuses ||
+    Object.entries(statuses)
+      .filter(([_, v]) => v.isTerminal)
+      .map(([k]) => k);
 
   const getStatusConfig = (status: string): MobileStatusConfig => {
     return statuses[status] || UNKNOWN_STATUS;

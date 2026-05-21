@@ -1,10 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { httpClient } from "@/services/api/client";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+import { httpClient } from '@/services/api/client';
 export interface StatusConfig {
   key: string;
   label: string;
-  category: "pending" | "in_progress" | "completed" | "terminal";
+  category: 'pending' | 'in_progress' | 'completed' | 'terminal';
   countsAsCompleted: boolean;
   isTerminal: boolean;
   color: string;
@@ -33,33 +34,38 @@ interface OrderConfigContextProps {
   validateStatus: (status: string) => boolean;
 }
 
-const CACHE_KEY = "@order_config_v1";
+const CACHE_KEY = '@order_config_v1';
 
 export const OrderConfigContext = createContext<OrderConfigContextProps>({
   config: null,
   loading: true,
   refreshConfig: async () => {},
   getStatusConfig: () => ({
-    key: "pending",
-    label: "Pendiente",
-    category: "pending",
+    key: 'pending',
+    label: 'Pendiente',
+    category: 'pending',
     countsAsCompleted: false,
     isTerminal: false,
-    color: "text-amber-600",
-    bgColor: "bg-amber-100",
-    dotColor: "bg-amber-500",
-    chipVariant: "flat",
-    borderColor: "border-amber-200",
-    icon: "clock",
-    hexColor: "#ca8a04",
-    hexBgColor: "#fef9c3",
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-100',
+    dotColor: 'bg-amber-500',
+    chipVariant: 'flat',
+    borderColor: 'border-amber-200',
+    icon: 'clock',
+    hexColor: '#ca8a04',
+    hexBgColor: '#fef9c3',
     order: 0,
   }),
   validateStatus: () => true,
 });
 
 const DEFAULT_MAP: Record<string, Partial<StatusConfig>> = {
-  pending: { label: "Pendiente", hexColor: "#ca8a04", hexBgColor: "#fef9c3", countsAsCompleted: false },
+  pending: {
+    label: 'Pendiente',
+    hexColor: '#ca8a04',
+    hexBgColor: '#fef9c3',
+    countsAsCompleted: false,
+  },
 };
 
 export const OrderConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -81,7 +87,7 @@ export const OrderConfigProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setConfig(processConfig(parsed));
       }
     } catch (err) {
-      console.log("Error loading cached order config", err);
+      console.log('Error loading cached order config', err);
     } finally {
       setLoading(false);
     }
@@ -102,18 +108,18 @@ export const OrderConfigProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const refreshConfig = async () => {
     try {
       setLoading(true);
-      const res = await httpClient.get("/api/web/order-config");
-      
+      const res = await httpClient.get('/api/web/order-config');
+
       if (res.data && res.data.data) {
         const processed = processConfig(res.data.data);
         setConfig(processed);
         await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(processed));
-        console.log("Order config refreshed and cached.");
+        console.log('Order config refreshed and cached.');
       } else {
-        console.warn("API order-config devolvió un formato inválido (¿HTML login?).", res.data);
+        console.warn('API order-config devolvió un formato inválido (¿HTML login?).', res.data);
       }
     } catch (err) {
-      console.log("Error fetching order config", err);
+      console.log('Error fetching order config', err);
     } finally {
       setLoading(false);
     }
@@ -129,18 +135,18 @@ export const OrderConfigProvider: React.FC<{ children: React.ReactNode }> = ({ c
     // Extreme fallback
     return {
       key: status,
-      label: "Estado No Registrado",
-      category: "terminal",
+      label: 'Estado No Registrado',
+      category: 'terminal',
       countsAsCompleted: false,
       isTerminal: false,
-      color: "text-gray-900",
-      bgColor: "bg-gray-100",
-      dotColor: "bg-gray-600",
-      chipVariant: "flat",
-      borderColor: "border-gray-300",
-      icon: "help-circle-outline",
-      hexColor: "#111827",
-      hexBgColor: "#f3f4f6",
+      color: 'text-gray-900',
+      bgColor: 'bg-gray-100',
+      dotColor: 'bg-gray-600',
+      chipVariant: 'flat',
+      borderColor: 'border-gray-300',
+      icon: 'help-circle-outline',
+      hexColor: '#111827',
+      hexBgColor: '#f3f4f6',
       order: 999,
     };
   };
@@ -153,7 +159,8 @@ export const OrderConfigProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   return (
-    <OrderConfigContext.Provider value={{ config, loading, refreshConfig, getStatusConfig, validateStatus }}>
+    <OrderConfigContext.Provider
+      value={{ config, loading, refreshConfig, getStatusConfig, validateStatus }}>
       {children}
     </OrderConfigContext.Provider>
   );

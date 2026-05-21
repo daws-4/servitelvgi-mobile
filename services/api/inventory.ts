@@ -1,4 +1,5 @@
 import { httpClient } from './client';
+
 import type {
   InventoryItem,
   InventoryBatch,
@@ -19,9 +20,7 @@ class InventoryService {
    */
   async getCrewInventory(crewId: string): Promise<AssignedInventoryItem[]> {
     // El API devuelve el objeto crew directamente con assignedInventory como propiedad
-    const response = await httpClient.get<any>(
-      `/api/web/crews?id=${crewId}`
-    );
+    const response = await httpClient.get<any>(`/api/web/crews?id=${crewId}`);
 
     // La respuesta puede tener la estructura { assignedInventory: [...] } o ser el crew completo
     const crew = response.data;
@@ -41,10 +40,9 @@ class InventoryService {
    * Obtener bobinas asignadas a la cuadrilla
    */
   async getCrewBatches(crewId: string): Promise<InventoryBatch[]> {
-    const response = await httpClient.get<InventoryBatch[]>(
-      '/api/web/inventory/batches',
-      { params: { crewId } }
-    );
+    const response = await httpClient.get<InventoryBatch[]>('/api/web/inventory/batches', {
+      params: { crewId },
+    });
 
     return response.data;
   }
@@ -66,10 +64,9 @@ class InventoryService {
     if (filters?.page) params.page = filters.page;
     if (filters?.limit) params.limit = filters.limit;
 
-    const response = await httpClient.get<InventoryHistoryEntry[] | { data: InventoryHistoryEntry[], pagination: any }>(
-      '/api/web/inventory-histories',
-      { params }
-    );
+    const response = await httpClient.get<
+      InventoryHistoryEntry[] | { data: InventoryHistoryEntry[]; pagination: any }
+    >('/api/web/inventory-histories', { params });
 
     // Si retorna paginación, devolver solo data (o adaptar según necesites)
     if (!Array.isArray(response.data) && 'data' in response.data) {
@@ -83,9 +80,7 @@ class InventoryService {
    * Obtener detalle de un ítem de inventario
    */
   async getInventoryItemById(itemId: string): Promise<InventoryItem> {
-    const response = await httpClient.get<InventoryItem>(
-      `/api/web/inventory?id=${itemId}`
-    );
+    const response = await httpClient.get<InventoryItem>(`/api/web/inventory?id=${itemId}`);
 
     return response.data;
   }
@@ -106,7 +101,11 @@ class InventoryService {
    * GET /api/web/inventory/instances?inventoryId=<id>&status=<status>
    * Obtener instancias de un equipo
    */
-  async getEquipmentInstances(inventoryId: string, status?: string, crewId?: string): Promise<EquipmentInstance[]> {
+  async getEquipmentInstances(
+    inventoryId: string,
+    status?: string,
+    crewId?: string
+  ): Promise<EquipmentInstance[]> {
     const params: any = { inventoryId };
     if (status) params.status = status;
     if (crewId) params.crewId = crewId;
