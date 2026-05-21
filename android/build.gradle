@@ -31,19 +31,34 @@ allprojects {
 apply plugin: "expo-root-project"
 apply plugin: "com.facebook.react.rootproject"
 
-// Force CMake 3.31.0+ (Ninja 1.12+) and redirect buildStagingDirectory to a very short path.
+// Force CMake version and redirect build directories to very short paths.
 // This resolves CMAKE_OBJECT_PATH_MAX warning, Ninja manifest loop, and long path compiler failures
-// on deeply nested pnpm paths.
-gradle.afterProject { sub ->
-    if (sub.plugins.hasPlugin('com.android.library') ||
-        sub.plugins.hasPlugin('com.android.application')) {
-        try {
-            def cmake = sub.android.externalNativeBuild.cmake
-            cmake.version = "4.1.2"
-            cmake.buildStagingDirectory = "C:/.cxx/${sub.name}"
-        } catch (Exception ignored) {
-            // Skip projects without cmake configuration
+// on deeply nested pnpm paths for all builds (Debug and Release).
+subprojects { sub ->
+    // 1. Acortar el directorio de construcción (buildDir) para evitar el límite MAX_PATH de Windows
+    // Esto es vital porque Gradle/Java lanza 'CreateProcess error=2' al ejecutar scripts como prefab_command.bat
+    if (sub.projectDir.absolutePath.contains("node_modules")) {
+        sub.buildDir = new File("C:/.rn_build/${sub.name}")
+    }
+
+    // 2. Forzar la versión de CMake de forma segura (verifica si ya fue evaluado)
+    def configureCMake = { project ->
+        if (project.plugins.hasPlugin('com.android.library') ||
+            project.plugins.hasPlugin('com.android.application')) {
+            try {
+                def cmake = project.android.externalNativeBuild.cmake
+                cmake.version = "4.1.2"
+                cmake.buildStagingDirectory = "C:/.cxx/${project.name}"
+            } catch (Exception ignored) {
+                // Skip projects without cmake configuration
+            }
         }
+    }
+
+    if (sub.state.executed) {
+        configureCMake(sub)
+    } else {
+        sub.afterEvaluate { project -> configureCMake(project) }
     }
 }
 
