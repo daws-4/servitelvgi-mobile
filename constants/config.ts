@@ -19,6 +19,7 @@ export const Config = {
    * Base URL del backend de Servitel
    * Debe configurarse en .env como API_BASE_URL
    * https://admin.servitelv.com
+   * https://pruebas.davidvillamizar.com
    */
   API_BASE_URL: getEnvVar('API_BASE_URL', 'https://admin.enlaredve.com'),
 
