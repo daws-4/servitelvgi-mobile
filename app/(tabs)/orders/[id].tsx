@@ -1,7 +1,7 @@
 import { FontAwesome } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,9 +12,14 @@ import {
   Linking,
   Modal,
   TextInput,
+  Share,
+  Clipboard,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Location from 'expo-location';
+import MapView, { Marker, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
+import { Config } from '@/constants/config';
 
 import { useAuth } from '@/app/contexts/AuthContext';
 import CustomerSignature from '@/components/orders/CustomerSignature';
@@ -66,6 +71,13 @@ export default function OrderDetailScreen() {
   // HARD status modal state
   const [hardReasonModalVisible, setHardReasonModalVisible] = useState(false);
   const [hardReason, setHardReason] = useState('');
+
+  // Coordinate map picker state
+  const [mapPickerVisible, setMapPickerVisible] = useState(false);
+  const [activeCoordType, setActiveCoordType] = useState<'coordenadasNap' | 'coordenadasCasa' | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const mapRef = useRef<MapView>(null);
 
   // Key to force re-render of text fields to clear selection
   const [selectionResetKey, setSelectionResetKey] = useState(0);
@@ -392,6 +404,167 @@ export default function OrderDetailScreen() {
       Alert.alert('Error', err.message || 'No se pudo actualizar el estado');
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleCaptureCoordinates = async (type: 'coordenadasNap' | 'coordenadasCasa') => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permiso denegado', 'Se requiere permiso de ubicación para abrir el mapa.');
+        return;
+      }
+
+      // Determine initial coordinate for the map
+      let initialCoords: { latitude: number; longitude: number } | null = null;
+
+      // 1. Use existing saved coordinates if present — open modal immediately
+      const existingCoords = order?.[type];
+      if (existingCoords?.latitude && existingCoords?.longitude) {
+        initialCoords = {
+          latitude: existingCoords.latitude,
+          longitude: existingCoords.longitude,
+        };
+      }
+
+      // Open modal right away — don't block on GPS
+      setActiveCoordType(type);
+      setSelectedLocation(initialCoords); // may be null, overlay shown while GPS loads
+      setMapPickerVisible(true);
+
+      // 2. Fetch GPS in background (with timeout) to update location if no saved coords
+      if (!initialCoords) {
+        const GPS_TIMEOUT_MS = 8000;
+        const gpsPromise = Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        const timeoutPromise = new Promise<null>((resolve) =>
+          setTimeout(() => resolve(null), GPS_TIMEOUT_MS)
+        );
+
+        Promise.race([gpsPromise, timeoutPromise])
+          .then((result) => {
+            if (result && 'coords' in result) {
+              console.log('[CoordPicker] GPS acquired:', result.coords.latitude, result.coords.longitude);
+              setSelectedLocation({
+                latitude: result.coords.latitude,
+                longitude: result.coords.longitude,
+              });
+            } else {
+              // Timeout or null — use San Cristóbal fallback
+              console.log('[CoordPicker] GPS timeout, using San Cristóbal fallback');
+              setSelectedLocation({ latitude: 7.7653, longitude: -72.2251 });
+            }
+          })
+          .catch((err) => {
+            console.log('[CoordPicker] GPS error, using San Cristóbal fallback:', err);
+            setSelectedLocation({ latitude: 7.7653, longitude: -72.2251 });
+          });
+      }
+    } catch (err: any) {
+      console.error('Error starting coordinate capture:', err);
+      Alert.alert('Error', 'Ocurrió un error al preparar el mapa.');
+    }
+  };
+
+  const handleConfirmSelectedLocation = async () => {
+    if (!activeCoordType || !selectedLocation || !order) return;
+
+    try {
+      setUpdating(true);
+
+      const typeLabel = activeCoordType === 'coordenadasNap' ? 'NAP' : 'Casa';
+
+      setOrder((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          [activeCoordType]: selectedLocation,
+        };
+      });
+
+      await orderService.updateOrder(order._id, {
+        [activeCoordType]: selectedLocation,
+      });
+
+      setMapPickerVisible(false);
+      Alert.alert(
+        'Éxito',
+        `Coordenadas de ${typeLabel} guardadas: ${selectedLocation.latitude.toFixed(5)}, ${selectedLocation.longitude.toFixed(5)}`
+      );
+    } catch (err: any) {
+      console.error('Error saving coordinates:', err);
+      Alert.alert('Error', 'No se pudieron guardar las coordenadas.');
+    } finally {
+      setUpdating(false);
+      setActiveCoordType(null);
+    }
+  };
+
+  const handleCopyAprovisionamiento = () => {
+    if (!order) return;
+    
+    const toDMS = (val: number, isLat: boolean): string => {
+      const absVal = Math.abs(val);
+      const degrees = Math.floor(absVal);
+      const minutes = Math.floor((absVal - degrees) * 60);
+      const seconds = ((absVal - degrees - minutes / 60) * 3600).toFixed(2);
+      const direction = isLat ? (val >= 0 ? 'N' : 'S') : (val >= 0 ? 'E' : 'W');
+      return `${degrees}°${minutes}'${seconds}"${direction}`;
+    };
+
+    let napCoordsStr = 'No registradas';
+    if (order.coordenadasNap?.latitude && order.coordenadasNap?.longitude) {
+      const latDMS = toDMS(order.coordenadasNap.latitude, true);
+      const lngDMS = toDMS(order.coordenadasNap.longitude, false);
+      const mapUrl = `https://maps.google.com/?q=${order.coordenadasNap.latitude},${order.coordenadasNap.longitude}`;
+      napCoordsStr = `${latDMS} ${lngDMS} (${mapUrl})`;
+    }
+
+    let casaCoordsStr = 'No registradas';
+    if (order.coordenadasCasa?.latitude && order.coordenadasCasa?.longitude) {
+      const latDMS = toDMS(order.coordenadasCasa.latitude, true);
+      const lngDMS = toDMS(order.coordenadasCasa.longitude, false);
+      const mapUrl = `https://maps.google.com/?q=${order.coordenadasCasa.latitude},${order.coordenadasCasa.longitude}`;
+      casaCoordsStr = `${latDMS} ${lngDMS} (${mapUrl})`;
+    }
+
+    const ontMaterial = order.materialsUsed?.find((m) => (m as any).item?.type === 'equipment');
+    const ontStr = ontMaterial
+      ? (ontMaterial as any).item?.description || (ontMaterial as any).item?.code || 'N/A'
+      : 'No registrado';
+
+    const textToCopy = `Abonado: ${order.subscriberNumber || 'N/A'}
+Ticket: ${order.ticket_id || 'N/A'}
+ONT: ${ontStr}
+NAP: ${order.serialNap || 'N/A'}
+Puerto: ${order.usedPort || 'N/A'}
+Puertos Disponibles: ${order.remainingPorts || 'N/A'}
+Etiqueta: ${order.etiqueta ? `${order.etiqueta.color?.toUpperCase()} ${order.etiqueta.numero}` : 'N/A'}
+Coordenadas NAP: ${napCoordsStr}
+Coordenadas Casa: ${casaCoordsStr}
+WiFi SSID: ${order.wifiSsid || 'N/A'}
+WiFi Contraseña: ${order.wifiPassword || 'N/A'}`;
+
+    Clipboard.setString(textToCopy);
+    Alert.alert('Copiado', 'Datos de aprovisionamiento copiados al portapapeles.');
+  };
+
+  const handleSharePublicLink = async (type: 'g' | 'a') => {
+    if (!order || !order.publicId) return;
+    try {
+      // Config.API_BASE_URL returns http://ip:3000 or similar
+      const baseDomain = Config.API_BASE_URL;
+      const link = `${baseDomain}/${type}/${order.publicId}`;
+
+      await Share.share({
+        message: `Enlace de la orden (${
+          type === 'g' ? 'General' : 'Aprovisionamiento'
+        }): ${link}`,
+        url: link,
+      });
+    } catch (err: any) {
+      console.error('Error sharing link:', err);
     }
   };
 
@@ -903,6 +1076,167 @@ export default function OrderDetailScreen() {
               )}
             </View>
 
+            {/* Aprovisionamiento WiFi y Coordenadas */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <FontAwesome name="server" size={14} color={BrandColors.primary} />
+                <Text style={styles.sectionTitle}>Datos de Aprovisionamiento</Text>
+              </View>
+
+              {/* Wi-Fi SSID */}
+              {!isReadOnly ? (
+                <EditableField
+                  label="SSID WiFi"
+                  value={order.wifiSsid || ''}
+                  onChangeText={(text) => handleOrderFieldUpdate('wifiSsid', text)}
+                  icon="wifi"
+                  placeholder="Ej: Servitel_Abonado"
+                />
+              ) : (
+                <ReadOnlyField
+                  label="SSID WiFi"
+                  value={order.wifiSsid || 'No registrado'}
+                  icon="wifi"
+                  selectable
+                />
+              )}
+
+              {/* Wi-Fi Contraseña */}
+              {!isReadOnly ? (
+                <EditableField
+                  label="Contraseña WiFi"
+                  value={order.wifiPassword || ''}
+                  onChangeText={(text) => handleOrderFieldUpdate('wifiPassword', text)}
+                  icon="key"
+                  placeholder="Ej: WiFi12345"
+                />
+              ) : (
+                <ReadOnlyField
+                  label="Contraseña WiFi"
+                  value={order.wifiPassword || 'No registrado'}
+                  icon="key"
+                  selectable
+                />
+              )}
+
+              {/* Coordenadas NAP */}
+              <View style={{ marginBottom: 12 }}>
+                <Text style={styles.subFieldLabel}>Coordenadas NAP</Text>
+                <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 4 }}>
+                  <View style={{ flex: 1, backgroundColor: '#f8fafc', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                    <Text style={{ fontSize: 13, color: '#334155', fontFamily: 'monospace' }}>
+                      {order.coordenadasNap?.latitude
+                        ? `${order.coordenadasNap.latitude.toFixed(5)}, ${order.coordenadasNap.longitude.toFixed(5)}`
+                        : 'No registradas'}
+                    </Text>
+                  </View>
+                  {!isReadOnly && (
+                    <TouchableOpacity
+                      onPress={() => handleCaptureCoordinates('coordenadasNap')}
+                      style={{ backgroundColor: BrandColors.primary, padding: 12, borderRadius: 10, justifyContent: 'center', alignItems: 'center', width: 44, height: 44 }}>
+                      <FontAwesome name="map-marker" size={16} color="#fff" />
+                    </TouchableOpacity>
+                  )}
+                  {order.coordenadasNap?.latitude && (
+                    <TouchableOpacity
+                      onPress={() => Linking.openURL(`https://maps.google.com/?q=${order.coordenadasNap?.latitude},${order.coordenadasNap?.longitude}`)}
+                      style={{ backgroundColor: '#f1f5f9', padding: 12, borderRadius: 10, justifyContent: 'center', alignItems: 'center', width: 44, height: 44, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                      <FontAwesome name="external-link" size={16} color="#475569" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+
+              {/* Coordenadas Casa */}
+              <View style={{ marginBottom: 16 }}>
+                <Text style={styles.subFieldLabel}>Coordenadas Casa</Text>
+                <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 4 }}>
+                  <View style={{ flex: 1, backgroundColor: '#f8fafc', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                    <Text style={{ fontSize: 13, color: '#334155', fontFamily: 'monospace' }}>
+                      {order.coordenadasCasa?.latitude
+                        ? `${order.coordenadasCasa.latitude.toFixed(5)}, ${order.coordenadasCasa.longitude.toFixed(5)}`
+                        : 'No registradas'}
+                    </Text>
+                  </View>
+                  {!isReadOnly && (
+                    <TouchableOpacity
+                      onPress={() => handleCaptureCoordinates('coordenadasCasa')}
+                      style={{ backgroundColor: BrandColors.primary, padding: 12, borderRadius: 10, justifyContent: 'center', alignItems: 'center', width: 44, height: 44 }}>
+                      <FontAwesome name="home" size={16} color="#fff" />
+                    </TouchableOpacity>
+                  )}
+                  {order.coordenadasCasa?.latitude && (
+                    <TouchableOpacity
+                      onPress={() => Linking.openURL(`https://maps.google.com/?q=${order.coordenadasCasa?.latitude},${order.coordenadasCasa?.longitude}`)}
+                      style={{ backgroundColor: '#f1f5f9', padding: 12, borderRadius: 10, justifyContent: 'center', alignItems: 'center', width: 44, height: 44, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                      <FontAwesome name="external-link" size={16} color="#475569" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+
+              {/* Copiar e Interacciones */}
+              <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                <TouchableOpacity
+                  onPress={handleCopyAprovisionamiento}
+                  style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: '#f8fafc',
+                    borderWidth: 1,
+                    borderColor: '#e2e8f0',
+                    borderRadius: 12,
+                    paddingVertical: 10,
+                    gap: 6
+                  }}>
+                  <FontAwesome name="copy" size={13} color="#475569" />
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: '#475569' }}>Copiar Datos</Text>
+                </TouchableOpacity>
+
+                {!!order.publicId && (
+                  <>
+                    <TouchableOpacity
+                      onPress={() => handleSharePublicLink('g')}
+                      style={{
+                        flex: 1,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: '#f8fafc',
+                        borderWidth: 1,
+                        borderColor: '#e2e8f0',
+                        borderRadius: 12,
+                        paddingVertical: 10,
+                        gap: 6
+                      }}>
+                      <FontAwesome name="share-alt" size={13} color="#475569" />
+                      <Text style={{ fontSize: 13, fontWeight: '600', color: '#475569' }}>Ver Gen.</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => handleSharePublicLink('a')}
+                      style={{
+                        flex: 1,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: '#f8fafc',
+                        borderWidth: 1,
+                        borderColor: '#e2e8f0',
+                        borderRadius: 12,
+                        paddingVertical: 10,
+                        gap: 6
+                      }}>
+                      <FontAwesome name="share-alt" size={13} color="#475569" />
+                      <Text style={{ fontSize: 13, fontWeight: '600', color: '#475569' }}>Aprov.</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+            </View>
+
             {/* Status Section (Editable) */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
@@ -1142,6 +1476,263 @@ export default function OrderDetailScreen() {
                 onPress={handleConfirmHardStatus}
                 disabled={!hardReason.trim()}>
                 <Text style={styles.modalButtonTextConfirm}>Confirmar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Selector de Coordenadas en Mapa */}
+      <Modal
+        visible={mapPickerVisible}
+        transparent={false}
+        animationType="slide"
+        onRequestClose={() => setMapPickerVisible(false)}>
+        <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+          {/* Header del mapa */}
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingTop: insets.top + 10,
+            paddingBottom: 15,
+            paddingHorizontal: 20,
+            backgroundColor: '#ffffff',
+            borderBottomWidth: 1,
+            borderBottomColor: '#e2e8f0',
+            elevation: 4,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 3
+          }}>
+            <TouchableOpacity 
+              onPress={() => setMapPickerVisible(false)} 
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: '#f1f5f9',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}>
+              <FontAwesome name="arrow-left" size={16} color="#0f0f0f" />
+            </TouchableOpacity>
+            <View style={{ flex: 1, marginLeft: 15 }}>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: '#0f172a' }}>
+                Seleccionar Ubicación
+              </Text>
+              <Text style={{ fontSize: 12, color: '#64748b', fontWeight: '500' }}>
+                {activeCoordType === 'coordenadasNap' ? 'Coordenadas del NAP' : 'Coordenadas de la Casa'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Map View */}
+          <View style={{ flex: 1, position: 'relative' }}>
+            <MapView
+              ref={mapRef}
+              provider={PROVIDER_GOOGLE}
+              style={{ width: '100%', height: '100%' }}
+              initialRegion={
+                selectedLocation
+                  ? {
+                      latitude: selectedLocation.latitude,
+                      longitude: selectedLocation.longitude,
+                      latitudeDelta: 0.005,
+                      longitudeDelta: 0.005,
+                    }
+                  : {
+                      latitude: 7.7653,
+                      longitude: -72.2251,
+                      latitudeDelta: 0.05,
+                      longitudeDelta: 0.05,
+                    }
+              }
+              showsUserLocation
+              showsCompass
+              showsMyLocationButton={false}
+              onMapReady={() => {
+                console.log('[CoordPicker] Google MapView READY ✅');
+              }}
+              onMapLoaded={() => {
+                console.log('[CoordPicker] Google Map tiles LOADED ✅');
+              }}
+              onPress={(e) => {
+                console.log('[CoordPicker] Map tapped at:', e.nativeEvent.coordinate);
+                setSelectedLocation(e.nativeEvent.coordinate);
+              }}
+            >
+              {selectedLocation && (
+                <Marker
+                  coordinate={selectedLocation}
+                  draggable
+                  onDragEnd={(e) => {
+                    console.log('[CoordPicker] Marker dragged to:', e.nativeEvent.coordinate);
+                    setSelectedLocation(e.nativeEvent.coordinate);
+                  }}
+                  title={activeCoordType === 'coordenadasNap' ? 'Ubicación NAP' : 'Ubicación Casa'}
+                  description="Arrastra el pin o toca el mapa para ajustar"
+                />
+              )}
+            </MapView>
+
+            {/* Loading overlay while location is being fetched */}
+            {!selectedLocation && (
+              <View style={{
+                position: 'absolute',
+                top: 0, left: 0, right: 0, bottom: 0,
+                backgroundColor: 'rgba(248, 250, 252, 0.85)',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: 12,
+              }}>
+                <ActivityIndicator size="large" color={BrandColors.primary} />
+                <Text style={{ fontSize: 14, color: '#64748b', fontWeight: '600' }}>
+                  Obteniendo ubicación GPS...
+                </Text>
+              </View>
+            )}
+
+            {/* Info flotante de coordenadas actuales */}
+            <View style={{
+              position: 'absolute',
+              top: 15,
+              left: 15,
+              right: 15,
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              padding: 12,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: '#e2e8f0',
+              elevation: 5,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 4
+            }}>
+              <Text style={{ fontSize: 11, fontWeight: '700', color: BrandColors.primary, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                Coordenadas Seleccionadas (WGS84)
+              </Text>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: '#1e293b', fontFamily: 'monospace', marginTop: 2 }}>
+                {selectedLocation ? `${selectedLocation.latitude.toFixed(6)}, ${selectedLocation.longitude.toFixed(6)}` : 'Cargando...'}
+              </Text>
+              <Text style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                💡 Consejo: Puedes arrastrar el marcador rojo o presionar cualquier punto del mapa para ajustar la precisión.
+              </Text>
+            </View>
+
+            {/* Botón flotante inferior para centrar en ubicación GPS actual */}
+            <TouchableOpacity
+              onPress={async () => {
+                if (gpsLoading) return;
+                setGpsLoading(true);
+                try {
+                  const gpsPromise = Location.getCurrentPositionAsync({
+                    accuracy: Location.Accuracy.Balanced,
+                  });
+                  const timeoutPromise = new Promise<null>((resolve) =>
+                    setTimeout(() => resolve(null), 8000)
+                  );
+                  const result = await Promise.race([gpsPromise, timeoutPromise]);
+                  if (result && 'coords' in result) {
+                    const { latitude, longitude } = result.coords;
+                    setSelectedLocation({ latitude, longitude });
+                    mapRef.current?.animateToRegion(
+                      { latitude, longitude, latitudeDelta: 0.003, longitudeDelta: 0.003 },
+                      600
+                    );
+                    console.log('[CoordPicker] Centered to GPS:', latitude, longitude);
+                  } else {
+                    Alert.alert('Sin señal', 'No se pudo obtener la ubicación GPS en el tiempo esperado.');
+                  }
+                } catch (err) {
+                  Alert.alert('Error', 'No se pudo obtener la ubicación GPS actual.');
+                } finally {
+                  setGpsLoading(false);
+                }
+              }}
+              style={{
+                position: 'absolute',
+                bottom: 120,
+                right: 20,
+                width: 50,
+                height: 50,
+                borderRadius: 25,
+                backgroundColor: '#ffffff',
+                justifyContent: 'center',
+                alignItems: 'center',
+                elevation: 6,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 5,
+                borderWidth: 1,
+                borderColor: '#e2e8f0'
+              }}
+            >
+              {gpsLoading
+                ? <ActivityIndicator size="small" color={BrandColors.primary} />
+                : <FontAwesome name="crosshairs" size={22} color={BrandColors.primary} />}
+            </TouchableOpacity>
+
+            {/* Botones de acción flotantes en la parte inferior */}
+            <View style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              backgroundColor: '#ffffff',
+              paddingHorizontal: 20,
+              paddingTop: 15,
+              paddingBottom: Math.max(insets.bottom, 15),
+              borderTopWidth: 1,
+              borderTopColor: '#e2e8f0',
+              flexDirection: 'row',
+              gap: 12,
+              elevation: 10,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: -3 },
+              shadowOpacity: 0.1,
+              shadowRadius: 5
+            }}>
+              <TouchableOpacity
+                onPress={() => setMapPickerVisible(false)}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#f1f5f9',
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: '#64748b' }}>
+                  Cancelar
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleConfirmSelectedLocation}
+                disabled={updating}
+                style={{
+                  flex: 1.5,
+                  backgroundColor: BrandColors.primary,
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'row',
+                  gap: 8
+                }}>
+                {updating ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <>
+                    <FontAwesome name="check" size={16} color="#ffffff" />
+                    <Text style={{ fontSize: 16, fontWeight: '600', color: '#ffffff' }}>
+                      Confirmar Ubicación
+                    </Text>
+                  </>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -1454,5 +2045,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#ffffff',
+  },
+  subFieldLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748b',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginLeft: 4,
   },
 });

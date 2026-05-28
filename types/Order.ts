@@ -143,6 +143,11 @@ export interface Order {
   serialNap?: string; // Serial de la NAP
   usedPort?: string; // Puerto usado
   visitCount?: number; // Contador de visitas
+  publicId?: string;
+  wifiSsid?: string;
+  wifiPassword?: string;
+  coordenadasNap?: Coordinates;
+  coordenadasCasa?: Coordinates;
 
   // Información adicional
   description?: string; // Descripción/notas

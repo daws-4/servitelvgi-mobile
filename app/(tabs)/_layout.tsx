@@ -82,6 +82,12 @@ export default function TabsLayout() {
           tabBarLabel: 'Perfil',
         }}
       />
+      <Tabs.Screen
+        name="profile/stats"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

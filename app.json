@@ -2,7 +2,7 @@
   "expo": {
     "name": "ENLARED TÉCNICOS",
     "slug": "enlared-mobile",
-    "version": "1.0.8",
+    "version": "1.1.7",
     "orientation": "portrait",
     "icon": "./assets/logo_bgless_resized.png",
     "userInterfaceStyle": "light",
@@ -42,7 +42,7 @@
       "package": "com.enlared.mobile",
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyDTyGS8C9ytWCV79-eh3mwE6LHmO2h-vLY"
+          "apiKey": "AIzaSyB3qU_u1Hr00wEPoGmQkejxaiE-Vsi2a6s"
         }
       },
       "useNextNotificationsApi": true,
@@ -91,7 +91,7 @@
       [
         "expo-maps",
         {
-          "googleMapsApiKey": "AIzaSyDTyGS8C9ytWCV79-eh3mwE6LHmO2h-vLY"
+          "googleMapsApiKey": "AIzaSyB3qU_u1Hr00wEPoGmQkejxaiE-Vsi2a6s"
         }
       ],
       "@react-native-firebase/app",

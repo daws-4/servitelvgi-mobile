@@ -76,6 +76,50 @@ class InstallerService {
   ): Promise<Installer> {
     return this.updateProfile(userId, { onDuty });
   }
+
+  /**
+   * GET /api/web/installers/stats
+   * Obtener estadísticas de producción del instalador/cuadrilla
+   */
+  async getStats(month?: number, year?: number): Promise<{
+    crewId: string;
+    stats: {
+      totalOrders: number;
+      pendingOrders: number;
+      inProgressOrders: number;
+      completedOrders: number;
+      completedSpecialOrders: number;
+      cancelledOrders: number;
+      installationsCount: number;
+      averiasCount: number;
+      recuperacionesCount: number;
+      todayCompletions: number;
+      monthCompletions: number;
+    };
+  }> {
+    const params = new URLSearchParams();
+    if (month !== undefined) params.append('month', month.toString());
+    if (year !== undefined) params.append('year', year.toString());
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+
+    const response = await httpClient.get<{
+      crewId: string;
+      stats: {
+        totalOrders: number;
+        pendingOrders: number;
+        inProgressOrders: number;
+        completedOrders: number;
+        completedSpecialOrders: number;
+        cancelledOrders: number;
+        installationsCount: number;
+        averiasCount: number;
+        recuperacionesCount: number;
+        todayCompletions: number;
+        monthCompletions: number;
+      };
+    }>(`/api/web/installers/stats${queryString}`);
+    return response.data;
+  }
 }
 
 // Crear instancia singleton
@@ -84,7 +128,7 @@ const installerService = new InstallerService();
 // Exportar servicio y métodos
 export default installerService;
 
-export const { getInstallerById, updateProfile, registerPushToken, updateOnDutyStatus } =
+export const { getInstallerById, updateProfile, registerPushToken, updateOnDutyStatus, getStats } =
   installerService;
 
 /**

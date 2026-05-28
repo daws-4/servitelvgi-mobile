@@ -294,6 +294,12 @@ export default function ProfileScreen() {
               subtitle="Cambiar o eliminar foto"
               onPress={() => setShowPhotoEditor(true)}
             />
+            <SettingsMenuItem
+              icon="bar-chart"
+              title="Mis Estadísticas"
+              subtitle="Producción diaria y mensual"
+              onPress={() => router.push('/profile/stats' as any)}
+            />
 
             {/* Biometric Toggle */}
             {isBiometricAvailable && (

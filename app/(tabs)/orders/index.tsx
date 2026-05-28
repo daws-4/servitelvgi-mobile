@@ -12,6 +12,8 @@ import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
+  Animated,
+  Easing,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import MapView, { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
@@ -52,6 +54,43 @@ export default function OrdersScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [pageSize, setPageSize] = useState(10);
 
+  const spinValue = React.useRef(new Animated.Value(0)).current;
+  const spinAnimation = React.useRef<Animated.CompositeAnimation | null>(null);
+
+  useEffect(() => {
+    if (refreshing) {
+      if (spinAnimation.current) {
+        spinAnimation.current.stop();
+      }
+      spinValue.setValue(0);
+      spinAnimation.current = Animated.loop(
+        Animated.timing(spinValue, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      );
+      spinAnimation.current.start();
+    } else {
+      if (spinAnimation.current) {
+        spinAnimation.current.stop();
+        spinAnimation.current = null;
+      }
+      Animated.timing(spinValue, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.ease,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [refreshing]);
+
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
   // Debounce search value
   const [debouncedSearchValue, setDebouncedSearchValue] = useState(searchValue);
 
@@ -64,6 +103,8 @@ export default function OrdersScreen() {
       clearTimeout(handler);
     };
   }, [searchValue]);
+
+
 
   // Auth context for crew ID
   const { installer } = useAuth();
@@ -182,6 +223,26 @@ export default function OrdersScreen() {
     return sorted;
   }, [orders, sortDirection]);
 
+  // Diagnostics for Map View
+  useEffect(() => {
+    if (viewMode === 'map') {
+      const ordersWithCasa = filteredOrders.filter((o) => o.coordenadasCasa?.latitude).length;
+      const ordersWithNap = filteredOrders.filter((o) => o.coordenadasNap?.latitude).length;
+      const ordersWithLegacy = filteredOrders.filter((o) => o.coordinates?.latitude).length;
+
+      console.log('=== [MapView Diagnostics] SCREEN MOUNT ===');
+      console.log(`- Total orders in list: ${filteredOrders.length}`);
+      console.log(`- Orders with coordenadasCasa (Subscriber): ${ordersWithCasa}`);
+      console.log(`- Orders with coordenadasNap (NAP): ${ordersWithNap}`);
+      console.log(`- Orders with legacy coordinates: ${ordersWithLegacy}`);
+      console.log(`- User current GPS location active: ${!!location}`);
+      if (location) {
+        console.log(`- User location coordinates: ${location.coords.latitude}, ${location.coords.longitude}`);
+      }
+      console.log('==========================================');
+    }
+  }, [viewMode, filteredOrders, location]);
+
   const handleOrderPress = (order: Order) => {
     router.push(`/orders/${order._id}`);
   };
@@ -235,22 +296,48 @@ export default function OrdersScreen() {
             initialRegion={initialRegion}
             showsUserLocation
             showsMyLocationButton
-            showsCompass>
+            showsCompass
+            onMapReady={() => {
+              console.log('[MapView Diagnostics] Native Map is READY and initialized successfully!');
+            }}
+            onMapLoaded={() => {
+              console.log('[MapView Diagnostics] Native Map tiles finished loading successfully.');
+            }}
+            onRegionChangeComplete={(region) => {
+              console.log('[MapView Diagnostics] Map region changed to:', JSON.stringify(region));
+            }}>
             {/* Show markers for orders with coordinates */}
-            {filteredOrders
-              .filter((order) => order.coordinates?.latitude && order.coordinates?.longitude)
-              .map((order) => (
+            {filteredOrders.map((order) => {
+              const coords =
+                order.coordenadasCasa?.latitude && order.coordenadasCasa?.longitude
+                  ? order.coordenadasCasa
+                  : order.coordenadasNap?.latitude && order.coordenadasNap?.longitude
+                  ? order.coordenadasNap
+                  : order.coordinates?.latitude && order.coordinates?.longitude
+                  ? order.coordinates
+                  : null;
+
+              if (!coords) return null;
+
+              const label = order.coordenadasCasa?.latitude && order.coordenadasCasa?.longitude
+                ? 'Casa'
+                : order.coordenadasNap?.latitude && order.coordenadasNap?.longitude
+                ? 'NAP'
+                : 'Ubicación';
+
+              return (
                 <Marker
                   key={order._id}
                   coordinate={{
-                    latitude: order.coordinates!.latitude,
-                    longitude: order.coordinates!.longitude,
+                    latitude: coords.latitude,
+                    longitude: coords.longitude,
                   }}
-                  title={order.subscriberName}
+                  title={`${order.subscriberName} (${label})`}
                   description={order.address}
                   onCalloutPress={() => handleOrderPress(order)}
                 />
-              ))}
+              );
+            })}
           </MapView>
         </View>
       </View>
@@ -306,7 +393,10 @@ export default function OrdersScreen() {
         <ScrollView
           showsVerticalScrollIndicator
           bounces
+          alwaysBounceVertical={true}
+          overScrollMode="always"
           contentContainerStyle={{
+            flexGrow: 1,
             paddingBottom: tabBarHeight + 24,
           }}
           refreshControl={
@@ -382,18 +472,29 @@ export default function OrdersScreen() {
           )}
         </ScrollView>
 
+        {/* Floating Refresh Button */}
+        <TouchableOpacity
+          style={[styles.floatingRefreshBtn, { bottom: tabBarHeight + 116 }]}
+          onPress={handleRefresh}
+          activeOpacity={0.8}
+        >
+          <Animated.View style={{ transform: [{ rotate: spin }] }}>
+            <FontAwesome name="refresh" size={16} color="white" />
+          </Animated.View>
+        </TouchableOpacity>
+
         {/* Floating Create Recovery Order Button */}
         <TouchableOpacity
-          style={[styles.floatingCreateBtn, { bottom: tabBarHeight + 90 }]}
+          style={[styles.floatingCreateBtn, { bottom: tabBarHeight + 68 }]}
           onPress={handleCreateOrder}>
-          <FontAwesome name="plus-square" size={20} color="white" />
+          <FontAwesome name="plus-square" size={16} color="white" />
         </TouchableOpacity>
 
         {/* Floating Map Button */}
         <TouchableOpacity
-          style={[styles.floatingMapBtn, { bottom: tabBarHeight + 24 }]}
+          style={[styles.floatingMapBtn, { bottom: tabBarHeight + 20 }]}
           onPress={handleMapPress}>
-          <FontAwesome name="map" size={20} color="white" />
+          <FontAwesome name="map" size={16} color="white" />
         </TouchableOpacity>
 
         <OrderTypeSelectionModal
@@ -481,36 +582,50 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#0f0f0f',
   },
+  floatingRefreshBtn: {
+    position: 'absolute',
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#10B981', // Emerald green
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
   floatingCreateBtn: {
     position: 'absolute',
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: '#3B82F6', // Blue for recovery
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#3B82F6',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowRadius: 4,
+    elevation: 4,
   },
   floatingMapBtn: {
     position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: BrandColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: BrandColors.primary,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowRadius: 4,
+    elevation: 4,
   },
   paginationControl: {
     flexDirection: 'row',
